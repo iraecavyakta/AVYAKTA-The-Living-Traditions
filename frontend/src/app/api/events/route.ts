@@ -1,33 +1,13 @@
 import { createClient } from "@supabase/supabase-js";
 import { NextRequest, NextResponse } from "next/server";
-import { cookies } from "next/headers";
 import { retryWithBackoff } from "../../../lib/api/retry";
-import {
-  verifySessionId,
-  getSessionCookieName,
-} from "../../../lib/auth/session";
+import { verifyAdminAuth } from "../../../lib/auth/session";
+import { eventWriteSchema } from "../../../lib/validators/event";
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.SUPABASE_SERVICE_ROLE_KEY!,
 );
-
-// Helper to verify admin authentication
-async function verifyAdminAuth(): Promise<boolean> {
-  try {
-    const cookieStore = await cookies();
-    const token = cookieStore.get(getSessionCookieName())?.value;
-
-    if (!token) {
-      return false;
-    }
-
-    const session = await verifySessionId(token);
-    return session !== null;
-  } catch {
-    return false;
-  }
-}
 
 type EventWritePayload = {
   title: string;
@@ -85,6 +65,18 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
+    const validation = eventWriteSchema.safeParse(body);
+    if (!validation.success) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: "Validation failed",
+          details: validation.error.flatten(),
+        },
+        { status: 400 },
+      );
+    }
+
     const {
       title,
       description,
@@ -97,14 +89,7 @@ export async function POST(request: NextRequest) {
       more_description,
       slug_image_url,
       poster_image_urls,
-    } = body;
-
-    if (!title?.trim()) {
-      return NextResponse.json(
-        { success: false, error: "Title is required" },
-        { status: 400 },
-      );
-    }
+    } = validation.data;
 
     const insertPayload: EventWritePayload = {
       title: title.trim(),

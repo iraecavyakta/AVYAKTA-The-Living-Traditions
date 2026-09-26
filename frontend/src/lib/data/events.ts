@@ -1,6 +1,6 @@
 import "server-only";
 
-import { createClient } from "@/utils/supabase/server";
+import { createPublicClient } from "@/utils/supabase/server";
 import {
   formatEventDate,
   inferEventStatus,
@@ -118,11 +118,8 @@ function mapRowToEvent(row: {
   const computedSlug = slugify(row.title);
   const subtitleFallback = `Explore ${row.title} with Avyakta.`;
 
-  const posterImage =
-    row.poster_image_url ||
-    row.slug_image_url ||
-    row.image_url ||
-    posterFallbacks[titleHashIndex(row.title)];
+  const posterUrl =
+    row.poster_image_url || row.slug_image_url || row.image_url || null;
 
   return {
     id: row.id,
@@ -133,7 +130,8 @@ function mapRowToEvent(row: {
     date: formatEventDate(row.date),
     status: inferEventStatus(row.date),
     domain: parsed.domain,
-    poster: posterImage,
+    posterUrl,
+    posterFallback: posterFallbacks[titleHashIndex(row.title)],
     venue: row.venue || undefined,
     highlights: parsed.highlights,
     timeline: parsed.timeline,
@@ -142,7 +140,7 @@ function mapRowToEvent(row: {
 
 async function fetchRawEventRows() {
   try {
-    const supabase = await createClient();
+    const supabase = createPublicClient();
     const { data, error } = await supabase
       .from("events")
       .select(
@@ -196,8 +194,8 @@ export async function getEventsFromDb(): Promise<EventItem[]> {
       }
 
       const existing = deduped.get(row.id)!;
-      if (!existing.poster && row.poster_image_url) {
-        deduped.set(row.id, { ...existing, poster: row.poster_image_url });
+      if (!existing.posterUrl && row.poster_image_url) {
+        deduped.set(row.id, { ...existing, posterUrl: row.poster_image_url });
       }
     }
 

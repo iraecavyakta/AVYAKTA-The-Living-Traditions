@@ -5,6 +5,10 @@ import bgFormsImage from "@/components/forms/bg-forms.jpeg";
 import { getRecruitmentStatus } from "@/lib/config/recruitmentStatus";
 import "./recruitment.css";
 
+// Must always be checked live, never statically frozen - this is a real
+// on/off gate an admin expects to take effect immediately.
+export const dynamic = "force-dynamic";
+
 export default async function RecruitmentPage() {
   const isOpen = await getRecruitmentStatus();
 

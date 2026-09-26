@@ -200,10 +200,15 @@ export default function RecruitmentForm({ bgImage }: { bgImage?: string }) {
 
               {/* Branch Field */}
               <div className="form-group">
-                <label className="form-label">
+                <label htmlFor="branch" className="form-label">
                   Branch <span className="required">*</span>
                 </label>
-                <select {...register("branch")} className="form-select">
+                <select
+                  id="branch"
+                  aria-describedby={errors.branch ? "branch-error" : undefined}
+                  {...register("branch")}
+                  className="form-select"
+                >
                   <option value="">Select your branch</option>
                   {RECRUITMENT_BRANCHES.map((b) => (
                     <option key={b} value={b}>
@@ -212,7 +217,9 @@ export default function RecruitmentForm({ bgImage }: { bgImage?: string }) {
                   ))}
                 </select>
                 {errors.branch && (
-                  <p className="form-error">{errors.branch.message}</p>
+                  <p id="branch-error" className="form-error">
+                    {errors.branch.message}
+                  </p>
                 )}
               </div>
 
@@ -240,10 +247,14 @@ export default function RecruitmentForm({ bgImage }: { bgImage?: string }) {
 
               {/* Section Field */}
               <div className="form-group">
-                <label className="form-label">
+                <label htmlFor="section" className="form-label">
                   Section <span className="required">*</span>
                 </label>
                 <input
+                  id="section"
+                  aria-describedby={
+                    errors.section ? "section-error" : undefined
+                  }
                   {...register("section")}
                   type="text"
                   placeholder="Your section"
@@ -251,7 +262,9 @@ export default function RecruitmentForm({ bgImage }: { bgImage?: string }) {
                   className="form-input"
                 />
                 {errors.section && (
-                  <p className="form-error">{errors.section.message}</p>
+                  <p id="section-error" className="form-error">
+                    {errors.section.message}
+                  </p>
                 )}
               </div>
 
@@ -284,6 +297,7 @@ export default function RecruitmentForm({ bgImage }: { bgImage?: string }) {
                           ? "selected"
                           : ""
                       } ${domain === selectedSecondDomain ? "disabled" : ""}`}
+                      aria-pressed={watch("first_preference_domain") === domain}
                       disabled={domain === selectedSecondDomain}
                     >
                       {domain}
@@ -326,6 +340,9 @@ export default function RecruitmentForm({ bgImage }: { bgImage?: string }) {
                           ? "selected"
                           : ""
                       } ${domain === selectedFirstPreference ? "disabled" : ""}`}
+                      aria-pressed={
+                        watch("second_domain_preference") === domain
+                      }
                       disabled={domain === selectedFirstPreference}
                     >
                       {domain}
@@ -344,10 +361,12 @@ export default function RecruitmentForm({ bgImage }: { bgImage?: string }) {
             <div className="form-right">
               {/* SRN Field */}
               <div className="form-group">
-                <label className="form-label">
+                <label htmlFor="srn" className="form-label">
                   SRN <span className="required">*</span>
                 </label>
                 <input
+                  id="srn"
+                  aria-describedby={errors.srn ? "srn-error" : undefined}
                   {...register("srn", {
                     onChange: (e) => {
                       e.target.value = e.target.value.toUpperCase();
@@ -359,23 +378,31 @@ export default function RecruitmentForm({ bgImage }: { bgImage?: string }) {
                   className="form-input uppercase"
                 />
                 {errors.srn && (
-                  <p className="form-error">{errors.srn.message}</p>
+                  <p id="srn-error" className="form-error">
+                    {errors.srn.message}
+                  </p>
                 )}
               </div>
 
               {/* Phone Number Field */}
               <div className="form-group">
-                <label className="form-label">
+                <label htmlFor="phone_number" className="form-label">
                   Phone Number <span className="required">*</span>
                 </label>
                 <input
+                  id="phone_number"
+                  aria-describedby={
+                    errors.phone_number ? "phone_number-error" : undefined
+                  }
                   {...register("phone_number")}
                   type="tel"
                   placeholder="9876543210"
                   className="form-input"
                 />
                 {errors.phone_number && (
-                  <p className="form-error">{errors.phone_number.message}</p>
+                  <p id="phone_number-error" className="form-error">
+                    {errors.phone_number.message}
+                  </p>
                 )}
               </div>
             </div>
@@ -384,15 +411,23 @@ export default function RecruitmentForm({ bgImage }: { bgImage?: string }) {
             <div className="form-textarea-section">
               {/* Experience Field */}
               <div className="form-group">
-                <label className="form-label">Experience</label>
+                <label htmlFor="experience" className="form-label">
+                  Experience
+                </label>
                 <textarea
+                  id="experience"
+                  aria-describedby={
+                    errors.experience ? "experience-error" : undefined
+                  }
                   {...register("experience")}
                   placeholder="Your relevant experience and achievements"
                   maxLength={1024}
                   className="form-textarea"
                 />
                 {errors.experience && (
-                  <p className="form-error">{errors.experience.message}</p>
+                  <p id="experience-error" className="form-error">
+                    {errors.experience.message}
+                  </p>
                 )}
               </div>
 
@@ -441,34 +476,44 @@ export default function RecruitmentForm({ bgImage }: { bgImage?: string }) {
 
               {/* Why You Field */}
               <div className="form-group">
-                <label className="form-label">
+                <label htmlFor="why_you" className="form-label">
                   What Do You Bring To Table?{" "}
                   <span className="required">*</span>
                 </label>
                 <textarea
+                  id="why_you"
+                  aria-describedby={
+                    errors.why_you ? "why_you-error" : undefined
+                  }
                   {...register("why_you")}
                   placeholder="Why are you interested in Avyakta?"
                   maxLength={1024}
                   className="form-textarea"
                 />
                 {errors.why_you && (
-                  <p className="form-error">{errors.why_you.message}</p>
+                  <p id="why_you-error" className="form-error">
+                    {errors.why_you.message}
+                  </p>
                 )}
               </div>
 
               {/* Why Us Field */}
               <div className="form-group">
-                <label className="form-label">
+                <label htmlFor="why_us" className="form-label">
                   Why Avyakta? <span className="required">*</span>
                 </label>
                 <textarea
+                  id="why_us"
+                  aria-describedby={errors.why_us ? "why_us-error" : undefined}
                   {...register("why_us")}
                   placeholder="What do you expect from Avyakta?"
                   maxLength={1024}
                   className="form-textarea"
                 />
                 {errors.why_us && (
-                  <p className="form-error">{errors.why_us.message}</p>
+                  <p id="why_us-error" className="form-error">
+                    {errors.why_us.message}
+                  </p>
                 )}
               </div>
             </div>

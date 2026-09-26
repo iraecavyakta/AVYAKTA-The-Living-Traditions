@@ -10,6 +10,25 @@
   --color-foreground: var(--foreground);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
+
+  /* Brand palette (was previously only declared in the unused tailwind.config.js) */
+  --color-bronze: #92791b;
+  --color-emerald: #1b5e3b;
+  --color-charcoal: #1c1c1c;
+  --color-olive: #737955;
+  --color-crimson: #8b1a1a;
+  --color-warm: #f5f0e8;
+  --color-gold: #c9a84c;
+}
+
+/* `inline` avoids Tailwind redeclaring these at :root — the actual values are
+   already set on <html> by next/font's `variable` option in layout.tsx under
+   the same custom-property names, so a plain @theme block here would create
+   a same-name self-referencing (invalid) custom property instead of aliasing it. */
+@theme inline {
+  --font-heading: var(--font-heading);
+  --font-body: var(--font-body);
+  --font-accent: var(--font-accent);
 }
 
 /* =========================
@@ -68,7 +87,7 @@
   margin: 80px 0;
   font-size: 20px;
   letter-spacing: 16px;
-  color: var(--gold);
+  color: var(--color-gold);
   opacity: 0.9;
 }
 
@@ -93,7 +112,7 @@
    TEXT
 ========================= */
 .text-muted {
-  color: var(--olive);
+  color: var(--color-olive);
 }
 
 /* =========================

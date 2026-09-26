@@ -1,8 +1,18 @@
 import Link from "next/link";
+import { redirect } from "next/navigation";
 import bgImage from "@/components/forms/bg.jpeg";
+import { getRecruitmentStatus } from "@/lib/config/recruitmentStatus";
 import "../recruitment/recruitment.css";
 
-export default function RecruitmentClosedPage() {
+export const dynamic = "force-dynamic";
+
+export default async function RecruitmentClosedPage() {
+  const isOpen = await getRecruitmentStatus();
+
+  if (isOpen) {
+    redirect("/recruitment");
+  }
+
   return (
     <main
       className="recruitment-page"

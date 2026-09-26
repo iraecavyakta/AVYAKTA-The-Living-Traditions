@@ -2,9 +2,29 @@ import { NextRequest, NextResponse } from "next/server";
 import { getSupabaseAdmin } from "../../../lib/supabase/server";
 import { recruitmentSchema } from "../../../lib/validators/recruitment";
 import { retryWithBackoff } from "../../../lib/api/retry";
+import { getClientIp, rateLimit } from "../../../lib/security/rateLimit";
+
+const SUBMIT_LIMIT = 5;
+const SUBMIT_WINDOW_MS = 10 * 60 * 1000;
 
 export async function POST(request: NextRequest) {
   try {
+    const ip = getClientIp(request);
+    const limitResult = rateLimit(
+      `recruitment:${ip}`,
+      SUBMIT_LIMIT,
+      SUBMIT_WINDOW_MS,
+    );
+    if (!limitResult.allowed) {
+      return NextResponse.json(
+        { error: "Too many submissions. Please try again later." },
+        {
+          status: 429,
+          headers: { "Retry-After": String(limitResult.retryAfterSeconds) },
+        },
+      );
+    }
+
     const body = await request.json();
 
     // Server-side validation

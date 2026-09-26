@@ -1,6 +1,6 @@
 import "server-only";
 
-import { createClient } from "@/utils/supabase/server";
+import { createPublicClient } from "@/utils/supabase/server";
 import {
   type MemberCard,
   type MemberSectionKey,
@@ -145,7 +145,7 @@ function fallbackMembers(): MemberCard[] {
 
 export async function getMembersFromDb(): Promise<MemberCard[]> {
   try {
-    const supabase = await createClient();
+    const supabase = createPublicClient();
     const { data: rows, error } = await supabase
       .from("members")
       .select("*")

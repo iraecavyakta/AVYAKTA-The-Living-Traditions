@@ -92,7 +92,7 @@ export default function LoginForm() {
           type="email"
           placeholder="Enter your email"
           {...register("email")}
-          className={`w-full px-3.5 py-3 text-sm bg-gray-50 border rounded-lg font-sans focus:outline-none focus:border-blue-600 focus:ring-2 focus:ring-blue-600/20 focus:bg-white transition-all ${
+          className={`w-full px-3.5 py-3 text-sm bg-gray-50 border rounded-lg font-sans focus:outline-none focus:border-bronze focus:ring-2 focus:ring-bronze/20 focus:bg-white transition-all ${
             errors.email ? "border-red-600 bg-red-50" : "border-gray-300"
           } disabled:bg-gray-200 disabled:cursor-not-allowed disabled:opacity-60`}
           disabled={isLoading}
@@ -116,7 +116,7 @@ export default function LoginForm() {
           type="password"
           placeholder="Enter your password"
           {...register("password")}
-          className={`w-full px-3.5 py-3 text-sm bg-gray-50 border rounded-lg font-sans focus:outline-none focus:border-blue-600 focus:ring-2 focus:ring-blue-600/20 focus:bg-white transition-all ${
+          className={`w-full px-3.5 py-3 text-sm bg-gray-50 border rounded-lg font-sans focus:outline-none focus:border-bronze focus:ring-2 focus:ring-bronze/20 focus:bg-white transition-all ${
             errors.password ? "border-red-600 bg-red-50" : "border-gray-300"
           } disabled:bg-gray-200 disabled:cursor-not-allowed disabled:opacity-60`}
           disabled={isLoading}
@@ -131,7 +131,7 @@ export default function LoginForm() {
       <button
         type="submit"
         disabled={isLoading}
-        className="w-full mt-2 px-4 py-3 bg-gradient-to-r from-blue-600 via-purple-600 to-purple-700 text-white text-base font-semibold rounded-lg shadow-lg hover:shadow-xl hover:-translate-y-0.5 active:translate-y-0 disabled:opacity-70 disabled:cursor-not-allowed disabled:shadow-md transition-all duration-200"
+        className="w-full mt-2 px-4 py-3 bg-bronze text-white text-base font-semibold rounded-lg shadow-lg hover:shadow-xl hover:-translate-y-0.5 hover:bg-bronze/90 active:translate-y-0 disabled:opacity-70 disabled:cursor-not-allowed disabled:shadow-md transition-all duration-200"
       >
         {isLoading ? "Signing in..." : "Enter"}
       </button>

@@ -1,9 +1,25 @@
 import Link from "next/link";
 import Image from "next/image";
 
-export default function Footer() {
+export default function Footer({
+  useImageBackground = false,
+}: {
+  useImageBackground?: boolean;
+}) {
   return (
-    <footer className="bg-charcoal border-t border-gold/30 relative overflow-hidden">
+    <footer
+      className={`border-t border-gold/30 relative overflow-hidden ${useImageBackground ? "" : "bg-charcoal"}`}
+      style={
+        useImageBackground
+          ? {
+              backgroundImage:
+                "linear-gradient(rgba(28,28,28,0.55), rgba(28,28,28,0.8)), url(/images/recruitment/recruit-bg-4.png)",
+              backgroundSize: "cover",
+              backgroundPosition: "center",
+            }
+          : undefined
+      }
+    >
       <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-gold to-transparent pointer-events-none" />
 
       <div
@@ -16,21 +32,21 @@ export default function Footer() {
       />
 
       {/* Main columns */}
-      <div className="max-w-[1200px] mx-auto px-6 grid grid-cols-4 gap-12 py-14 relative z-10 items-start">
+      <div className="max-w-[1200px] mx-auto px-6 grid grid-cols-2 gap-x-8 gap-y-10 py-14 relative z-10 items-start sm:grid-cols-2 md:grid-cols-4 md:gap-12">
         {/* Logo */}
-        <div className="flex flex-col items-start">
+        <div className="col-span-2 flex flex-col items-center sm:items-start md:col-span-1">
           <Image
-            src="/logo.png"
+            src="/logo-crest.png"
             alt="Avyakta Logo"
             width={160}
             height={160}
-            className="object-contain"
+            className="h-24 w-24 object-contain sm:h-32 sm:w-32 md:h-40 md:w-40"
           />
         </div>
 
         {/* About Us */}
         <div>
-          <p className="font-heading text-gold text-lg tracking-[4px] uppercase mb-4">
+          <p className="font-heading text-gold text-xl tracking-[4px] uppercase mb-4">
             About Us
           </p>
           <div className="h-px bg-gold/20 mb-5" />
@@ -43,7 +59,7 @@ export default function Footer() {
               <li key={label}>
                 <Link
                   href={href}
-                  className="font-body text-sm text-warm/50 hover:text-gold transition-colors duration-300 flex items-center gap-2 no-underline group"
+                  className="font-body text-base text-warm/60 hover:text-gold transition-colors duration-300 flex items-center gap-2 no-underline group"
                 >
                   <span className="w-1 h-1 rounded-full bg-gold/30 group-hover:bg-gold transition-colors duration-300" />
                   {label}
@@ -55,7 +71,7 @@ export default function Footer() {
 
         {/* Explore */}
         <div>
-          <p className="font-heading text-gold text-lg tracking-[4px] uppercase mb-4">
+          <p className="font-heading text-gold text-xl tracking-[4px] uppercase mb-4">
             Explore
           </p>
           <div className="h-px bg-gold/20 mb-5" />
@@ -69,7 +85,7 @@ export default function Footer() {
               <li key={label}>
                 <Link
                   href={href}
-                  className="font-body text-sm text-warm/50 hover:text-gold transition-colors duration-300 flex items-center gap-2 no-underline group"
+                  className="font-body text-base text-warm/60 hover:text-gold transition-colors duration-300 flex items-center gap-2 no-underline group"
                 >
                   <span className="w-1 h-1 rounded-full bg-gold/30 group-hover:bg-gold transition-colors duration-300" />
                   {label}
@@ -81,7 +97,7 @@ export default function Footer() {
 
         {/* Contact */}
         <div>
-          <p className="font-heading text-gold text-lg tracking-[4px] uppercase mb-4">
+          <p className="font-heading text-gold text-xl tracking-[4px] uppercase mb-4">
             Contact
           </p>
           <div className="h-px bg-gold/20 mb-5" />
@@ -95,7 +111,7 @@ export default function Footer() {
                   href={href}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="font-body text-sm text-warm/50 hover:text-gold transition-colors duration-300 flex items-center gap-2 no-underline group"
+                  className="font-body text-base text-warm/60 hover:text-gold transition-colors duration-300 flex items-center gap-2 no-underline group"
                 >
                   <span className="w-1 h-1 rounded-full bg-gold/30 group-hover:bg-gold transition-colors duration-300" />
                   {label}
@@ -106,21 +122,12 @@ export default function Footer() {
         </div>
       </div>
 
-      {/* Ornament divider */}
-      <div className="max-w-[1200px] mx-auto px-6 relative z-10">
-        <div className="h-px bg-gold/15" />
-        <div className="text-center text-xs tracking-[8px] text-gold/30 -mt-3 relative z-10">
-          <span className="bg-charcoal px-4">{"✦  ✧  ✦  ✧  ✦"}</span>
-        </div>
-        <div className="h-px bg-gold/15 mt-3" />
-      </div>
-
       {/* Bottom bar */}
-      <div className="max-w-[1200px] mx-auto px-6 flex items-center justify-between py-6 relative z-10">
-        <p className="font-body text-xs text-warm/25 tracking-wide">
+      <div className="max-w-[1200px] mx-auto px-6 flex flex-col items-center gap-2 py-6 text-center relative z-10 sm:flex-row sm:items-center sm:justify-between sm:gap-4 sm:text-left">
+        <p className="font-body text-sm text-warm/40 tracking-wide">
           {"© 2025 Avyakta · PESU EC · All rights reserved"}
         </p>
-        <p className="font-accent italic text-xs text-gold/30 tracking-wide">
+        <p className="font-accent italic text-sm text-gold/40 tracking-wide">
           {"The Wholeness in Becoming"}
         </p>
       </div>
