@@ -19,6 +19,17 @@ export default function Navbar() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const ticking = useRef(false);
 
+  // Close the menu on route change. Adjusting state during render (rather
+  // than in an effect) per https://react.dev/learn/you-might-not-need-an-effect -
+  // an effect keyed on pathname closes the menu one paint late, and a bare
+  // render-phase check without tracking the previous pathname re-closes it
+  // on every render, so it could never stay open at all.
+  const [prevPathname, setPrevPathname] = useState(pathname);
+  if (pathname !== prevPathname) {
+    setPrevPathname(pathname);
+    setMobileOpen(false);
+  }
+
   // The bar no longer hides on the way down - it condenses instead, so the
   // crest and wordmark stay on screen the whole time. A hysteresis gap
   // (shrink past 70, expand again under 30) keeps it from flickering when
@@ -39,14 +50,6 @@ export default function Navbar() {
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
-
-  // Close the menu on route change. This has to be an effect keyed on
-  // pathname - as a bare render-phase check it re-ran on every render, so
-  // opening the menu immediately closed it again and it could never stay
-  // open at all.
-  useEffect(() => {
-    setMobileOpen(false);
-  }, [pathname]);
 
   // Lock body scroll only for the full-width mobile menu. On desktop the
   // same button opens a small dropdown, and freezing the page there would

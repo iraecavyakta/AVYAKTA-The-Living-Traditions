@@ -50,9 +50,10 @@ function useHorizontalPan(itemCount: number, enabled: boolean) {
   const [runwayPx, setRunwayPx] = useState(0);
 
   useEffect(() => {
+    // When disabled, skip measuring and leave maxPanPx/runwayPx as they
+    // were - the values below are only ever read while enabled, via the
+    // `enabled ? ... : 0` guards, so stale state here has no effect.
     if (!enabled) {
-      setMaxPanPx(0);
-      setRunwayPx(0);
       return;
     }
 
@@ -77,9 +78,16 @@ function useHorizontalPan(itemCount: number, enabled: boolean) {
     target: sectionRef,
     offset: ["start start", "end end"],
   });
-  const x = useTransform(scrollYProgress, [0, 1], [0, -maxPanPx]);
+  const x = useTransform(scrollYProgress, [0, 1], [0, enabled ? -maxPanPx : 0]);
 
-  return { sectionRef, viewportRef, trackRef, x, runwayPx, scrollYProgress };
+  return {
+    sectionRef,
+    viewportRef,
+    trackRef,
+    x,
+    runwayPx: enabled ? runwayPx : 0,
+    scrollYProgress,
+  };
 }
 
 function JaaliOverlay() {
@@ -128,12 +136,19 @@ export default function GalleryPageClient({
     return () => query.removeEventListener("change", update);
   }, []);
 
-  const topWall = useHorizontalPan(topGridImages.length, isWideEnoughToPan);
+  const {
+    sectionRef: topWallSectionRef,
+    viewportRef: topWallViewportRef,
+    trackRef: topWallTrackRef,
+    x: topWallX,
+    runwayPx: topWallRunwayPx,
+    scrollYProgress: topWallScrollYProgress,
+  } = useHorizontalPan(topGridImages.length, isWideEnoughToPan);
   // The wall fades out over the last stretch of its own pin instead of
   // cutting straight to the next section - a soft dissolve rather than a
   // hard scroll-snap handoff.
   const topWallOpacity = useTransform(
-    topWall.scrollYProgress,
+    topWallScrollYProgress,
     [0, 0.82, 1],
     [1, 1, 0],
   );
@@ -235,16 +250,16 @@ export default function GalleryPageClient({
         // every tile stays the same size, there's just more of them stacked
         // vertically before the pan flows sideways.
         <section
-          ref={topWall.sectionRef}
+          ref={topWallSectionRef}
           className="relative w-full"
           style={
             isWideEnoughToPan
-              ? { height: `${topWall.runwayPx || 1}px` }
+              ? { height: `${topWallRunwayPx || 1}px` }
               : undefined
           }
         >
           <motion.div
-            ref={topWall.viewportRef}
+            ref={topWallViewportRef}
             className={`w-full overflow-hidden pt-20 ${isWideEnoughToPan ? "sticky top-0 h-screen flex flex-col justify-center" : ""}`}
             style={{
               opacity: isWideEnoughToPan ? topWallOpacity : 1,
@@ -259,10 +274,10 @@ export default function GalleryPageClient({
             }}
           >
             <motion.div
-              ref={topWall.trackRef}
+              ref={topWallTrackRef}
               className="grid w-full grid-cols-3 grid-flow-row-dense auto-rows-[110px] gap-3 sm:grid-cols-4 sm:auto-rows-[140px] sm:gap-4 md:w-fit md:grid-cols-none md:grid-flow-col-dense md:auto-cols-[160px]"
               style={{
-                x: topWall.x,
+                x: topWallX,
                 ...(isWideEnoughToPan
                   ? { gridTemplateRows: `repeat(${wallRows}, 160px)` }
                   : null),
