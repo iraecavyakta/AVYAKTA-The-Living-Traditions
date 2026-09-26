@@ -46,14 +46,15 @@ export const registrationSchema = z
     section: z.string().min(1, "Section is required").max(10),
     srn: z
       .string()
+      .length(13, "SRN must be exactly 13 characters")
       .regex(
-        /^(PES)[X12]20[1-9][A-Z]{2}[0-9]{5}$/i,
-        "Please enter a valid PES SRN",
-      )
-      .max(13),
+        /^PES[12][A-Z]{2}[0-9]{2}[A-Z]{2}[0-9]{3}$/i,
+        "SRN format: PES + 1 or 2 + 2 letters + 2 numbers + 2 letters + 3 numbers (e.g., PES2UG23CS135)",
+      ),
     phone_number: z
       .string()
       .regex(/^[0-9]{10}$/, "Please enter a valid 10-digit phone number"),
+    hostel: z.boolean(),
 
     // Participant-only fields
     dietaryNeeds: z.string().max(200).optional(),
@@ -64,6 +65,8 @@ export const registrationSchema = z
     volunteerExperience: z.string().max(1024).optional(),
 
     links: z.string().optional(),
+
+    payment_image_url: z.string().optional(),
   })
   .superRefine((data, ctx) => {
     if (data.isVolunteer) {

@@ -3,6 +3,8 @@
 import React, { useState, useEffect } from "react";
 import { RECRUITMENT_DOMAINS } from "../../lib/validators/recruitment";
 import RecruitmentCtaToggle from "../dashboard/RecruitmentCtaToggle";
+import DashboardPageBackground from "../layout/DashboardPageBackground";
+import recruitmentBackground from "../../../Admin_Dash_Img/4.png";
 
 interface CounterStat {
   domain: string;
@@ -25,9 +27,8 @@ export default function RecruitmentStatsClient() {
   const [selectedDomain, setSelectedDomain] = useState<
     (typeof RECRUITMENT_DOMAINS)[number]
   >(RECRUITMENT_DOMAINS[0]);
-  const [globalIndicator, setGlobalIndicator] = useState<boolean>(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [togglingGlobal, setTogglingGlobal] = useState(false);
+  const [bulkAction, setBulkAction] = useState<"open" | "close" | null>(null);
   const [togglingDomain, setTogglingDomain] = useState(false);
   const [flushingAll, setFlushingAll] = useState(false);
   const [error, setError] = useState("");
@@ -66,13 +67,6 @@ export default function RecruitmentStatsClient() {
         setSelectedDomain(RECRUITMENT_DOMAINS[0]);
       }
 
-      // Set global indicator by explicitly finding the "global" domain record
-      const globalRecord = indicatorsArray.find(
-        (ind: DomainIndicator) => ind.domain === "global",
-      );
-      const globalStatus = globalRecord ? globalRecord.indicator : false;
-      setGlobalIndicator(globalStatus);
-
       setError("");
     } catch (err) {
       setError("Failed to load recruitment stats");
@@ -82,27 +76,44 @@ export default function RecruitmentStatsClient() {
     }
   };
 
-  const handleToggleGlobalIndicator = async () => {
+  const handleBulkToggleAllDomains = async (nextStatus: boolean) => {
     try {
-      setTogglingGlobal(true);
-      const newStatus = !globalIndicator;
+      setBulkAction(nextStatus ? "open" : "close");
+      setError("");
+      setSuccess("");
 
-      const response = await fetch("/api/recruitment/indicator", {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ indicator: newStatus }),
-      });
+      for (const domain of RECRUITMENT_DOMAINS) {
+        const response = await fetch("/api/recruitment/indicator", {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ domain, indicator: nextStatus }),
+        });
 
-      if (!response.ok) throw new Error("Failed to update indicator");
+        if (!response.ok) {
+          throw new Error(`Failed to update indicator for domain: ${domain}`);
+        }
+      }
 
-      setGlobalIndicator(newStatus);
-      setSuccess(`Recruitment ${newStatus ? "enabled" : "disabled"} globally`);
+      setDomainIndicators((currentIndicators) =>
+        RECRUITMENT_DOMAINS.map((domain) => {
+          const existing = currentIndicators.find(
+            (entry) => entry.domain === domain,
+          );
+          return existing
+            ? { ...existing, indicator: nextStatus }
+            : { id: domain, domain, indicator: nextStatus };
+        }),
+      );
+
+      setSuccess(
+        `Recruitment ${nextStatus ? "opened" : "closed"} for all domains`,
+      );
       setTimeout(() => setSuccess(""), 3000);
     } catch (err) {
-      setError("Failed to toggle recruitment status");
-      console.error("Error toggling indicator:", err);
+      setError("Failed to update all domains");
+      console.error("Error bulk toggling indicators:", err);
     } finally {
-      setTogglingGlobal(false);
+      setBulkAction(null);
     }
   };
 
@@ -150,7 +161,7 @@ export default function RecruitmentStatsClient() {
   const handleFlushAllCounters = async () => {
     if (
       !confirm(
-        "⚠️ WARNING: This will migrate all approved applicants to the members table, clear ALL recruitment data, reset all domain counters, and CLOSE all recruitment domains. This action CANNOT be undone. Continue?",
+        "WARNING: This will migrate all approved applicants to the members table, clear ALL recruitment data, reset all domain counters, and CLOSE all recruitment domains. This action CANNOT be undone. Continue?",
       )
     ) {
       return;
@@ -213,7 +224,7 @@ export default function RecruitmentStatsClient() {
 
       // All operations successful
       setSuccess(
-        `✅ Complete flush successful! Added ${recruitmentResult.stats.totalMembersAdded} new members (${recruitmentResult.stats.secondPreferenceMembers} second preference + ${recruitmentResult.stats.firstPreferenceMembers} first preference). All recruitment data, counters cleared, and recruitment domains closed.`,
+        `Complete flush successful. Added ${recruitmentResult.stats.totalMembersAdded} new members (${recruitmentResult.stats.secondPreferenceMembers} second preference + ${recruitmentResult.stats.firstPreferenceMembers} first preference). All recruitment data and counters cleared, and recruitment domains closed.`,
       );
 
       // Refresh data to show updated stats
@@ -224,7 +235,7 @@ export default function RecruitmentStatsClient() {
     } catch (err) {
       const errorMessage =
         err instanceof Error ? err.message : "Unknown error occurred";
-      setError(`❌ Flush failed: ${errorMessage}`);
+      setError(`Flush failed: ${errorMessage}`);
       console.error("Error during flush operations:", err);
     } finally {
       setFlushingAll(false);
@@ -235,113 +246,115 @@ export default function RecruitmentStatsClient() {
     counter.not_sure + counter.approved + counter.rejected;
 
   return (
-    <main className="recruitment-container">
-      <div className="recruitment-wrapper">
-        <div className="recruitment-header">
-          <div className="recruitment-title-section">
+    <>
+      <DashboardPageBackground src={recruitmentBackground.src} />
+
+      <main className="recruitment-container">
+        <div className="recruitment-wrapper">
+          <header className="recruitment-header">
+            <span className="corner corner-tl" aria-hidden />
+            <span className="corner corner-br" aria-hidden />
+
             <p className="recruitment-label">Avyakta Admin</p>
             <h1>Recruitment Management</h1>
-            <p>
+            <p className="recruitment-tagline">
               Manage recruitment status and view application stats by domain.
             </p>
-          </div>
-        </div>
 
-        <div className="stats-header">
-          <div className="header-left">
-            <h3>📋 Recruitment Stats</h3>
-            <div className="status-display">
-              <span
-                className={`indicator-dot ${globalIndicator ? "active" : ""}`}
-              ></span>
-              <span className="status-text">
-                Recruitment is {globalIndicator ? "OPEN" : "CLOSED"}
-              </span>
+            <div className="rangoli" aria-hidden>
+              <span className="dot small" />
+              <span className="dot large" />
+              <span className="dot small" />
+            </div>
+          </header>
+
+          <div className="stats-header">
+            <div className="header-left">
+              <h3>Recruitment Stats</h3>
+            </div>
+            <div className="header-actions">
+              <RecruitmentCtaToggle variant="compact" />
+              <button
+                onClick={fetchData}
+                className="btn-refresh"
+                disabled={isLoading}
+              >
+                {isLoading ? "Loading..." : "Refresh"}
+              </button>
+              <button
+                onClick={() => handleBulkToggleAllDomains(true)}
+                className="btn-toggle-global active"
+                disabled={bulkAction !== null}
+              >
+                {bulkAction === "open" ? "Updating..." : "Open All"}
+              </button>
+              <button
+                onClick={() => handleBulkToggleAllDomains(false)}
+                className="btn-toggle-global"
+                disabled={bulkAction !== null}
+              >
+                {bulkAction === "close" ? "Updating..." : "Close All"}
+              </button>
+              <button
+                onClick={handleFlushAllCounters}
+                className="btn-flush-all"
+                disabled={flushingAll}
+              >
+                {flushingAll ? "Processing..." : "Flush All"}
+              </button>
             </div>
           </div>
-          <div className="header-actions">
-            <RecruitmentCtaToggle variant="compact" />
-            <button
-              onClick={fetchData}
-              className="btn-refresh"
-              disabled={isLoading}
-            >
-              {isLoading ? "Loading..." : "Refresh"}
-            </button>
-            <button
-              onClick={handleToggleGlobalIndicator}
-              className={`btn-toggle-global ${globalIndicator ? "active" : ""}`}
-              disabled={togglingGlobal}
-            >
-              {togglingGlobal
-                ? "Updating..."
-                : globalIndicator
-                  ? "🔓 Close"
-                  : "🔒 Open"}
-            </button>
-            <button
-              onClick={handleFlushAllCounters}
-              className="btn-flush-all"
-              disabled={flushingAll}
-            >
-              {flushingAll ? "Processing..." : "🧹 Flush All"}
-            </button>
-          </div>
-        </div>
 
-        <div className="stats-header">
-          <div className="header-left">
-            <h3>🎯 Domain Control</h3>
-            <p className="text-sm text-gray-600">
-              Pick a domain and open or close recruitment for that specific
-              team.
-            </p>
-          </div>
-          <div className="header-actions">
-            <select
-              value={selectedDomain}
-              onChange={(event) =>
-                setSelectedDomain(
-                  event.target.value as (typeof RECRUITMENT_DOMAINS)[number],
-                )
-              }
-              className="min-w-[240px] rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm font-medium text-gray-800 shadow-sm outline-none transition focus:border-amber-500 focus:ring-2 focus:ring-amber-200"
-            >
-              {RECRUITMENT_DOMAINS.map((domain) => (
-                <option key={domain} value={domain}>
-                  {domain}
-                </option>
-              ))}
-            </select>
-            <button
-              onClick={() => handleToggleSelectedDomainIndicator(true)}
-              className="btn-toggle-global"
-              disabled={togglingDomain}
-            >
-              {togglingDomain ? "Updating..." : "🔓 Open Selected"}
-            </button>
-            <button
-              onClick={() => handleToggleSelectedDomainIndicator(false)}
-              className="btn-flush-all"
-              disabled={togglingDomain}
-            >
-              {togglingDomain ? "Updating..." : "🔒 Close Selected"}
-            </button>
-          </div>
-        </div>
-
-        <div className="rounded-2xl border border-gray-200 bg-white p-4 shadow-sm">
-          <div className="flex flex-wrap items-center justify-between gap-3">
-            <div>
-              <p className="text-sm text-gray-500">Selected domain</p>
-              <p className="text-lg font-semibold text-gray-900">
-                {selectedDomain}
+          <div className="stats-header">
+            <div className="header-left">
+              <h3>Domain Control</h3>
+              <p className="panel-hint">
+                Pick a domain and open or close recruitment for that specific
+                team.
               </p>
             </div>
-            <div className="flex items-center gap-2 rounded-full bg-gray-100 px-3 py-1.5 text-sm font-semibold text-gray-700">
+            <div className="header-actions">
+              <select
+                value={selectedDomain}
+                onChange={(event) =>
+                  setSelectedDomain(
+                    event.target.value as (typeof RECRUITMENT_DOMAINS)[number],
+                  )
+                }
+                className="domain-select"
+              >
+                {RECRUITMENT_DOMAINS.map((domain) => (
+                  <option key={domain} value={domain}>
+                    {domain}
+                  </option>
+                ))}
+              </select>
+              <button
+                onClick={() => handleToggleSelectedDomainIndicator(true)}
+                className="btn-toggle-global"
+                disabled={togglingDomain}
+              >
+                {togglingDomain ? "Updating..." : "Open Selected"}
+              </button>
+              <button
+                onClick={() => handleToggleSelectedDomainIndicator(false)}
+                className="btn-flush-all"
+                disabled={togglingDomain}
+              >
+                {togglingDomain ? "Updating..." : "Close Selected"}
+              </button>
+            </div>
+          </div>
+
+          <div className="selected-domain-panel">
+            <div>
+              <p className="selected-domain-label">Selected domain</p>
+              <p className="selected-domain-name">{selectedDomain}</p>
+            </div>
+            <div className="selected-domain-state">
               <span
                 className={`indicator-dot ${domainIndicators.find((entry) => entry.domain === selectedDomain)?.indicator ? "active" : ""}`}
-              ></span>
+              />
               <span>
                 {domainIndicators.find(
                   (entry) => entry.domain === selectedDomain,
@@ -351,392 +364,630 @@ export default function RecruitmentStatsClient() {
               </span>
             </div>
           </div>
-        </div>
 
-        {error && <div className="alert alert-error">{error}</div>}
-        {success && <div className="alert alert-success">{success}</div>}
+          {error && <div className="alert alert-error">{error}</div>}
+          {success && <div className="alert alert-success">{success}</div>}
 
-        <div className="recruitment-grid">
-          {RECRUITMENT_DOMAINS.map((domain) => {
-            const counter = counters.find((c) => c.domain === domain);
-            const domainIndic = domainIndicators.find(
-              (d) => d.domain === domain,
-            );
-            const isActive = domainIndic?.indicator ?? false;
-            const total = counter ? getTotal(counter) : 0;
+          <div className="recruitment-grid">
+            {RECRUITMENT_DOMAINS.map((domain) => {
+              const counter = counters.find((c) => c.domain === domain);
+              const domainIndic = domainIndicators.find(
+                (d) => d.domain === domain,
+              );
+              const isActive = domainIndic?.indicator ?? false;
+              const total = counter ? getTotal(counter) : 0;
 
-            return (
-              <div
-                key={domain}
-                className={`recruitment-card ${isActive ? "active" : "inactive"}`}
-              >
-                <div className="card-header">
-                  <div className="domain-title">
-                    <h4>{domain}</h4>
-                    <span
-                      className={`domain-indicator ${isActive ? "active" : ""}`}
-                    >
-                      {isActive ? "🟢" : "🔴"}
-                    </span>
+              return (
+                <div
+                  key={domain}
+                  className={`recruitment-card ${isActive ? "active" : "inactive"}`}
+                >
+                  <div className="card-header">
+                    <div className="domain-title">
+                      <h4>{domain}</h4>
+                      <span
+                        className={`domain-indicator ${isActive ? "active" : ""}`}
+                      >
+                        {isActive ? "Open" : "Closed"}
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="stats-section">
+                    <div className="stat-row total">
+                      <span className="stat-label">Total</span>
+                      <span className="stat-value">{total}</span>
+                    </div>
+                    <div className="stat-row">
+                      <span className="stat-label">Approved</span>
+                      <span className="stat-value approved">
+                        {counter?.approved || 0}
+                      </span>
+                    </div>
+                    <div className="stat-row">
+                      <span className="stat-label">Pending</span>
+                      <span className="stat-value waiting">
+                        {counter?.not_sure || 0}
+                      </span>
+                    </div>
+                    <div className="stat-row">
+                      <span className="stat-label">Rejected</span>
+                      <span className="stat-value rejected">
+                        {counter?.rejected || 0}
+                      </span>
+                    </div>
                   </div>
                 </div>
-
-                <div className="stats-section">
-                  <div className="stat-row">
-                    <span className="stat-label">Total:</span>
-                    <span className="stat-value">{total}</span>
-                  </div>
-                  <div className="stat-row">
-                    <span className="stat-label">✅ Approved:</span>
-                    <span className="stat-value approved">
-                      {counter?.approved || 0}
-                    </span>
-                  </div>
-                  <div className="stat-row">
-                    <span className="stat-label">⏳ Pending:</span>
-                    <span className="stat-value waiting">
-                      {counter?.not_sure || 0}
-                    </span>
-                  </div>
-                  <div className="stat-row">
-                    <span className="stat-label">❌ Rejected:</span>
-                    <span className="stat-value rejected">
-                      {counter?.rejected || 0}
-                    </span>
-                  </div>
-                </div>
-              </div>
-            );
-          })}
+              );
+            })}
+          </div>
         </div>
-      </div>
 
-      <style jsx>{`
-        .recruitment-container {
-          min-height: 100vh;
-          padding: 20px;
-          background: linear-gradient(
-            135deg,
-            #f0f4f8 0%,
-            #f5f0e8 50%,
-            #f0f4f8 100%
-          );
-          display: flex;
-          flex-direction: column;
-        }
-
-        .recruitment-wrapper {
-          max-width: 1200px;
-          margin: 0 auto;
-        }
-
-        .recruitment-header {
-          margin-bottom: 24px;
-        }
-
-        .recruitment-title-section {
-          margin: 0 0 24px 0;
-        }
-
-        .recruitment-label {
-          margin: 0 0 8px 0;
-          font-size: 12px;
-          font-weight: 600;
-          color: #9ca3af;
-          text-transform: uppercase;
-          letter-spacing: 0.5px;
-        }
-
-        .recruitment-title-section h1 {
-          margin: 0 0 8px 0;
-          font-size: 32px;
-          font-weight: 700;
-          color: #1f2937;
-        }
-
-        .recruitment-title-section p {
-          margin: 0;
-          font-size: 14px;
-          color: #6b7280;
-        }
-
-        .recruitment-stats-panel {
-          padding: 20px;
-          background: #fff;
-          border-radius: 8px;
-          border: 1px solid #e5e7eb;
-        }
-
-        .stats-header {
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-          gap: 16px;
-          margin-bottom: 24px;
-          padding: 16px;
-          background: #f3f4f6;
-          border-radius: 8px;
-          border: 1px solid #e5e7eb;
-        }
-
-        .header-left {
-          display: flex;
-          align-items: center;
-          gap: 16px;
-          flex: 1;
-        }
-
-        .header-left h3 {
-          margin: 0;
-          font-size: 16px;
-          font-weight: 600;
-          color: #1f2937;
-          white-space: nowrap;
-        }
-
-        .status-display {
-          display: flex;
-          align-items: center;
-          gap: 8px;
-          padding: 8px 12px;
-          background: white;
-          border-radius: 4px;
-          border: 1px solid #e5e7eb;
-        }
-
-        .status-text {
-          font-size: 13px;
-          font-weight: 600;
-          color: #1f2937;
-        }
-
-        .header-actions {
-          display: flex;
-          gap: 8px;
-          flex-wrap: wrap;
-        }
-
-        .btn-refresh,
-        .btn-toggle-global,
-        .btn-flush-all {
-          padding: 10px 16px;
-          border: none;
-          border-radius: 4px;
-          font-size: 13px;
-          font-weight: 500;
-          cursor: pointer;
-          transition: all 0.2s;
-          white-space: nowrap;
-        }
-
-        .btn-refresh {
-          background-color: #3b82f6;
-          color: white;
-        }
-
-        .btn-refresh:hover:not(:disabled) {
-          background-color: #2563eb;
-        }
-
-        .btn-toggle-global {
-          background-color: #dbeafe;
-          color: #1e40af;
-        }
-
-        .btn-toggle-global:hover:not(:disabled) {
-          background-color: #bfdbfe;
-        }
-
-        .btn-toggle-global.active {
-          background-color: #dcfce7;
-          color: #166534;
-        }
-
-        .btn-toggle-global.active:hover:not(:disabled) {
-          background-color: #bbf7d0;
-        }
-
-        .btn-flush-all {
-          background-color: #fef3c7;
-          color: #92400e;
-          border: 2px solid #f59e0b;
-        }
-
-        .btn-flush-all:hover:not(:disabled) {
-          background-color: #fde68a;
-          transform: scale(1.05);
-        }
-
-        .btn-refresh:disabled,
-        .btn-toggle-global:disabled,
-        .btn-flush-all:disabled {
-          opacity: 0.5;
-          cursor: not-allowed;
-        }
-
-        .alert {
-          padding: 12px 16px;
-          border-radius: 4px;
-          margin-bottom: 16px;
-          font-size: 13px;
-          font-weight: 500;
-        }
-
-        .alert-error {
-          background-color: #fee2e2;
-          color: #991b1b;
-          border: 1px solid #fecaca;
-        }
-
-        .alert-success {
-          background-color: #dcfce7;
-          color: #166534;
-          border: 1px solid #bbf7d0;
-        }
-
-        .recruitment-grid {
-          display: grid;
-          grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-          gap: 16px;
-        }
-
-        .recruitment-card {
-          background: #f9fafb;
-          border: 1px solid #e5e7eb;
-          border-radius: 6px;
-          padding: 16px;
-          display: flex;
-          flex-direction: column;
-          gap: 12px;
-          transition: all 0.3s ease;
-        }
-
-        .recruitment-card.active {
-          background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
-          border-color: #86efac;
-        }
-
-        .recruitment-card.inactive {
-          background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%);
-          border-color: #fca5a5;
-        }
-
-        .recruitment-card:hover {
-          box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-          transform: translateY(-2px);
-        }
-
-        .card-header {
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-          margin-bottom: 4px;
-          gap: 8px;
-        }
-
-        .domain-title {
-          display: flex;
-          align-items: center;
-          gap: 8px;
-          flex: 1;
-        }
-
-        .domain-title h4 {
-          margin: 0;
-          font-size: 14px;
-          font-weight: 600;
-          color: #1f2937;
-        }
-
-        .domain-indicator {
-          font-size: 16px;
-          line-height: 1;
-          animation: pulse-indicator 2s infinite;
-        }
-
-        @keyframes pulse-indicator {
-          0%,
-          100% {
-            opacity: 1;
+        <style jsx>{`
+          .recruitment-container {
+            position: relative;
+            z-index: 1;
+            min-height: 100vh;
+            padding: 48px 24px 64px;
           }
-          50% {
+
+          .recruitment-wrapper {
+            max-width: 1280px;
+            margin: 0 auto;
+          }
+
+          /* ---------- Header ---------- */
+          .recruitment-header {
+            position: relative;
+            background: var(--av-warm);
+            border: 1px solid rgba(146, 121, 27, 0.35);
+            border-radius: 18px;
+            padding: 40px 32px 32px;
+            margin-bottom: 32px;
+            text-align: center;
+            box-shadow: 0 24px 60px rgba(28, 28, 28, 0.45);
+          }
+
+          .corner {
+            position: absolute;
+            width: 34px;
+            height: 34px;
+            pointer-events: none;
+          }
+
+          .corner-tl {
+            top: 14px;
+            left: 14px;
+            border-top: 2px solid rgba(201, 168, 76, 0.75);
+            border-left: 2px solid rgba(201, 168, 76, 0.75);
+            border-top-left-radius: 10px;
+          }
+
+          .corner-br {
+            bottom: 14px;
+            right: 14px;
+            border-bottom: 2px solid rgba(201, 168, 76, 0.75);
+            border-right: 2px solid rgba(201, 168, 76, 0.75);
+            border-bottom-right-radius: 10px;
+          }
+
+          .recruitment-label {
+            margin: 0;
+            font-family: var(--font-body), sans-serif;
+            font-size: 11px;
+            font-weight: 600;
+            color: var(--av-olive);
+            letter-spacing: 5px;
+            text-transform: uppercase;
+          }
+
+          .recruitment-header h1 {
+            margin: 12px 0 8px;
+            font-family: var(--font-heading), serif;
+            font-size: 44px;
+            font-weight: 600;
+            color: var(--av-bronze);
+            letter-spacing: 0.5px;
+          }
+
+          .recruitment-tagline {
+            margin: 0;
+            font-family: var(--font-accent), serif;
+            font-style: italic;
+            font-size: 16px;
+            color: rgba(28, 28, 28, 0.7);
+          }
+
+          .rangoli {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 8px;
+            margin-top: 24px;
+          }
+
+          .dot {
+            border-radius: 50%;
+            background: var(--av-gold);
+          }
+
+          .dot.small {
+            width: 6px;
+            height: 6px;
             opacity: 0.6;
           }
-        }
 
-        .status-badge {
-          display: flex;
-          align-items: center;
-          gap: 6px;
-          font-size: 12px;
-          font-weight: 500;
-          padding: 4px 8px;
-          background: white;
-          border: 1px solid #e5e7eb;
-          border-radius: 3px;
-          color: #6b7280;
-        }
-
-        .indicator-dot {
-          width: 8px;
-          height: 8px;
-          border-radius: 50%;
-          background-color: #ef4444;
-          transition: all 0.2s;
-        }
-
-        .indicator-dot.active {
-          background-color: #10b981;
-        }
-
-        .stats-section {
-          display: flex;
-          flex-direction: column;
-          gap: 8px;
-        }
-
-        .stat-row {
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-          padding: 6px 0;
-          font-size: 13px;
-        }
-
-        .stat-label {
-          color: #6b7280;
-          font-weight: 500;
-        }
-
-        .stat-value {
-          font-weight: 600;
-          color: #1f2937;
-        }
-
-        .stat-value.approved {
-          color: #10b981;
-        }
-
-        .stat-value.waiting {
-          color: #f59e0b;
-        }
-
-        .stat-value.rejected {
-          color: #ef4444;
-        }
-
-        @media (max-width: 1024px) {
-          .recruitment-grid {
-            grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+          .dot.large {
+            width: 10px;
+            height: 10px;
           }
-        }
 
-        @media (max-width: 768px) {
-          .recruitment-grid {
-            grid-template-columns: 1fr;
+          /* ---------- Control panels ---------- */
+          .stats-header,
+          .selected-domain-panel {
+            position: relative;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 24px;
+            flex-wrap: wrap;
+            background: var(--av-warm);
+            border: 1px solid rgba(146, 121, 27, 0.3);
+            border-radius: 16px;
+            padding: 24px;
+            margin-bottom: 24px;
+            box-shadow: 0 16px 40px rgba(28, 28, 28, 0.35);
           }
-        }
-      `}</style>
-    </main>
+
+          /* Gold accent along the top edge */
+          .stats-header::before,
+          .selected-domain-panel::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            border-radius: 16px 16px 0 0;
+            background: linear-gradient(
+              90deg,
+              transparent,
+              var(--av-gold),
+              transparent
+            );
+          }
+
+          .header-left {
+            min-width: 0;
+          }
+
+          .header-left h3 {
+            margin: 0;
+            font-family: var(--font-heading), serif;
+            font-size: 26px;
+            font-weight: 600;
+            color: var(--av-bronze);
+          }
+
+          .header-left .panel-hint {
+            margin: 6px 0 0;
+            font-family: var(--font-body), sans-serif;
+            font-size: 13px;
+            color: var(--av-olive);
+          }
+
+          .header-actions {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex-wrap: wrap;
+          }
+
+          /* ---------- Buttons ---------- */
+          .btn-refresh,
+          .btn-toggle-global,
+          .btn-flush-all {
+            padding: 10px 22px;
+            border-radius: 999px;
+            border: 1px solid transparent;
+            background: transparent;
+            font-family: var(--font-body), sans-serif;
+            font-size: 11px;
+            font-weight: 600;
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+            cursor: pointer;
+            white-space: nowrap;
+            transition:
+              transform 0.25s ease,
+              background-color 0.25s ease,
+              color 0.25s ease,
+              box-shadow 0.25s ease;
+          }
+
+          .btn-refresh {
+            border-color: rgba(115, 121, 85, 0.6);
+            color: var(--av-olive);
+          }
+
+          .btn-refresh:hover:not(:disabled) {
+            background: rgba(115, 121, 85, 0.15);
+            color: var(--av-charcoal);
+          }
+
+          /* "Close" style — quiet outline */
+          .btn-toggle-global {
+            border-color: rgba(146, 121, 27, 0.5);
+            color: var(--av-bronze);
+          }
+
+          .btn-toggle-global:hover:not(:disabled) {
+            transform: scale(1.03);
+            background: var(--av-bronze);
+            color: var(--av-warm);
+            box-shadow: 0 6px 20px rgba(146, 121, 27, 0.35);
+          }
+
+          /* "Open" style — emerald, the affirmative action */
+          .btn-toggle-global.active {
+            border-color: rgba(27, 94, 59, 0.6);
+            color: var(--av-emerald);
+          }
+
+          .btn-toggle-global.active:hover:not(:disabled) {
+            background: var(--av-emerald);
+            color: var(--av-warm);
+            box-shadow: 0 6px 20px rgba(27, 94, 59, 0.35);
+          }
+
+          /* Destructive */
+          .btn-flush-all {
+            border-color: rgba(139, 26, 26, 0.6);
+            color: var(--av-crimson);
+          }
+
+          .btn-flush-all:hover:not(:disabled) {
+            transform: scale(1.03);
+            background: var(--av-crimson);
+            color: var(--av-warm);
+            box-shadow: 0 6px 20px rgba(139, 26, 26, 0.35);
+          }
+
+          .btn-refresh:disabled,
+          .btn-toggle-global:disabled,
+          .btn-flush-all:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+          }
+
+          .domain-select {
+            min-width: 240px;
+            padding: 11px 14px;
+            border: 1px solid rgba(146, 121, 27, 0.35);
+            border-radius: 10px;
+            background: #ffffff;
+            font-family: var(--font-body), sans-serif;
+            font-size: 14px;
+            font-weight: 500;
+            color: var(--av-charcoal);
+            cursor: pointer;
+            transition:
+              border-color 0.2s ease,
+              box-shadow 0.2s ease;
+          }
+
+          .domain-select:focus {
+            outline: none;
+            border-color: var(--av-gold);
+            box-shadow: 0 0 0 3px rgba(201, 168, 76, 0.25);
+          }
+
+          /* ---------- Selected domain readout ---------- */
+          .selected-domain-label {
+            margin: 0;
+            font-family: var(--font-body), sans-serif;
+            font-size: 10px;
+            font-weight: 600;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            color: var(--av-olive);
+          }
+
+          .selected-domain-name {
+            margin: 6px 0 0;
+            font-family: var(--font-heading), serif;
+            font-size: 24px;
+            font-weight: 600;
+            color: var(--av-charcoal);
+          }
+
+          .selected-domain-state {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 8px 18px;
+            border-radius: 999px;
+            background: rgba(146, 121, 27, 0.1);
+            border: 1px solid rgba(146, 121, 27, 0.28);
+            font-family: var(--font-body), sans-serif;
+            font-size: 12px;
+            font-weight: 600;
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+            color: var(--av-olive);
+          }
+
+          .indicator-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: rgba(115, 121, 85, 0.6);
+            flex-shrink: 0;
+          }
+
+          .indicator-dot.active {
+            background: var(--av-emerald);
+            box-shadow: 0 0 0 3px rgba(27, 94, 59, 0.2);
+          }
+
+          /* ---------- Alerts ---------- */
+          .alert {
+            padding: 16px 20px;
+            border-radius: 12px;
+            margin-bottom: 24px;
+            font-family: var(--font-body), sans-serif;
+            font-size: 14px;
+            font-weight: 500;
+          }
+
+          .alert-error {
+            background: var(--av-warm);
+            color: var(--av-crimson);
+            border: 1px solid rgba(139, 26, 26, 0.45);
+            border-left: 4px solid var(--av-crimson);
+          }
+
+          .alert-success {
+            background: var(--av-warm);
+            color: var(--av-emerald);
+            border: 1px solid rgba(27, 94, 59, 0.45);
+            border-left: 4px solid var(--av-emerald);
+          }
+
+          /* ---------- Domain cards ---------- */
+          .recruitment-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+            gap: 24px;
+            margin-top: 32px;
+          }
+
+          .recruitment-card {
+            position: relative;
+            background: var(--av-warm);
+            border: 1px solid rgba(146, 121, 27, 0.3);
+            border-radius: 16px;
+            padding: 24px;
+            overflow: hidden;
+            box-shadow: 0 16px 40px rgba(28, 28, 28, 0.35);
+            transition:
+              transform 0.3s cubic-bezier(0.22, 1, 0.36, 1),
+              box-shadow 0.3s ease;
+          }
+
+          /* Top rail states whether the domain is accepting applications */
+          .recruitment-card::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+          }
+
+          .recruitment-card.active::before {
+            background: linear-gradient(
+              90deg,
+              transparent,
+              var(--av-emerald),
+              transparent
+            );
+          }
+
+          .recruitment-card.inactive::before {
+            background: linear-gradient(
+              90deg,
+              transparent,
+              rgba(115, 121, 85, 0.7),
+              transparent
+            );
+          }
+
+          /* Faint textile weave */
+          .recruitment-card::after {
+            content: "";
+            position: absolute;
+            inset: 0;
+            pointer-events: none;
+            opacity: 0.05;
+            background-image: repeating-linear-gradient(
+              45deg,
+              rgba(146, 121, 27, 0.8) 0,
+              rgba(146, 121, 27, 0.8) 1px,
+              transparent 1px,
+              transparent 12px
+            );
+          }
+
+          .recruitment-card.inactive {
+            opacity: 0.88;
+          }
+
+          .recruitment-card:hover {
+            transform: translateY(-6px) scale(1.02);
+            box-shadow: 0 24px 56px rgba(201, 168, 76, 0.3);
+          }
+
+          .card-header {
+            position: relative;
+            margin-bottom: 20px;
+            padding-bottom: 16px;
+            border-bottom: 1px solid rgba(201, 168, 76, 0.3);
+          }
+
+          .domain-title {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+          }
+
+          .domain-title h4 {
+            margin: 0;
+            font-family: var(--font-heading), serif;
+            font-size: 22px;
+            font-weight: 600;
+            color: var(--av-bronze);
+            /* Reserve two lines so a wrapping domain name keeps its divider
+               aligned with the single-line cards beside it. */
+            line-height: 1.25;
+            min-height: 2.5em;
+            display: flex;
+            align-items: center;
+          }
+
+          .domain-indicator {
+            flex-shrink: 0;
+            padding: 4px 12px;
+            border-radius: 999px;
+            font-family: var(--font-body), sans-serif;
+            font-size: 9px;
+            font-weight: 600;
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+            background: rgba(115, 121, 85, 0.12);
+            border: 1px solid rgba(115, 121, 85, 0.45);
+            color: var(--av-olive);
+          }
+
+          .domain-indicator.active {
+            background: rgba(27, 94, 59, 0.12);
+            border-color: rgba(27, 94, 59, 0.45);
+            color: var(--av-emerald);
+          }
+
+          /* ---------- Stats ---------- */
+          .stats-section {
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+          }
+
+          .stat-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+          }
+
+          .stat-row.total {
+            padding-bottom: 12px;
+            margin-bottom: 4px;
+            border-bottom: 1px solid rgba(201, 168, 76, 0.25);
+          }
+
+          .stat-label {
+            font-family: var(--font-body), sans-serif;
+            font-size: 10px;
+            font-weight: 600;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            color: var(--av-olive);
+          }
+
+          .stat-value {
+            font-family: var(--font-heading), serif;
+            /* Cormorant defaults to old-style figures, which makes "1" read as
+             "I" and drops "5" below the baseline — force lining numerals. */
+            font-variant-numeric: lining-nums tabular-nums;
+            font-size: 22px;
+            font-weight: 600;
+            line-height: 1;
+            color: var(--av-charcoal);
+          }
+
+          .stat-row.total .stat-value {
+            font-size: 32px;
+            color: var(--av-bronze);
+          }
+
+          .stat-value.approved {
+            color: var(--av-emerald);
+          }
+
+          .stat-value.waiting {
+            color: var(--av-olive);
+          }
+
+          .stat-value.rejected {
+            color: var(--av-crimson);
+          }
+
+          @media (prefers-reduced-motion: reduce) {
+            .recruitment-card,
+            .btn-refresh,
+            .btn-toggle-global,
+            .btn-flush-all {
+              transition: none;
+            }
+
+            .recruitment-card:hover,
+            .btn-toggle-global:hover:not(:disabled),
+            .btn-flush-all:hover:not(:disabled) {
+              transform: none;
+            }
+          }
+
+          @media (max-width: 768px) {
+            .recruitment-container {
+              padding: 32px 16px 48px;
+            }
+
+            .recruitment-header {
+              padding: 32px 20px 24px;
+            }
+
+            .recruitment-header h1 {
+              font-size: 32px;
+            }
+
+            .recruitment-tagline {
+              font-size: 14px;
+            }
+
+            .stats-header,
+            .selected-domain-panel {
+              flex-direction: column;
+              align-items: stretch;
+            }
+
+            .header-actions {
+              flex-direction: column;
+              align-items: stretch;
+            }
+
+            .domain-select {
+              min-width: 0;
+              width: 100%;
+            }
+
+            .recruitment-grid {
+              grid-template-columns: 1fr;
+            }
+          }
+        `}</style>
+      </main>
+    </>
   );
 }

@@ -32,8 +32,17 @@
 }
 
 /* =========================
-   TOKENS
+   TOKENS — Avyakta palette (the only colours permitted in the design system)
 ========================= */
+:root {
+  --av-bronze: #92791b;
+  --av-emerald: #1b5e3b;
+  --av-charcoal: #1c1c1c;
+  --av-olive: #737955;
+  --av-crimson: #8b1a1a;
+  --av-warm: #f5f0e8;
+  --av-gold: #c9a84c;
+}
 
 /* =========================
    CARD (HANDCRAFTED FEEL)
@@ -141,4 +150,42 @@ body {
 
 .animate-spin-slow {
   animation: spin-slow 24s linear infinite;
+}
+
+/* =========================
+   LOGIN → DASHBOARD SCROLL
+   Only runs for navigations tagged "login-success" (see LoginForm): the login
+   screen scrolls up out of view while the destination rises in beneath it.
+========================= */
+::view-transition-old(.auto-scroll-out) {
+  animation: 800ms cubic-bezier(0.65, 0, 0.35, 1) both av-scroll-out;
+}
+
+::view-transition-new(.auto-scroll-in) {
+  animation: 800ms cubic-bezier(0.65, 0, 0.35, 1) both av-scroll-in;
+}
+
+@keyframes av-scroll-out {
+  from {
+    translate: 0 0;
+  }
+  to {
+    translate: 0 -100vh;
+  }
+}
+
+@keyframes av-scroll-in {
+  from {
+    translate: 0 100vh;
+  }
+  to {
+    translate: 0 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-old(.auto-scroll-out),
+  ::view-transition-new(.auto-scroll-in) {
+    animation: none;
+  }
 }

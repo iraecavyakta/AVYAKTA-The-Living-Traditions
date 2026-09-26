@@ -64,13 +64,14 @@ export default function IndicatorBuzzer({
     }
   };
 
+  const locked = disabled || !canToggle;
+
   return (
-    <div className="flex items-center justify-between gap-4 rounded-xl border border-amber-100 bg-white p-4 shadow-sm transition hover:shadow-md">
-      <div>
-        <p className="text-sm font-semibold uppercase tracking-wide text-amber-700">
-          {domain}
-        </p>
-        <p className="text-sm text-gray-500">
+    <div className="buzzer">
+      <div className="buzzer-text">
+        <p className="buzzer-domain">{domain}</p>
+        <p className={`buzzer-state ${isActive ? "open" : "closed"}`}>
+          <span className="state-dot" aria-hidden />
           {isActive ? "Recruitment open" : "Recruitment closed"}
         </p>
       </div>
@@ -78,21 +79,117 @@ export default function IndicatorBuzzer({
       <button
         type="button"
         onClick={handleToggle}
-        disabled={disabled || !canToggle || isSaving}
-        className={`flex h-12 w-12 items-center justify-center rounded-full text-lg font-bold text-white transition ${
-          isActive ? "bg-green-500" : "bg-red-500"
-        } ${
-          disabled || !canToggle
-            ? "cursor-not-allowed opacity-90"
-            : isActive
-              ? "hover:bg-green-600"
-              : "hover:bg-red-600"
-        } ${isSaving ? "opacity-75" : ""}`}
+        disabled={locked || isSaving}
+        className={`buzzer-btn ${isActive ? "open" : "closed"}`}
         aria-label={`${domain} indicator toggle`}
         title={direction === "close" ? "Close recruitment" : "Open recruitment"}
       >
-        {isSaving ? "…" : isActive ? "✓" : "◯"}
+        {isSaving ? "..." : isActive ? "Close" : "Closed"}
       </button>
+
+      <style jsx>{`
+        .buzzer {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          gap: 24px;
+          flex-wrap: wrap;
+          padding: 16px 20px;
+          border-radius: 12px;
+          border: 1px solid rgba(146, 121, 27, 0.28);
+          background: rgba(146, 121, 27, 0.06);
+        }
+
+        .buzzer-text {
+          min-width: 0;
+        }
+
+        .buzzer-domain {
+          margin: 0;
+          font-family: var(--font-body), sans-serif;
+          font-size: 10px;
+          font-weight: 600;
+          letter-spacing: 2px;
+          text-transform: uppercase;
+          color: var(--av-olive);
+        }
+
+        .buzzer-state {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          margin: 6px 0 0;
+          font-family: var(--font-body), sans-serif;
+          font-size: 14px;
+          font-weight: 500;
+        }
+
+        .buzzer-state.open {
+          color: var(--av-emerald);
+        }
+
+        .buzzer-state.closed {
+          color: var(--av-olive);
+        }
+
+        .state-dot {
+          width: 10px;
+          height: 10px;
+          border-radius: 50%;
+          flex-shrink: 0;
+          background: currentColor;
+        }
+
+        .buzzer-state.open .state-dot {
+          box-shadow: 0 0 0 3px rgba(27, 94, 59, 0.2);
+        }
+
+        .buzzer-btn {
+          padding: 10px 22px;
+          border-radius: 999px;
+          background: transparent;
+          font-family: var(--font-body), sans-serif;
+          font-size: 11px;
+          font-weight: 600;
+          letter-spacing: 1.5px;
+          text-transform: uppercase;
+          white-space: nowrap;
+          cursor: pointer;
+          transition:
+            background-color 0.25s ease,
+            color 0.25s ease,
+            box-shadow 0.25s ease;
+        }
+
+        /* Live recruitment: the button closes it, so it reads destructive. */
+        .buzzer-btn.open {
+          border: 1px solid rgba(139, 26, 26, 0.6);
+          color: var(--av-crimson);
+        }
+
+        .buzzer-btn.open:hover:not(:disabled) {
+          background: var(--av-crimson);
+          color: var(--av-warm);
+          box-shadow: 0 6px 20px rgba(139, 26, 26, 0.3);
+        }
+
+        /* Already closed: nothing to do from here, so it reads inert. */
+        .buzzer-btn.closed {
+          border: 1px solid rgba(115, 121, 85, 0.5);
+          color: var(--av-olive);
+        }
+
+        .buzzer-btn:disabled {
+          opacity: 0.6;
+          cursor: not-allowed;
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+          .buzzer-btn {
+            transition: none;
+          }
+        }
+      `}</style>
     </div>
   );
 }

@@ -17,6 +17,7 @@ type EventWritePayload = {
   venue?: string | null;
   registration_enabled?: boolean;
   registration_status?: boolean;
+  registration_deadline?: string | null;
   payment_image_required?: boolean;
 };
 
@@ -85,6 +86,7 @@ export async function POST(request: NextRequest) {
       venue,
       registration_enabled,
       registration_status,
+      registration_deadline,
       payment_image_required,
       more_description,
       slug_image_url,
@@ -107,6 +109,9 @@ export async function POST(request: NextRequest) {
     }
     if (registration_status !== undefined) {
       insertPayload.registration_status = registration_status;
+    }
+    if (registration_deadline !== undefined) {
+      insertPayload.registration_deadline = registration_deadline || null;
     }
     if (payment_image_required !== undefined) {
       insertPayload.payment_image_required = payment_image_required;
