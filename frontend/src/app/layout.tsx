@@ -8,8 +8,7 @@ import {
   Poppins,
 } from "next/font/google";
 import "./globals.css";
-import Navbar from "@/components/layout/Navbar";
-import Footer from "@/components/layout/Footer";
+import SiteChrome from "@/components/layout/SiteChrome";
 
 const heading = Cormorant_Garamond({
   subsets: ["latin"],
@@ -63,9 +62,7 @@ export default function RootLayout({
     >
       <body className="min-h-screen bg-warm text-charcoal font-body flex flex-col">
         <GlobalCursorFx />
-        <Navbar />
-        {children}
-        <Footer />
+        <SiteChrome>{children}</SiteChrome>
       </body>
     </html>
   );

@@ -67,9 +67,11 @@ export async function POST(request: NextRequest) {
       domain,
     });
 
+    // Admins land straight on the Members page: going via /dashboard adds a
+    // server redirect hop, which drops the login scroll transition.
     const redirectTo = domain
       ? `/domain/${formatDomainToUrl(domain)}`
-      : "/dashboard";
+      : "/dashboard/members";
 
     const response = NextResponse.json(
       { message: "Login successful", redirectTo },

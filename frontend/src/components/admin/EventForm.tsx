@@ -12,6 +12,7 @@ interface Event {
   venue?: string | null;
   registration_enabled?: boolean;
   registration_status?: boolean;
+  registration_deadline?: string | null;
   payment_image_required?: boolean;
   event_slug?: Array<{
     id: string;
@@ -39,6 +40,7 @@ export interface EventFormData {
   venue?: string;
   registration_enabled?: boolean;
   registration_status?: boolean;
+  registration_deadline?: string;
   payment_image_required?: boolean;
   more_description?: string;
   slug_image_url?: string;
@@ -61,6 +63,7 @@ export default function EventForm({
     venue: event?.venue || "",
     registration_enabled: event?.registration_enabled ?? true,
     registration_status: event?.registration_status ?? true,
+    registration_deadline: event?.registration_deadline || "",
     payment_image_required: event?.payment_image_required ?? false,
     more_description: eventSlug?.more_description || "",
     slug_image_url: eventSlug?.image_url || "",
@@ -91,6 +94,7 @@ export default function EventForm({
         venue: event?.venue || "",
         registration_enabled: event?.registration_enabled ?? true,
         registration_status: event?.registration_status ?? true,
+        registration_deadline: event?.registration_deadline || "",
         payment_image_required: event?.payment_image_required ?? false,
         more_description: eventSlug?.more_description || "",
         slug_image_url: eventSlug?.image_url || "",
@@ -275,6 +279,7 @@ export default function EventForm({
         venue: "",
         registration_enabled: true,
         registration_status: true,
+        registration_deadline: "",
         payment_image_required: false,
         more_description: "",
         slug_image_url: "",
@@ -292,7 +297,7 @@ export default function EventForm({
 
       {/* Basic Event Info */}
       <div className="form-section">
-        <h3>📌 Basic Event Information</h3>
+        <h3>Basic Event Information</h3>
 
         <div className="form-group">
           <label htmlFor="title">Title *</label>
@@ -346,11 +351,7 @@ export default function EventForm({
               disabled={isLoading || isCompressing}
               className="file-input"
             />
-            {imageError && (
-              <p className="help-text" style={{ color: "#dc2626" }}>
-                ⚠️ {imageError}
-              </p>
-            )}
+            {imageError && <p className="help-text error">{imageError}</p>}
             {imagePreview && (
               <div className="image-preview">
                 <img src={imagePreview} alt="Preview" />
@@ -376,7 +377,7 @@ export default function EventForm({
 
       {/* Event Details */}
       <div className="form-section">
-        <h3>📝 Event Details & Information</h3>
+        <h3>Event Details & Information</h3>
 
         <div className="form-group">
           <label htmlFor="more_description">Detailed Description</label>
@@ -431,10 +432,10 @@ export default function EventForm({
 
       {/* Registration Settings */}
       <div className="form-section">
-        <h3>⚙️ Registration Settings</h3>
+        <h3>Registration Settings</h3>
 
         <div className="form-group">
-          <label htmlFor="venue">📍 Event Venue/Location</label>
+          <label htmlFor="venue">Event Venue/Location</label>
           <input
             id="venue"
             type="text"
@@ -462,8 +463,24 @@ export default function EventForm({
               disabled={isLoading}
               className="checkbox-input"
             />
-            <span>🔓 Registrations OPEN</span>
+            <span>Registrations open</span>
           </label>
+        </div>
+
+        <div className="form-group">
+          <label htmlFor="registration_deadline">Registration Deadline</label>
+          <input
+            id="registration_deadline"
+            type="date"
+            name="registration_deadline"
+            value={formData.registration_deadline || ""}
+            onChange={handleInputChange}
+            disabled={isLoading}
+          />
+          <p className="field-hint">
+            Registration automatically closes after this date. Leave blank for
+            no deadline.
+          </p>
         </div>
 
         <div className="form-group checkbox-group">
@@ -481,14 +498,14 @@ export default function EventForm({
               disabled={isLoading || !formData.registration_enabled}
               className="checkbox-input"
             />
-            <span>💳 Require Payment Proof</span>
+            <span>Require payment proof</span>
           </label>
         </div>
       </div>
 
       {/* Event Posters */}
       <div className="form-section">
-        <h3>📰 Event Posters</h3>
+        <h3>Event Posters</h3>
 
         <div className="form-group">
           <label htmlFor="posters">Poster Images</label>
@@ -546,246 +563,339 @@ export default function EventForm({
       </div>
 
       <style jsx>{`
+        /* The parent .form-card already supplies the parchment panel. */
         .event-form {
-          background: white;
-          padding: 24px;
-          border-radius: 8px;
-          box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-          max-height: 90vh;
-          overflow-y: auto;
+          padding: 32px;
         }
 
         h2 {
-          margin: 0 0 24px 0;
-          font-size: 20px;
+          margin: 0 0 24px;
+          padding-bottom: 16px;
+          font-family: var(--font-heading), serif;
+          font-size: 28px;
           font-weight: 600;
-          color: #1f2937;
+          color: var(--av-bronze);
+          border-bottom: 1px solid rgba(201, 168, 76, 0.35);
         }
 
         .form-section {
-          margin-bottom: 24px;
+          margin-bottom: 32px;
           padding-bottom: 24px;
-          border-bottom: 1px solid #e5e7eb;
+          border-bottom: 1px solid rgba(201, 168, 76, 0.25);
         }
 
         .form-section:last-of-type {
           border-bottom: none;
+          margin-bottom: 16px;
         }
 
         .form-section h3 {
-          margin: 0 0 16px 0;
-          font-size: 16px;
+          margin: 0 0 16px;
+          font-family: var(--font-body), sans-serif;
+          font-size: 11px;
           font-weight: 600;
-          color: #374151;
+          letter-spacing: 2px;
+          text-transform: uppercase;
+          color: var(--av-olive);
         }
 
         .form-group {
-          margin-bottom: 16px;
+          margin-bottom: 24px;
         }
 
         .form-group label {
           display: block;
-          margin-bottom: 6px;
-          font-size: 14px;
-          font-weight: 500;
-          color: #374151;
+          margin-bottom: 8px;
+          font-family: var(--font-body), sans-serif;
+          font-size: 11px;
+          font-weight: 600;
+          letter-spacing: 1.5px;
+          text-transform: uppercase;
+          color: var(--av-olive);
         }
 
         .form-group input[type="text"],
         .form-group input[type="date"],
         .form-group textarea {
           width: 100%;
-          padding: 10px;
-          border: 1px solid #d1d5db;
-          border-radius: 4px;
+          padding: 12px 14px;
+          border: 1px solid rgba(146, 121, 27, 0.35);
+          border-radius: 10px;
+          background: #ffffff;
+          font-family: var(--font-body), sans-serif;
           font-size: 14px;
-          font-family: inherit;
+          color: var(--av-charcoal);
+          transition:
+            border-color 0.2s ease,
+            box-shadow 0.2s ease;
+        }
+
+        .form-group input[type="text"]:focus,
+        .form-group input[type="date"]:focus,
+        .form-group textarea:focus {
+          outline: none;
+          border-color: var(--av-gold);
+          box-shadow: 0 0 0 3px rgba(201, 168, 76, 0.25);
         }
 
         .form-group textarea {
           resize: vertical;
+          min-height: 96px;
+          line-height: 1.6;
         }
 
         .form-group input:disabled,
         .form-group textarea:disabled {
-          background-color: #f3f4f6;
-          color: #9ca3af;
+          opacity: 0.55;
+          cursor: not-allowed;
+        }
+
+        .field-hint {
+          margin: 8px 0 0;
+          font-family: var(--font-body), sans-serif;
+          font-size: 11px;
+          color: var(--av-olive);
         }
 
         .checkbox-group {
-          display: flex;
-          align-items: center;
+          padding: 16px;
+          border: 1px solid rgba(146, 121, 27, 0.25);
+          border-radius: 10px;
+          background: rgba(146, 121, 27, 0.05);
         }
 
         .checkbox-group label {
           display: flex;
           align-items: center;
-          gap: 8px;
+          gap: 12px;
           margin-bottom: 0;
+          font-size: 13px;
+          letter-spacing: 0.5px;
+          text-transform: none;
+          color: var(--av-charcoal);
+          cursor: pointer;
         }
 
         .checkbox-input {
           width: 18px;
           height: 18px;
+          accent-color: var(--av-bronze);
           cursor: pointer;
+          flex-shrink: 0;
         }
 
         .image-upload-group {
-          border: 2px dashed #d1d5db;
-          border-radius: 6px;
-          padding: 16px;
-          background: #f9fafb;
+          display: flex;
+          flex-direction: column;
         }
 
         .file-input {
-          display: block;
           width: 100%;
-          margin-bottom: 8px;
+          padding: 14px;
+          border: 1px dashed rgba(146, 121, 27, 0.5);
+          border-radius: 10px;
+          background: rgba(146, 121, 27, 0.05);
+          font-family: var(--font-body), sans-serif;
+          font-size: 13px;
+          color: var(--av-charcoal);
+          cursor: pointer;
+          transition:
+            border-color 0.2s ease,
+            background-color 0.2s ease;
+        }
+
+        .file-input:hover:not(:disabled) {
+          border-color: var(--av-gold);
+          background: rgba(201, 168, 76, 0.12);
+        }
+
+        .file-input:disabled {
+          opacity: 0.55;
+          cursor: not-allowed;
         }
 
         .help-text {
-          margin: 8px 0 0 0;
-          font-size: 12px;
-          color: #6b7280;
+          margin: 8px 0 0;
+          font-family: var(--font-body), sans-serif;
+          font-size: 11px;
+          color: var(--av-olive);
+        }
+
+        .help-text.error {
+          color: var(--av-crimson);
+          font-weight: 500;
         }
 
         .image-preview {
-          margin-top: 12px;
           position: relative;
-          width: fit-content;
+          margin-top: 16px;
+          padding: 16px;
+          border: 1px dashed rgba(146, 121, 27, 0.4);
+          border-radius: 12px;
+          background: rgba(146, 121, 27, 0.05);
         }
 
         .image-preview img {
-          width: 200px;
-          height: 150px;
+          width: 100%;
+          max-height: 220px;
           object-fit: cover;
-          border-radius: 4px;
+          border-radius: 8px;
+          border: 1px solid rgba(201, 168, 76, 0.5);
+          display: block;
         }
 
-        .btn-remove-image {
+        /* ---------- Remove buttons ---------- */
+        .btn-remove-image,
+        .btn-remove-slug-image,
+        .btn-remove-poster-image {
           position: absolute;
-          top: 4px;
-          right: 4px;
-          background: rgba(0, 0, 0, 0.7);
-          color: white;
-          border: none;
-          border-radius: 3px;
-          padding: 4px 8px;
-          font-size: 12px;
+          border-radius: 999px;
+          border: 1px solid rgba(139, 26, 26, 0.6);
+          background: var(--av-warm);
+          color: var(--av-crimson);
+          line-height: 1;
           cursor: pointer;
+          transition:
+            background-color 0.25s ease,
+            color 0.25s ease;
         }
 
-        .slug-images-grid {
+        /* Labelled pill over the cover preview */
+        .btn-remove-image {
+          top: 26px;
+          right: 26px;
+          padding: 7px 14px;
+          font-family: var(--font-body), sans-serif;
+          font-size: 11px;
+          font-weight: 600;
+          letter-spacing: 1px;
+          text-transform: uppercase;
+        }
+
+        /* Icon-only discs over the thumbnails */
+        .btn-remove-slug-image,
+        .btn-remove-poster-image {
+          top: 8px;
+          right: 8px;
+          width: 26px;
+          height: 26px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          font-size: 12px;
+        }
+
+        .btn-remove-image:hover:not(:disabled),
+        .btn-remove-slug-image:hover:not(:disabled),
+        .btn-remove-poster-image:hover:not(:disabled) {
+          background: var(--av-crimson);
+          color: var(--av-warm);
+        }
+
+        .btn-remove-image:disabled,
+        .btn-remove-slug-image:disabled,
+        .btn-remove-poster-image:disabled {
+          opacity: 0.5;
+          cursor: not-allowed;
+        }
+
+        /* ---------- Image grids ---------- */
+        .slug-images-grid,
+        .poster-images-grid {
           display: grid;
           grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
-          gap: 12px;
-          margin-top: 12px;
+          gap: 16px;
+          margin-top: 16px;
         }
 
-        .slug-image-card {
+        .slug-image-card,
+        .poster-image-card {
           position: relative;
-          border-radius: 4px;
+          border-radius: 10px;
           overflow: hidden;
-          background: #f3f4f6;
+          border: 1px solid rgba(146, 121, 27, 0.35);
         }
 
-        .slug-image-card img {
+        .slug-image-card img,
+        .poster-image-card img {
           width: 100%;
           height: 120px;
           object-fit: cover;
+          display: block;
         }
 
-        .btn-remove-slug-image {
-          position: absolute;
-          top: 2px;
-          right: 2px;
-          background: rgba(220, 38, 38, 0.9);
-          color: white;
-          border: none;
-          border-radius: 2px;
-          padding: 2px 6px;
-          font-size: 11px;
-          cursor: pointer;
-        }
-
-        .poster-images-grid {
-          display: grid;
-          grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
-          gap: 12px;
-          margin-top: 12px;
-        }
-
-        .poster-image-card {
-          position: relative;
-          border-radius: 4px;
-          overflow: hidden;
-          background: #f3f4f6;
-          border: 2px solid #e5e7eb;
-        }
-
-        .poster-image-card img {
-          width: 100%;
-          height: 160px;
-          object-fit: cover;
-        }
-
-        .btn-remove-poster-image {
-          position: absolute;
-          top: 4px;
-          right: 4px;
-          background: rgba(220, 38, 38, 0.9);
-          color: white;
-          border: none;
-          border-radius: 3px;
-          padding: 4px 8px;
-          font-size: 12px;
-          cursor: pointer;
-        }
-
-        .btn-remove-poster-image:hover:not(:disabled) {
-          background: rgba(220, 38, 38, 1);
-        }
-
+        /* ---------- Actions ---------- */
         .form-actions {
           display: flex;
-          gap: 12px;
-          margin-top: 24px;
+          gap: 16px;
+          padding-top: 24px;
+          border-top: 1px solid rgba(201, 168, 76, 0.35);
         }
 
         .btn-submit,
         .btn-cancel {
           flex: 1;
-          padding: 10px 20px;
-          border: none;
-          border-radius: 4px;
-          font-size: 14px;
+          padding: 14px 24px;
+          border-radius: 999px;
+          border: 1px solid transparent;
+          font-family: var(--font-body), sans-serif;
+          font-size: 12px;
           font-weight: 600;
+          letter-spacing: 2px;
+          text-transform: uppercase;
           cursor: pointer;
+          transition:
+            transform 0.25s ease,
+            box-shadow 0.25s ease,
+            background-color 0.25s ease,
+            color 0.25s ease;
         }
 
         .btn-submit {
-          background-color: #3b82f6;
-          color: white;
+          background: var(--av-bronze);
+          color: var(--av-warm);
         }
 
         .btn-submit:hover:not(:disabled) {
-          background-color: #2563eb;
+          transform: scale(1.02);
+          box-shadow: 0 8px 28px rgba(146, 121, 27, 0.4);
         }
 
         .btn-cancel {
-          background-color: #f3f4f6;
-          color: #374151;
-          border: 1px solid #d1d5db;
+          background: transparent;
+          border-color: rgba(115, 121, 85, 0.6);
+          color: var(--av-olive);
         }
 
         .btn-cancel:hover:not(:disabled) {
-          background-color: #e5e7eb;
+          background: rgba(115, 121, 85, 0.15);
+          color: var(--av-charcoal);
         }
 
         .btn-submit:disabled,
         .btn-cancel:disabled {
-          opacity: 0.5;
+          opacity: 0.55;
           cursor: not-allowed;
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+          .btn-submit {
+            transition: none;
+          }
+
+          .btn-submit:hover:not(:disabled) {
+            transform: none;
+          }
+        }
+
+        @media (max-width: 768px) {
+          .event-form {
+            padding: 24px 20px;
+          }
+
+          .form-actions {
+            flex-direction: column;
+          }
         }
       `}</style>
     </form>

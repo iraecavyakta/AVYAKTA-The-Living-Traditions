@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, type ChangeEvent } from "react";
 import { useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
@@ -9,10 +9,13 @@ import {
   EVENT_DOMAINS,
   RegistrationFormData,
 } from "../../lib/validators/registration";
+import { compressImage, validateImage } from "../../lib/utils/imageOptimizer";
+import { uploadImageToStorage } from "../../lib/utils/imageUploader";
 
 type EventItem = {
   id: string;
   title: string;
+  payment_image_required?: boolean;
 };
 
 export default function RegistrationForm({
@@ -28,6 +31,10 @@ export default function RegistrationForm({
   const [linkInputs, setLinkInputs] = useState([""]);
   const [isAnimating, setIsAnimating] = useState(false);
   const [showThankYou, setShowThankYou] = useState(false);
+  const [paymentImagePreview, setPaymentImagePreview] = useState("");
+  const [paymentImageError, setPaymentImageError] = useState("");
+  const [isProcessingPaymentImage, setIsProcessingPaymentImage] =
+    useState(false);
 
   useEffect(() => {
     if (!successMessage) return;
@@ -47,6 +54,7 @@ export default function RegistrationForm({
     resolver: zodResolver(registrationSchema),
     defaultValues: {
       isVolunteer: false,
+      hostel: false,
     },
   });
 
@@ -54,6 +62,43 @@ export default function RegistrationForm({
     control,
     name: "isVolunteer",
   });
+
+  const selectedEventId = useWatch({
+    control,
+    name: "eventSelector",
+  });
+
+  const selectedEvent = events.find((e) => e.id === selectedEventId);
+  const paymentRequired = Boolean(selectedEvent?.payment_image_required);
+
+  const handlePaymentImageChange = async (e: ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setPaymentImageError("");
+    setIsProcessingPaymentImage(true);
+
+    try {
+      const validation = validateImage(file, 10);
+      if (!validation.valid) {
+        throw new Error(validation.error || "Invalid image");
+      }
+
+      const compressed = await compressImage(file, {
+        maxWidth: 1280,
+        maxHeight: 1280,
+        quality: 0.7,
+        maxSizeKB: 300,
+      });
+      setPaymentImagePreview(compressed);
+    } catch (error) {
+      setPaymentImageError(
+        error instanceof Error ? error.message : "Failed to process image",
+      );
+    } finally {
+      setIsProcessingPaymentImage(false);
+    }
+  };
 
   const addLinkInput = () => setLinkInputs([...linkInputs, ""]);
   const removeLinkInput = (index: number) => {
@@ -66,18 +111,34 @@ export default function RegistrationForm({
   };
 
   const onSubmit = async (data: RegistrationFormData) => {
+    if (paymentRequired && !paymentImagePreview) {
+      setPaymentImageError("Please upload your payment screenshot");
+      return;
+    }
+
     setIsSubmitting(true);
     setSuccessMessage("");
     setErrorMessage("");
+    setPaymentImageError("");
 
     try {
       const validLinks = linkInputs.filter((link) => link.trim().length > 0);
       const linksJson =
         validLinks.length > 0 ? JSON.stringify(validLinks) : undefined;
 
+      let paymentImageUrl: string | undefined;
+      if (paymentImagePreview) {
+        paymentImageUrl = await uploadImageToStorage(paymentImagePreview, {
+          bucket: "payment",
+          folder: `event-${data.eventSelector}`,
+          fileName: `payment-${Date.now()}`,
+        });
+      }
+
       const payload = {
         ...data,
         links: linksJson,
+        payment_image_url: paymentImageUrl,
       };
 
       const response = await fetch("/api/registrations", {
@@ -102,6 +163,7 @@ export default function RegistrationForm({
         setShowThankYou(true);
         reset();
         setLinkInputs([""]);
+        setPaymentImagePreview("");
       }, 2000);
     } catch (error) {
       console.error("Submission error:", error);
@@ -329,6 +391,20 @@ export default function RegistrationForm({
                   <p className="form-error">{errors.phone_number.message}</p>
                 )}
               </div>
+
+              <div className="form-group">
+                <label className="form-label flex items-center gap-2">
+                  <input
+                    {...register("hostel")}
+                    type="checkbox"
+                    className="h-4 w-4"
+                  />
+                  Staying in Hostel
+                </label>
+                {errors.hostel && (
+                  <p className="form-error">{errors.hostel.message}</p>
+                )}
+              </div>
             </div>
 
             {/* DYNAMIC SECTION (Based on toggle) */}
@@ -445,6 +521,41 @@ export default function RegistrationForm({
                 </button>
               </div>
             </div>
+
+            {/* Payment Section */}
+            {paymentRequired && (
+              <div className="form-group" style={{ gridColumn: "1 / -1" }}>
+                <label className="form-label">
+                  Payment Copy Required <span className="required">*</span>
+                </label>
+                <p className="text-sm text-[var(--dull-olive)] mb-2">
+                  This event requires proof of payment. Please upload a
+                  screenshot of your payment.
+                </p>
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={handlePaymentImageChange}
+                  disabled={isProcessingPaymentImage}
+                  className="form-input"
+                />
+                {paymentImageError && (
+                  <p className="form-error">{paymentImageError}</p>
+                )}
+                {paymentImagePreview && (
+                  <img
+                    src={paymentImagePreview}
+                    alt="Payment proof preview"
+                    style={{
+                      marginTop: "0.75rem",
+                      maxWidth: "220px",
+                      borderRadius: "10px",
+                      border: "1.5px solid #d9cbb8",
+                    }}
+                  />
+                )}
+              </div>
+            )}
 
             {/* Submit Button */}
             <button

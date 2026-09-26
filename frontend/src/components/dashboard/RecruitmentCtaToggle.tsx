@@ -55,22 +55,30 @@ export default function RecruitmentCtaToggle({
         title="Toggle site-wide 'Join Us' / 'Apply Now' buttons on the home page and footer"
         className="btn-cta-toggle"
         style={{
-          padding: "8px 16px",
-          borderRadius: "8px",
-          fontSize: "14px",
+          padding: "10px 22px",
+          borderRadius: "999px",
+          fontFamily: "var(--font-body), sans-serif",
+          fontSize: "11px",
           fontWeight: 600,
-          color: "white",
-          border: "none",
+          letterSpacing: "1.5px",
+          textTransform: "uppercase",
+          whiteSpace: "nowrap",
+          // Emerald reads "site buttons live", olive reads "hidden" — both
+          // from the Avyakta palette, no new colours.
+          color: isOpen ? "var(--av-emerald)" : "var(--av-olive)",
+          background: "transparent",
+          border: `1px solid ${
+            isOpen ? "rgba(27, 94, 59, 0.6)" : "rgba(115, 121, 85, 0.6)"
+          }`,
           cursor: isOpen === null || isSaving ? "not-allowed" : "pointer",
-          opacity: isOpen === null || isSaving ? 0.75 : 1,
-          backgroundColor: isOpen ? "#16a34a" : "#dc2626",
+          opacity: isOpen === null || isSaving ? 0.6 : 1,
         }}
       >
         {isOpen === null || isSaving
           ? "Loading..."
           : isOpen
-            ? "🌐 Buttons: ON"
-            : "🌐 Buttons: OFF"}
+            ? "Site Buttons: On"
+            : "Site Buttons: Off"}
       </button>
     );
   }

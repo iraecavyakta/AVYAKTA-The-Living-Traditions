@@ -37,6 +37,7 @@ type EventUpdatePayload = {
   venue?: string | null;
   registration_enabled?: boolean;
   registration_status?: boolean;
+  registration_deadline?: string | null;
   payment_image_required?: boolean;
 };
 
@@ -103,6 +104,7 @@ export async function PUT(
       venue,
       registration_enabled,
       registration_status,
+      registration_deadline,
       payment_image_required,
       more_description,
       slug_image_url,
@@ -122,6 +124,8 @@ export async function PUT(
       updatePayload.registration_enabled = registration_enabled;
     if (registration_status !== undefined)
       updatePayload.registration_status = registration_status;
+    if (registration_deadline !== undefined)
+      updatePayload.registration_deadline = registration_deadline || null;
     if (payment_image_required !== undefined)
       updatePayload.payment_image_required = payment_image_required;
 

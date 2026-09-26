@@ -17,8 +17,8 @@ export const events = pgTable("events", {
   image_url: text("image_url"),
   date: date("date"),
   venue: text("venue"),
-  registration_enabled: boolean("registration_enabled").default(true),
   registration_status: boolean("registration_status").default(true),
+  registration_deadline: date("registration_deadline"),
   payment_image_required: boolean("payment_image_required").default(false),
 });
 
@@ -88,6 +88,14 @@ export const registration = pgTable("registration", {
   email: text("email").notNull(),
   phone_no: text("phone_no").notNull(),
   payment_image_url: text("payment_image_url"),
+  is_volunteer: boolean("is_volunteer").default(false),
+  class_year: integer("class_year"),
+  section: text("section"),
+  dietary_needs: text("dietary_needs"),
+  team_name: text("team_name"),
+  volunteer_domain: text("volunteer_domain"),
+  volunteer_experience: text("volunteer_experience"),
+  links: text("links"),
 });
 
 export const login_credentials = pgTable("login_credentials", {

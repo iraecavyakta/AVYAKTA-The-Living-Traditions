@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "next/navigation";
+import { motion } from "framer-motion";
 import { loginSchema, LoginFormData } from "../../lib/validators/auth";
 
 export default function LoginForm() {
@@ -38,7 +39,10 @@ export default function LoginForm() {
       if (response.ok) {
         setSuccessMessage("Login successful! Redirecting...");
         const result = (await response.json()) as { redirectTo?: string };
-        router.push(result.redirectTo || "/dashboard");
+        // The "login-success" type drives the scroll transition in globals.css.
+        router.push(result.redirectTo || "/dashboard/members", {
+          transitionTypes: ["login-success"],
+        });
         return;
       }
 
@@ -69,21 +73,26 @@ export default function LoginForm() {
       className="w-full space-y-0 flex flex-col"
     >
       {error && (
-        <div className="mb-4 p-3 bg-red-100 border border-red-400 text-red-900 text-sm font-medium rounded-md animation-in fade-in slide-in-from-top-2">
+        <div className="mb-5 rounded-lg border border-[#8B1A1A]/40 bg-[#8B1A1A]/10 p-3 text-sm font-medium text-[#8B1A1A]">
           {error}
         </div>
       )}
 
       {successMessage && (
-        <div className="mb-4 p-3 bg-green-100 border border-green-400 text-green-800 text-sm font-medium rounded-md animation-in fade-in slide-in-from-top-2">
+        <div className="mb-5 rounded-lg border border-[#1B5E3B]/40 bg-[#1B5E3B]/10 p-3 text-sm font-medium text-[#1B5E3B]">
           {successMessage}
         </div>
       )}
 
-      <div className="mb-5">
+      <motion.div
+        className="mb-5"
+        whileHover={{ scale: 1.015, y: -2 }}
+        style={{ transformStyle: "preserve-3d" }}
+        transition={{ type: "spring", stiffness: 300, damping: 20 }}
+      >
         <label
           htmlFor="email"
-          className="block mb-2 text-sm font-medium text-gray-700"
+          className="mb-2 block text-sm font-medium text-[#1C1C1C]/70"
         >
           Email Address
         </label>
@@ -92,22 +101,29 @@ export default function LoginForm() {
           type="email"
           placeholder="Enter your email"
           {...register("email")}
-          className={`w-full px-3.5 py-3 text-sm bg-gray-50 border rounded-lg font-sans focus:outline-none focus:border-blue-600 focus:ring-2 focus:ring-blue-600/20 focus:bg-white transition-all ${
-            errors.email ? "border-red-600 bg-red-50" : "border-gray-300"
-          } disabled:bg-gray-200 disabled:cursor-not-allowed disabled:opacity-60`}
+          className={`w-full rounded-lg border px-3.5 py-3 text-sm text-[#1C1C1C] transition-all placeholder:text-[#737955]/60 focus:outline-none focus:ring-2 ${
+            errors.email
+              ? "border-[#8B1A1A] bg-[#FBF1F1] focus:border-[#8B1A1A] focus:ring-[#8B1A1A]/25"
+              : "border-[#C9A84C]/35 bg-white focus:border-[#C9A84C] focus:ring-[#C9A84C]/25 focus:shadow-[0_0_20px_rgba(201,168,76,0.2)]"
+          } disabled:cursor-not-allowed disabled:opacity-50`}
           disabled={isLoading}
         />
         {errors.email && (
-          <p className="text-xs font-medium text-red-600 mt-1.5">
+          <p className="mt-1.5 text-xs font-medium text-[#8B1A1A]">
             {errors.email.message}
           </p>
         )}
-      </div>
+      </motion.div>
 
-      <div className="mb-2">
+      <motion.div
+        className="mb-2"
+        whileHover={{ scale: 1.015, y: -2 }}
+        style={{ transformStyle: "preserve-3d" }}
+        transition={{ type: "spring", stiffness: 300, damping: 20 }}
+      >
         <label
           htmlFor="password"
-          className="block mb-2 text-sm font-medium text-gray-700"
+          className="mb-2 block text-sm font-medium text-[#1C1C1C]/70"
         >
           Password
         </label>
@@ -116,25 +132,29 @@ export default function LoginForm() {
           type="password"
           placeholder="Enter your password"
           {...register("password")}
-          className={`w-full px-3.5 py-3 text-sm bg-gray-50 border rounded-lg font-sans focus:outline-none focus:border-blue-600 focus:ring-2 focus:ring-blue-600/20 focus:bg-white transition-all ${
-            errors.password ? "border-red-600 bg-red-50" : "border-gray-300"
-          } disabled:bg-gray-200 disabled:cursor-not-allowed disabled:opacity-60`}
+          className={`w-full rounded-lg border px-3.5 py-3 text-sm text-[#1C1C1C] transition-all placeholder:text-[#737955]/60 focus:outline-none focus:ring-2 ${
+            errors.password
+              ? "border-[#8B1A1A] bg-[#FBF1F1] focus:border-[#8B1A1A] focus:ring-[#8B1A1A]/25"
+              : "border-[#C9A84C]/35 bg-white focus:border-[#C9A84C] focus:ring-[#C9A84C]/25 focus:shadow-[0_0_20px_rgba(201,168,76,0.2)]"
+          } disabled:cursor-not-allowed disabled:opacity-50`}
           disabled={isLoading}
         />
         {errors.password && (
-          <p className="text-xs font-medium text-red-600 mt-1.5">
+          <p className="mt-1.5 text-xs font-medium text-[#8B1A1A]">
             {errors.password.message}
           </p>
         )}
-      </div>
+      </motion.div>
 
-      <button
+      <motion.button
         type="submit"
         disabled={isLoading}
-        className="w-full mt-2 px-4 py-3 bg-gradient-to-r from-blue-600 via-purple-600 to-purple-700 text-white text-base font-semibold rounded-lg shadow-lg hover:shadow-xl hover:-translate-y-0.5 active:translate-y-0 disabled:opacity-70 disabled:cursor-not-allowed disabled:shadow-md transition-all duration-200"
+        whileHover={!isLoading ? { scale: 1.02, y: -2 } : undefined}
+        whileTap={!isLoading ? { scale: 0.98 } : undefined}
+        className="mt-6 w-full rounded-full bg-[#92791B] px-4 py-3 text-base font-semibold text-white shadow-[0_10px_30px_rgba(146,121,27,0.35)] transition-colors hover:bg-[#C9A84C] hover:shadow-[0_10px_40px_rgba(201,168,76,0.45)] disabled:cursor-not-allowed disabled:opacity-60"
       >
         {isLoading ? "Signing in..." : "Enter"}
-      </button>
+      </motion.button>
     </form>
   );
 }

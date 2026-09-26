@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { isRegistrationOpen } from "@/lib/utils/events";
 
 interface Event {
   id: string;
@@ -11,6 +12,7 @@ interface Event {
   date: string | null;
   venue?: string | null;
   registration_status?: boolean;
+  registration_deadline?: string | null;
 }
 
 export default function RegistrationAvailableClient() {
@@ -33,11 +35,9 @@ export default function RegistrationAvailableClient() {
       if (!result.success)
         throw new Error(result.error || "Failed to fetch events");
 
-      // Filter only events with open registration status
-      const openEvents = (result.data || []).filter(
-        (event: Event) =>
-          event.registration_status === true ||
-          event.registration_status === undefined,
+      // Filter only events with open registration (status + deadline)
+      const openEvents = (result.data || []).filter((event: Event) =>
+        isRegistrationOpen(event),
       );
 
       setEvents(openEvents);
@@ -118,6 +118,20 @@ export default function RegistrationAvailableClient() {
 
                   {event.venue && (
                     <p className="registration-venue">📍 {event.venue}</p>
+                  )}
+
+                  {event.registration_deadline && (
+                    <p className="registration-deadline">
+                      ⏳ Register by{" "}
+                      {new Date(event.registration_deadline).toLocaleDateString(
+                        "en-US",
+                        {
+                          year: "numeric",
+                          month: "short",
+                          day: "numeric",
+                        },
+                      )}
+                    </p>
                   )}
 
                   {event.description && (
@@ -242,10 +256,16 @@ export default function RegistrationAvailableClient() {
         }
 
         .registration-date,
-        .registration-venue {
+        .registration-venue,
+        .registration-deadline {
           margin: 4px 0;
           font-size: 13px;
           color: #6b7280;
+        }
+
+        .registration-deadline {
+          color: #92400e;
+          font-weight: 600;
         }
 
         .registration-description {

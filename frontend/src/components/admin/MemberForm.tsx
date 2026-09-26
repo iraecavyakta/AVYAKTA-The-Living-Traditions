@@ -129,76 +129,88 @@ export default function MemberForm({
   return (
     <div className="member-form">
       <h3>{member ? "Edit Member" : "Add New Member"}</h3>
+      <div className="title-rule" aria-hidden />
+
       <form onSubmit={handleSubmit}>
-        <div className="form-group">
-          <label htmlFor="name">Name *</label>
-          <input
-            type="text"
-            id="name"
-            name="name"
-            value={formData.name}
-            onChange={handleChange}
-            placeholder="Enter member name"
-            required
-          />
+        <div className="form-grid">
+          <div className="form-group">
+            <label htmlFor="name">
+              Name <span className="required">*</span>
+            </label>
+            <input
+              type="text"
+              id="name"
+              name="name"
+              value={formData.name}
+              onChange={handleChange}
+              placeholder="Enter member name"
+              required
+            />
+          </div>
+
+          <div className="form-group">
+            <label htmlFor="domain">
+              Domain <span className="required">*</span>
+            </label>
+            <select
+              id="domain"
+              name="domain"
+              value={formData.domain}
+              onChange={handleSelectChange}
+              required
+            >
+              <option value="">Select a domain</option>
+              {RECRUITMENT_DOMAINS.map((domain) => (
+                <option key={domain} value={domain}>
+                  {domain}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div className="form-group">
+            <label htmlFor="role">
+              Role <span className="required">*</span>
+            </label>
+            <select
+              id="role"
+              name="role"
+              value={formData.role}
+              onChange={handleSelectChange}
+              required
+            >
+              <option value="">Select a role</option>
+              <option value="domain_head">Domain Head</option>
+              <option value="members">Members</option>
+            </select>
+          </div>
+
+          <div className="form-group">
+            <label htmlFor="photo">
+              Photo <span className="optional">(optional)</span>
+            </label>
+            <input
+              type="file"
+              id="photo"
+              accept="image/*"
+              onChange={handlePhotoUpload}
+              disabled={isUploading}
+              className="file-input"
+            />
+            <small className="file-hint">
+              Accepted: JPG, PNG, GIF, WebP (max 5MB)
+            </small>
+          </div>
         </div>
 
-        <div className="form-group">
-          <label htmlFor="domain">Domain *</label>
-          <select
-            id="domain"
-            name="domain"
-            value={formData.domain}
-            onChange={handleSelectChange}
-            required
-          >
-            <option value="">Select a domain</option>
-            {RECRUITMENT_DOMAINS.map((domain) => (
-              <option key={domain} value={domain}>
-                {domain}
-              </option>
-            ))}
-          </select>
-        </div>
+        {photoPreview && (
+          <div className="photo-preview">
+            <small>Preview</small>
+            <img src={photoPreview} alt="Member preview" />
+          </div>
+        )}
 
-        <div className="form-group">
-          <label htmlFor="role">Role *</label>
-          <select
-            id="role"
-            name="role"
-            value={formData.role}
-            onChange={handleSelectChange}
-            required
-          >
-            <option value="">Select a role</option>
-            <option value="domain_head">Domain Head</option>
-            <option value="members">Members</option>
-          </select>
-        </div>
-
-        <div className="form-group">
-          <label htmlFor="photo">Photo (Optional)</label>
-          <input
-            type="file"
-            id="photo"
-            accept="image/*"
-            onChange={handlePhotoUpload}
-            disabled={isUploading}
-            className="file-input"
-          />
-          <small className="file-hint">
-            Accepted: JPG, PNG, GIF, WebP (Max 5MB)
-          </small>
-          {photoPreview && (
-            <div className="photo-preview">
-              <small>Preview:</small>
-              <img src={photoPreview} alt="Member preview" />
-            </div>
-          )}
-          {isUploading && (
-            <div className="uploading">⏳ Uploading image...</div>
-          )}
-        </div>
+        {isUploading && <div className="uploading">Uploading image…</div>}
 
         {error && <div className="form-error">{error}</div>}
 
@@ -208,7 +220,7 @@ export default function MemberForm({
             disabled={isLoading || isUploading}
             className="btn-primary"
           >
-            {isLoading ? "Saving..." : member ? "Update Member" : "Add Member"}
+            {isLoading ? "Saving…" : member ? "Update Member" : "Add Member"}
           </button>
           <button
             type="button"
@@ -223,184 +235,266 @@ export default function MemberForm({
 
       <style jsx>{`
         .member-form {
-          background: white;
-          border: 1px solid #e5e7eb;
-          border-radius: 8px;
-          padding: 20px;
-          margin-bottom: 20px;
-          box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+          background: var(--av-warm);
+          border: 1px solid rgba(146, 121, 27, 0.3);
+          border-radius: 16px;
+          padding: 32px;
+          box-shadow: 0 16px 40px rgba(28, 28, 28, 0.35);
         }
 
         .member-form h3 {
-          margin: 0 0 16px 0;
-          font-size: 18px;
+          margin: 0;
+          font-family: var(--font-heading), serif;
+          font-size: 28px;
           font-weight: 600;
-          color: #1f2937;
+          color: var(--av-bronze);
+        }
+
+        .title-rule {
+          height: 1px;
+          margin: 16px 0 24px;
+          background: linear-gradient(
+            90deg,
+            rgba(201, 168, 76, 0.55),
+            transparent
+          );
+        }
+
+        .form-grid {
+          display: grid;
+          grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+          gap: 24px;
         }
 
         .form-group {
-          margin-bottom: 16px;
+          display: flex;
+          flex-direction: column;
         }
 
         .form-group label {
-          display: block;
-          margin-bottom: 6px;
-          font-weight: 500;
-          color: #374151;
-          font-size: 14px;
+          margin-bottom: 8px;
+          font-family: var(--font-body), sans-serif;
+          font-size: 11px;
+          font-weight: 600;
+          letter-spacing: 1.5px;
+          text-transform: uppercase;
+          color: var(--av-olive);
         }
 
-        .form-group input {
+        .required {
+          color: var(--av-crimson);
+        }
+
+        .optional {
+          text-transform: none;
+          letter-spacing: 0;
+          font-weight: 400;
+          font-style: italic;
+        }
+
+        .form-group input[type="text"],
+        .form-group select {
           width: 100%;
-          padding: 10px;
-          border: 1px solid #d1d5db;
-          border-radius: 6px;
+          padding: 12px 14px;
+          border: 1px solid rgba(146, 121, 27, 0.35);
+          border-radius: 10px;
+          background: #ffffff;
+          font-family: var(--font-body), sans-serif;
           font-size: 14px;
-          font-family: inherit;
-          transition: border-color 0.2s;
+          color: var(--av-charcoal);
+          transition:
+            border-color 0.2s ease,
+            box-shadow 0.2s ease;
         }
 
-        .form-group input:focus {
+        .form-group input[type="text"]:focus,
+        .form-group select:focus {
           outline: none;
-          border-color: #3b82f6;
-          box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+          border-color: var(--av-gold);
+          box-shadow: 0 0 0 3px rgba(201, 168, 76, 0.25);
         }
 
         .form-group select {
-          width: 100%;
-          padding: 10px;
-          border: 1px solid #d1d5db;
-          border-radius: 6px;
-          font-size: 14px;
-          font-family: inherit;
-          transition: border-color 0.2s;
-          background-color: white;
           cursor: pointer;
         }
 
-        .form-group select:focus {
-          outline: none;
-          border-color: #3b82f6;
-          box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        .file-input {
+          width: 100%;
+          padding: 14px;
+          border: 1px dashed rgba(146, 121, 27, 0.5);
+          border-radius: 10px;
+          background: rgba(146, 121, 27, 0.05);
+          font-family: var(--font-body), sans-serif;
+          font-size: 13px;
+          color: var(--av-charcoal);
+          cursor: pointer;
+          transition:
+            border-color 0.2s ease,
+            background-color 0.2s ease;
         }
 
-        .form-error {
-          color: #dc2626;
-          font-size: 13px;
-          margin-bottom: 12px;
-          padding: 8px 12px;
-          background-color: #fee2e2;
-          border-radius: 4px;
-          border-left: 3px solid #dc2626;
+        .file-input:hover:not(:disabled) {
+          border-color: var(--av-gold);
+          background: rgba(201, 168, 76, 0.12);
+        }
+
+        .file-input:disabled {
+          opacity: 0.55;
+          cursor: not-allowed;
+        }
+
+        .file-hint {
+          margin-top: 8px;
+          font-family: var(--font-body), sans-serif;
+          font-size: 11px;
+          color: var(--av-olive);
         }
 
         .photo-preview {
-          margin-top: 12px;
-          padding: 12px;
-          background-color: #f9fafb;
-          border-radius: 6px;
-          border: 1px dashed #d1d5db;
+          margin-top: 24px;
+          padding: 16px;
+          border: 1px dashed rgba(146, 121, 27, 0.4);
+          border-radius: 12px;
+          background: rgba(146, 121, 27, 0.05);
         }
 
         .photo-preview small {
           display: block;
           margin-bottom: 8px;
-          color: #6b7280;
-          font-size: 12px;
-          font-weight: 500;
+          font-family: var(--font-body), sans-serif;
+          font-size: 10px;
+          font-weight: 600;
+          letter-spacing: 2px;
+          text-transform: uppercase;
+          color: var(--av-olive);
         }
 
         .photo-preview img {
           max-width: 100%;
-          max-height: 150px;
-          border-radius: 4px;
+          max-height: 160px;
+          border-radius: 8px;
+          border: 1px solid rgba(201, 168, 76, 0.5);
           object-fit: cover;
         }
 
-        .file-input {
-          width: 100%;
-          padding: 10px;
-          border: 2px dashed #d1d5db;
-          border-radius: 6px;
-          font-size: 14px;
-          cursor: pointer;
-          transition: all 0.2s;
-          background-color: #fafafa;
-        }
-
-        .file-input:hover:not(:disabled) {
-          border-color: #3b82f6;
-          background-color: #eff6ff;
-        }
-
-        .file-input:disabled {
-          opacity: 0.6;
-          cursor: not-allowed;
-          background-color: #f3f4f6;
-        }
-
-        .file-hint {
-          display: block;
-          margin-top: 6px;
-          color: #6b7280;
-          font-size: 12px;
-        }
-
         .uploading {
-          margin-top: 12px;
-          padding: 10px 12px;
-          background-color: #fef3c7;
-          border-radius: 6px;
-          color: #92400e;
+          margin-top: 16px;
+          padding: 12px 16px;
+          border-radius: 10px;
+          border-left: 3px solid var(--av-gold);
+          background: rgba(201, 168, 76, 0.12);
+          font-family: var(--font-body), sans-serif;
           font-size: 13px;
-          border-left: 3px solid #f59e0b;
           font-weight: 500;
+          color: var(--av-bronze);
+        }
+
+        .form-error {
+          margin-top: 16px;
+          padding: 12px 16px;
+          border-radius: 10px;
+          border-left: 3px solid var(--av-crimson);
+          background: rgba(139, 26, 26, 0.08);
+          font-family: var(--font-body), sans-serif;
+          font-size: 13px;
+          font-weight: 500;
+          color: var(--av-crimson);
         }
 
         .form-actions {
           display: flex;
-          gap: 10px;
-          margin-top: 16px;
+          gap: 16px;
+          margin-top: 32px;
         }
 
         .btn-primary,
         .btn-secondary {
-          padding: 10px 16px;
-          border: none;
-          border-radius: 6px;
-          font-size: 14px;
-          font-weight: 500;
+          padding: 12px 32px;
+          border-radius: 999px;
+          font-family: var(--font-body), sans-serif;
+          font-size: 12px;
+          font-weight: 600;
+          letter-spacing: 2px;
+          text-transform: uppercase;
           cursor: pointer;
-          transition: all 0.2s;
-          flex: 1;
+          transition:
+            transform 0.2s ease,
+            background-color 0.2s ease,
+            color 0.2s ease,
+            box-shadow 0.2s ease;
         }
 
         .btn-primary {
-          background-color: #3b82f6;
-          color: white;
+          border: 1px solid var(--av-bronze);
+          background: var(--av-bronze);
+          color: var(--av-warm);
+          box-shadow: 0 8px 24px rgba(146, 121, 27, 0.3);
         }
 
         .btn-primary:hover:not(:disabled) {
-          background-color: #2563eb;
-        }
-
-        .btn-primary:disabled {
-          background-color: #9ca3af;
-          cursor: not-allowed;
+          transform: scale(1.03);
+          background: var(--av-gold);
+          border-color: var(--av-gold);
+          color: var(--av-charcoal);
+          box-shadow: 0 10px 30px rgba(201, 168, 76, 0.45);
         }
 
         .btn-secondary {
-          background-color: #e5e7eb;
-          color: #374151;
+          border: 1px solid rgba(115, 121, 85, 0.5);
+          background: transparent;
+          color: var(--av-olive);
         }
 
         .btn-secondary:hover:not(:disabled) {
-          background-color: #d1d5db;
+          transform: scale(1.03);
+          border-color: var(--av-charcoal);
+          color: var(--av-charcoal);
         }
 
+        .btn-primary:disabled,
         .btn-secondary:disabled {
           opacity: 0.5;
           cursor: not-allowed;
+          box-shadow: none;
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+          .btn-primary,
+          .btn-secondary,
+          .file-input,
+          .form-group input[type="text"],
+          .form-group select {
+            transition: none;
+          }
+
+          .btn-primary:hover:not(:disabled),
+          .btn-secondary:hover:not(:disabled) {
+            transform: none;
+          }
+        }
+
+        @media (max-width: 768px) {
+          .member-form {
+            padding: 24px 20px;
+          }
+
+          .member-form h3 {
+            font-size: 24px;
+          }
+
+          .form-grid {
+            grid-template-columns: 1fr;
+            gap: 20px;
+          }
+
+          .form-actions {
+            flex-direction: column;
+          }
+
+          .btn-primary,
+          .btn-secondary {
+            width: 100%;
+          }
         }
       `}</style>
     </div>
