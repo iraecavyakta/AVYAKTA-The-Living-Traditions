@@ -6,7 +6,7 @@ type Props = {
   params: Promise<{ slug: string }>;
 };
 
-export const dynamic = "force-dynamic";
+export const revalidate = 60;
 
 export default async function EventDetailPage({ params }: Props) {
   const { slug } = await params;

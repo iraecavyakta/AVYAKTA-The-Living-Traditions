@@ -219,10 +219,14 @@ export default function RegistrationForm({
             <div className="form-group" style={{ gridColumn: "1 / -1" }}>
               <div className="flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
                 <div className="flex-1">
-                  <label className="form-label">
+                  <label htmlFor="eventSelector" className="form-label">
                     Select Event <span className="required">*</span>
                   </label>
                   <select
+                    id="eventSelector"
+                    aria-describedby={
+                      errors.eventSelector ? "eventSelector-error" : undefined
+                    }
                     {...register("eventSelector")}
                     className="form-select mt-2"
                   >
@@ -234,15 +238,18 @@ export default function RegistrationForm({
                     ))}
                   </select>
                   {errors.eventSelector && (
-                    <p className="form-error">{errors.eventSelector.message}</p>
+                    <p id="eventSelector-error" className="form-error">
+                      {errors.eventSelector.message}
+                    </p>
                   )}
                 </div>
 
                 <div className="flex flex-col items-start gap-2 md:items-end">
-                  <label className="form-label">I am registering as</label>
+                  <span className="form-label">I am registering as</span>
                   <div className="flex overflow-hidden rounded-full border-2 border-[#d9cbb8] bg-[rgba(252,248,240,0.94)] p-1 shadow-inner md:w-64">
                     <button
                       type="button"
+                      aria-pressed={!isVolunteer}
                       className={`flex-1 rounded-full px-4 py-2 text-sm font-bold uppercase transition-all duration-300 ${
                         !isVolunteer
                           ? "bg-[var(--bronze-gold)] text-white shadow-md"
@@ -257,6 +264,7 @@ export default function RegistrationForm({
                     </button>
                     <button
                       type="button"
+                      aria-pressed={isVolunteer}
                       className={`flex-1 rounded-full px-4 py-2 text-sm font-bold uppercase transition-all duration-300 ${
                         isVolunteer
                           ? "bg-[var(--emerald-green)] text-white shadow-md"
@@ -276,40 +284,57 @@ export default function RegistrationForm({
             {/* LEFT COLUMN */}
             <div className="form-left">
               <div className="form-group">
-                <label className="form-label">
+                <label htmlFor="reg-name" className="form-label">
                   Name <span className="required">*</span>
                 </label>
                 <input
+                  id="reg-name"
+                  aria-describedby={errors.name ? "reg-name-error" : undefined}
                   {...register("name")}
                   type="text"
                   placeholder="Your full name"
                   className="form-input"
                 />
                 {errors.name && (
-                  <p className="form-error">{errors.name.message}</p>
+                  <p id="reg-name-error" className="form-error">
+                    {errors.name.message}
+                  </p>
                 )}
               </div>
 
               <div className="form-group">
-                <label className="form-label">
+                <label htmlFor="reg-email" className="form-label">
                   Email <span className="required">*</span>
                 </label>
                 <input
+                  id="reg-email"
+                  aria-describedby={
+                    errors.email ? "reg-email-error" : undefined
+                  }
                   {...register("email")}
                   type="email"
                   placeholder="your@email.com"
                   className="form-input"
                 />
                 {errors.email && (
-                  <p className="form-error">{errors.email.message}</p>
+                  <p id="reg-email-error" className="form-error">
+                    {errors.email.message}
+                  </p>
                 )}
               </div>
 
               <div className="form-group">
-                <label className="form-label">
+                <label htmlFor="reg-branch" className="form-label">
                   Branch <span className="required">*</span>
                 </label>
-                <select {...register("branch")} className="form-select">
+                <select
+                  id="reg-branch"
+                  aria-describedby={
+                    errors.branch ? "reg-branch-error" : undefined
+                  }
+                  {...register("branch")}
+                  className="form-select"
+                >
                   <option value="">Select your branch</option>
                   {REGISTRATION_BRANCHES.map((b) => (
                     <option key={b} value={b}>
@@ -318,15 +343,21 @@ export default function RegistrationForm({
                   ))}
                 </select>
                 {errors.branch && (
-                  <p className="form-error">{errors.branch.message}</p>
+                  <p id="reg-branch-error" className="form-error">
+                    {errors.branch.message}
+                  </p>
                 )}
               </div>
 
               <div className="form-group">
-                <label className="form-label">
+                <label htmlFor="reg-classYear" className="form-label">
                   Year <span className="required">*</span>
                 </label>
                 <input
+                  id="reg-classYear"
+                  aria-describedby={
+                    errors.classYear ? "reg-classYear-error" : undefined
+                  }
                   {...register("classYear", { valueAsNumber: true })}
                   type="number"
                   min="1"
@@ -335,22 +366,30 @@ export default function RegistrationForm({
                   className="form-input"
                 />
                 {errors.classYear && (
-                  <p className="form-error">{errors.classYear.message}</p>
+                  <p id="reg-classYear-error" className="form-error">
+                    {errors.classYear.message}
+                  </p>
                 )}
               </div>
 
               <div className="form-group">
-                <label className="form-label">
+                <label htmlFor="reg-section" className="form-label">
                   Section <span className="required">*</span>
                 </label>
                 <input
+                  id="reg-section"
+                  aria-describedby={
+                    errors.section ? "reg-section-error" : undefined
+                  }
                   {...register("section")}
                   type="text"
                   placeholder="Your section"
                   className="form-input"
                 />
                 {errors.section && (
-                  <p className="form-error">{errors.section.message}</p>
+                  <p id="reg-section-error" className="form-error">
+                    {errors.section.message}
+                  </p>
                 )}
               </div>
             </div>
@@ -358,10 +397,12 @@ export default function RegistrationForm({
             {/* RIGHT COLUMN */}
             <div className="form-right">
               <div className="form-group">
-                <label className="form-label">
+                <label htmlFor="reg-srn" className="form-label">
                   SRN <span className="required">*</span>
                 </label>
                 <input
+                  id="reg-srn"
+                  aria-describedby={errors.srn ? "reg-srn-error" : undefined}
                   {...register("srn", {
                     onChange: (e) => {
                       e.target.value = e.target.value.toUpperCase();
@@ -373,22 +414,30 @@ export default function RegistrationForm({
                   className="form-input uppercase"
                 />
                 {errors.srn && (
-                  <p className="form-error">{errors.srn.message}</p>
+                  <p id="reg-srn-error" className="form-error">
+                    {errors.srn.message}
+                  </p>
                 )}
               </div>
 
               <div className="form-group">
-                <label className="form-label">
+                <label htmlFor="reg-phone_number" className="form-label">
                   Phone Number <span className="required">*</span>
                 </label>
                 <input
+                  id="reg-phone_number"
+                  aria-describedby={
+                    errors.phone_number ? "reg-phone_number-error" : undefined
+                  }
                   {...register("phone_number")}
                   type="tel"
                   placeholder="9876543210"
                   className="form-input"
                 />
                 {errors.phone_number && (
-                  <p className="form-error">{errors.phone_number.message}</p>
+                  <p id="reg-phone_number-error" className="form-error">
+                    {errors.phone_number.message}
+                  </p>
                 )}
               </div>
 
@@ -417,11 +466,12 @@ export default function RegistrationForm({
                 // Participant Fields
                 <div className="grid gap-6 md:grid-cols-2">
                   <div className="form-group">
-                    <label className="form-label">
+                    <label htmlFor="reg-teamName" className="form-label">
                       Team Name{" "}
                       <span className="optional">(If team event)</span>
                     </label>
                     <input
+                      id="reg-teamName"
                       {...register("teamName")}
                       type="text"
                       placeholder="Your team name"
@@ -429,10 +479,11 @@ export default function RegistrationForm({
                     />
                   </div>
                   <div className="form-group">
-                    <label className="form-label">
+                    <label htmlFor="reg-dietaryNeeds" className="form-label">
                       Dietary Needs <span className="optional">(Optional)</span>
                     </label>
                     <input
+                      id="reg-dietaryNeeds"
                       {...register("dietaryNeeds")}
                       type="text"
                       placeholder="e.g. Vegetarian, Jain"
@@ -444,14 +495,15 @@ export default function RegistrationForm({
                 // Volunteer Fields
                 <div className="grid gap-6">
                   <div className="form-group">
-                    <label className="form-label">
+                    <span className="form-label">
                       Domain of Help <span className="required">*</span>
-                    </label>
+                    </span>
                     <div className="domain-chips-container">
                       {EVENT_DOMAINS.map((domain) => (
                         <button
                           key={domain}
                           type="button"
+                          aria-pressed={watch("volunteerDomain") === domain}
                           onClick={() => setValue("volunteerDomain", domain)}
                           className={`domain-chip ${
                             watch("volunteerDomain") === domain
@@ -471,11 +523,15 @@ export default function RegistrationForm({
                   </div>
 
                   <div className="form-group">
-                    <label className="form-label">
+                    <label
+                      htmlFor="reg-volunteerExperience"
+                      className="form-label"
+                    >
                       Prior Volunteer Experience{" "}
                       <span className="optional">(Optional)</span>
                     </label>
                     <textarea
+                      id="reg-volunteerExperience"
                       {...register("volunteerExperience")}
                       placeholder="Describe any past experience organising events..."
                       className="form-textarea"

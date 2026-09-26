@@ -7,7 +7,8 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "test": "echo \"No tests yet\""
+    "test": "echo \"No tests yet\"",
+    "manage-logins": "node scripts/manage-logins.mjs"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.2.2",

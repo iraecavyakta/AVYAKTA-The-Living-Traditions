@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useRef } from "react";
 import { motion, useScroll, useTransform } from "framer-motion";
 import CursorSplashOverlay from "@/components/shared/CursorSplashOverlay";
 import { useCursorSplash } from "@/hooks/useCursorSplash";
@@ -28,9 +29,21 @@ const heroParticles = [
 ];
 
 export default function EventDetailClient({ event }: EventDetailClientProps) {
-  const { scrollYProgress } = useScroll();
-  const heroY = useTransform(scrollYProgress, [0, 0.3], [0, 110]);
-  const heroScale = useTransform(scrollYProgress, [0, 0.3], [1, 0.95]);
+  const heroRef = useRef<HTMLElement | null>(null);
+
+  // Whole-page progress, for the top progress bar.
+  const { scrollYProgress: pageScrollProgress } = useScroll();
+
+  // Scoped to just the hero section, so the parallax maps to actually
+  // scrolling past the hero instead of an arbitrary slice of the whole
+  // page's scroll distance (which made it feel laggy/disconnected,
+  // especially on longer event pages).
+  const { scrollYProgress: heroScrollProgress } = useScroll({
+    target: heroRef,
+    offset: ["start start", "end start"],
+  });
+  const heroY = useTransform(heroScrollProgress, [0, 1], [0, 110]);
+  const heroScale = useTransform(heroScrollProgress, [0, 1], [1, 0.95]);
   const cursorFx = useCursorSplash();
 
   return (
@@ -39,10 +52,13 @@ export default function EventDetailClient({ event }: EventDetailClientProps) {
 
       <motion.div
         className="fixed left-0 right-0 top-0 z-[80] h-1 origin-left bg-[linear-gradient(90deg,#8B1A1A,#C9A84C,#1B5E3B)]"
-        style={{ scaleX: scrollYProgress }}
+        style={{ scaleX: pageScrollProgress }}
       />
 
-      <section className="relative overflow-hidden border-b-2 border-[#C9A84C]/40 bg-[#1C1C1C] px-6 py-16 text-[#F5F0E8] md:px-16">
+      <section
+        ref={heroRef}
+        className="relative overflow-hidden border-b-2 border-[#C9A84C]/40 bg-[#1C1C1C] px-6 py-16 text-[#F5F0E8] md:px-16"
+      >
         <div
           className="pointer-events-none absolute inset-0 opacity-60"
           style={{
@@ -111,15 +127,18 @@ export default function EventDetailClient({ event }: EventDetailClientProps) {
             whileHover={{ y: -8, scale: 1.02 }}
             className="group relative aspect-[4/5] w-full overflow-hidden rounded-3xl border-4 border-[#C9A84C]/30 shadow-[0_20px_50px_rgba(0,0,0,0.5)]"
           >
-            {event.poster ? (
+            {event.posterUrl ? (
               // eslint-disable-next-line @next/next/no-img-element
               <img
-                src={event.poster}
+                src={event.posterUrl}
                 alt={event.title}
                 className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-110"
               />
             ) : (
-              <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-[#1B5E3B] to-[#0A2617]">
+              <div
+                className="flex h-full w-full items-center justify-center"
+                style={{ background: event.posterFallback }}
+              >
                 <span className="text-6xl opacity-30">✦</span>
               </div>
             )}
@@ -136,7 +155,7 @@ export default function EventDetailClient({ event }: EventDetailClientProps) {
         <motion.article
           initial="hidden"
           whileInView="show"
-          viewport={{ once: false, amount: 0.28 }}
+          viewport={{ once: true, amount: 0.28 }}
           variants={reveal}
           whileHover={{ y: -6 }}
           className="rounded-2xl border border-[#C9A84C]/40 bg-white p-6 shadow-[0_18px_40px_rgba(40,22,6,0.12)]"
@@ -164,7 +183,7 @@ export default function EventDetailClient({ event }: EventDetailClientProps) {
         <motion.article
           initial="hidden"
           whileInView="show"
-          viewport={{ once: false, amount: 0.28 }}
+          viewport={{ once: true, amount: 0.28 }}
           variants={reveal}
           whileHover={{ y: -6 }}
           className="rounded-2xl border border-[#C9A84C]/40 bg-white p-6 shadow-[0_18px_40px_rgba(40,22,6,0.12)]"
@@ -205,7 +224,7 @@ export default function EventDetailClient({ event }: EventDetailClientProps) {
         <motion.div
           initial="hidden"
           whileInView="show"
-          viewport={{ once: false }}
+          viewport={{ once: true }}
           variants={reveal}
           className="mx-auto flex w-full max-w-6xl flex-col gap-4 md:flex-row md:items-center md:justify-between"
         >

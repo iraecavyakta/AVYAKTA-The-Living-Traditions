@@ -1,6 +1,7 @@
 import { createClient } from "@supabase/supabase-js";
 import { NextRequest, NextResponse } from "next/server";
 import { retryWithBackoff } from "../../../lib/api/retry";
+import { verifyAdminAuth } from "../../../lib/auth/session";
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -30,6 +31,17 @@ export async function GET() {
 // POST - Create a new member
 export async function POST(request: NextRequest) {
   try {
+    const isAuthenticated = await verifyAdminAuth();
+    if (!isAuthenticated) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: "Unauthorized: Admin authentication required",
+        },
+        { status: 401 },
+      );
+    }
+
     const body = await request.json();
     const { name, domain, role, photo_url } = body;
 

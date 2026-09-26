@@ -1,4 +1,5 @@
 import { SignJWT, jwtVerify, type JWTPayload } from "jose";
+import { cookies } from "next/headers";
 
 const SESSION_COOKIE_NAME = "avyakta-auth";
 const SESSION_ALGORITHM = "HS256";
@@ -58,5 +59,27 @@ export async function verifySessionId(
     return payload as SessionPayload;
   } catch {
     return null;
+  }
+}
+
+/**
+ * True only for the full-admin session (login_credentials.domain === null).
+ * A domain head has a valid session too, but must not pass this check —
+ * route handlers that gate club-wide content (events, members, recruitment
+ * status) should use this, not just "is there a session at all".
+ */
+export async function verifyAdminAuth(): Promise<boolean> {
+  try {
+    const cookieStore = await cookies();
+    const token = cookieStore.get(getSessionCookieName())?.value;
+
+    if (!token) {
+      return false;
+    }
+
+    const session = await verifySessionId(token);
+    return session !== null && session.domain === null;
+  } catch {
+    return false;
   }
 }

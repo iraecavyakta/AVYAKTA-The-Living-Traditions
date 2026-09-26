@@ -1,33 +1,13 @@
 import { createClient } from "@supabase/supabase-js";
 import { NextRequest, NextResponse } from "next/server";
-import { cookies } from "next/headers";
 import { retryWithBackoff } from "../../../../lib/api/retry";
-import {
-  verifySessionId,
-  getSessionCookieName,
-} from "../../../../lib/auth/session";
+import { verifyAdminAuth } from "../../../../lib/auth/session";
+import { eventUpdateSchema } from "../../../../lib/validators/event";
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.SUPABASE_SERVICE_ROLE_KEY!,
 );
-
-// Helper to verify admin authentication
-async function verifyAdminAuth(): Promise<boolean> {
-  try {
-    const cookieStore = await cookies();
-    const token = cookieStore.get(getSessionCookieName())?.value;
-
-    if (!token) {
-      return false;
-    }
-
-    const session = await verifySessionId(token);
-    return session !== null;
-  } catch {
-    return false;
-  }
-}
 
 type EventUpdatePayload = {
   title?: string;
@@ -60,11 +40,18 @@ export async function GET(
         `,
         )
         .eq("id", id)
-        .single(),
+        .maybeSingle(),
     );
 
     const { data, error } = result;
     if (error) throw new Error(error.message);
+
+    if (!data) {
+      return NextResponse.json(
+        { success: false, error: "Event not found" },
+        { status: 404 },
+      );
+    }
 
     return NextResponse.json({ success: true, data });
   } catch (error) {
@@ -96,6 +83,18 @@ export async function PUT(
 
     const { id } = await params;
     const body = await request.json();
+    const validation = eventUpdateSchema.safeParse(body);
+    if (!validation.success) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: "Validation failed",
+          details: validation.error.flatten(),
+        },
+        { status: 400 },
+      );
+    }
+
     const {
       title,
       description,
@@ -109,7 +108,7 @@ export async function PUT(
       more_description,
       slug_image_url,
       poster_image_urls,
-    } = body;
+    } = validation.data;
 
     const updatePayload: EventUpdatePayload = {};
 

@@ -4,6 +4,10 @@ import { registrationSchema } from "@/lib/validators/registration";
 import { getSupabaseAdmin } from "@/lib/supabase/server";
 import { retryWithBackoff } from "@/lib/api/retry";
 import { verifySessionId, getSessionCookieName } from "@/lib/auth/session";
+import { getClientIp, rateLimit } from "@/lib/security/rateLimit";
+
+const SUBMIT_LIMIT = 5;
+const SUBMIT_WINDOW_MS = 10 * 60 * 1000;
 
 async function verifyAdminAuth(): Promise<boolean> {
   try {
@@ -23,6 +27,22 @@ async function verifyAdminAuth(): Promise<boolean> {
 
 export async function POST(request: NextRequest) {
   try {
+    const ip = getClientIp(request);
+    const limitResult = rateLimit(
+      `registration:${ip}`,
+      SUBMIT_LIMIT,
+      SUBMIT_WINDOW_MS,
+    );
+    if (!limitResult.allowed) {
+      return NextResponse.json(
+        { error: "Too many submissions. Please try again later." },
+        {
+          status: 429,
+          headers: { "Retry-After": String(limitResult.retryAfterSeconds) },
+        },
+      );
+    }
+
     const body = await request.json();
     const parsed = registrationSchema.safeParse(body);
 

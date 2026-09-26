@@ -88,7 +88,7 @@ export const registration = pgTable("registration", {
   email: text("email").notNull(),
   phone_no: text("phone_no").notNull(),
   payment_image_url: text("payment_image_url"),
-  is_volunteer: boolean("is_volunteer").default(false),
+  is_volunteer: boolean("is_volunteer").notNull().default(false),
   class_year: integer("class_year"),
   section: text("section"),
   dietary_needs: text("dietary_needs"),
@@ -127,4 +127,9 @@ export const indicator = pgTable("indicator", {
   id: uuid("id").primaryKey().defaultRandom(),
   domain: text("domain").notNull().unique(),
   indicator: boolean("indicator").default(false),
+});
+
+export const recruitment_config = pgTable("recruitment_config", {
+  id: boolean("id").primaryKey().default(true),
+  is_open: boolean("is_open").notNull().default(true),
 });

@@ -8,9 +8,29 @@ import {
 import { loginSchema } from "../../../../lib/validators/auth";
 import { formatDomainToUrl } from "@/lib/utils/domainFormatter";
 import { isValidDomainName } from "@/lib/utils/domainValidator";
+import { getClientIp, rateLimit } from "@/lib/security/rateLimit";
+
+const LOGIN_ATTEMPT_LIMIT = 8;
+const LOGIN_ATTEMPT_WINDOW_MS = 10 * 60 * 1000;
 
 export async function POST(request: NextRequest) {
   try {
+    const ip = getClientIp(request);
+    const limitResult = rateLimit(
+      `login:${ip}`,
+      LOGIN_ATTEMPT_LIMIT,
+      LOGIN_ATTEMPT_WINDOW_MS,
+    );
+    if (!limitResult.allowed) {
+      return NextResponse.json(
+        { error: "Too many login attempts. Please try again later." },
+        {
+          status: 429,
+          headers: { "Retry-After": String(limitResult.retryAfterSeconds) },
+        },
+      );
+    }
+
     const body = await request.json();
 
     // Validate input
@@ -22,7 +42,8 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const { email, password } = validation.data;
+    const { password } = validation.data;
+    const email = validation.data.email.trim().toLowerCase();
 
     // Use Supabase admin client to verify credentials
     const supabaseAdmin = getSupabaseAdmin();

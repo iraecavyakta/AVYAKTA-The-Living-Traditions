@@ -1,6 +1,6 @@
 import "server-only";
 
-import { createClient } from "@/utils/supabase/server";
+import { createPublicClient } from "@/utils/supabase/server";
 
 export type GalleryImage = {
   id: string;
@@ -36,8 +36,12 @@ function slugify(value: string) {
 
 function splitUrls(input: string | null | undefined): string[] {
   if (!input) return [];
+  // Only split on newline/pipe, not comma - a data: URI's own
+  // "data:image/...;base64," prefix contains a comma, so splitting on it
+  // used to cut every base64-encoded image in half (the prefix kept, the
+  // actual image data discarded), leaving nothing renderable.
   return input
-    .split(/[\n,|]/)
+    .split(/[\n|]/)
     .map((item) => item.trim())
     .filter(
       (item) => /^https?:\/\//i.test(item) || /^data:image\//i.test(item),
@@ -152,7 +156,7 @@ function fallbackGalleryEvents(): GalleryEvent[] {
 
 export async function getGalleryEventsFromDb(): Promise<GalleryEvent[]> {
   try {
-    const supabase = await createClient();
+    const supabase = createPublicClient();
     const { data: rows, error } = await supabase
       .from("events")
       .select(
