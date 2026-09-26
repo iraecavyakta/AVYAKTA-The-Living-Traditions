@@ -96,7 +96,6 @@
   max-width: 600px;
   margin-left: auto;
   margin-right: auto;
-  text-shadow: 0 0 8px rgb(255, 9, 9);
 }
 
 /* ============ RANGOLI DIVIDER ============ */
@@ -183,8 +182,8 @@
   position: relative;
   z-index: 2;
   text-shadow:
-    0 0 7 rgba(228, 56, 56, 0.986),
-    0 0 9 rgba(97, 26, 26, 0.959);
+    0 0 7px rgba(228, 56, 56, 0.986),
+    0 0 9px rgba(97, 26, 26, 0.959);
 }
 
 .ethics-content {
@@ -344,7 +343,7 @@
   font-family: "Inter", "DM Sans", sans-serif;
   font-size: 0.85rem;
   font-weight: 800;
-  color: #c60000 !important;
+  color: var(--charcoal-black);
   text-transform: uppercase;
   letter-spacing: 0.1em;
   margin-bottom: 0;
@@ -1145,51 +1144,8 @@
 
 /* ============ DARK MODE SUPPORT ============ */
 
-@media (prefers-color-scheme: dark) {
-  .recruitment-page {
-    background: linear-gradient(135deg, #2a2a2a 0%, #1f1f1f 100%);
-  }
-
-  .recruitment-form-container {
-    background: linear-gradient(135deg, #3a3a3a 0%, #2f2f2f 100%);
-    border-top-color: var(--gold-light);
-  }
-
-  .recruitment-title,
-  .form-section-label {
-    color: #f5f0e8;
-  }
-
-  .recruitment-subtitle {
-    color: #b8b8b8;
-  }
-
-  .form-input,
-  .form-textarea,
-  .form-select {
-    background: #1f1f1f;
-    border-color: #3a3a3a;
-    color: #e0e0e0;
-  }
-
-  .form-input::placeholder,
-  .form-textarea::placeholder {
-    color: #a8a8a8;
-  }
-
-  .form-label {
-    color: #e0e0e0;
-  }
-
-  .form-hint {
-    color: #999;
-  }
-
-  .ethics-statement {
-    background: linear-gradient(
-      135deg,
-      rgba(27, 94, 59, 0.2) 0%,
-      transparent 100%
-    );
-  }
-}
+/* Intentionally no @media (prefers-color-scheme: dark) block here - this
+   page uses one warm, traditional theme regardless of OS preference. A
+   previous dark-mode variant made labels/inputs unreadable (near-black
+   inputs, low-contrast text) since it wasn't kept in sync with the rest
+   of the site, which has no dark mode anywhere else. */

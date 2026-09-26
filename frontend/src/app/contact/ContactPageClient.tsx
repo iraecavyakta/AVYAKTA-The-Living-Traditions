@@ -62,7 +62,7 @@ export default function ContactPageClient() {
         >
           {/* Instagram Card */}
           <motion.a
-            href="https://instagram.com/avyakta"
+            href="https://instagram.com/avyakta_pesu"
             target="_blank"
             rel="noopener noreferrer"
             variants={fadeUp}
@@ -100,7 +100,7 @@ export default function ContactPageClient() {
 
           {/* Email Card */}
           <motion.a
-            href="mailto:contact@avyakta.com"
+            href="mailto:avyakta@ecc.pes.edu"
             variants={fadeUp}
             whileHover={{ y: -8, scale: 1.02 }}
             className="group relative overflow-hidden bg-white rounded-[24px] p-8 border-2 border-[#C9A84C]/30 shadow-[0_15px_40px_rgba(146,121,27,0.08)] hover:border-[#92791B] hover:shadow-[0_20px_50px_rgba(146,121,27,0.15)] transition-all duration-300"
@@ -164,6 +164,8 @@ export default function ContactPageClient() {
               Club Heads
             </h3>
 
+            {/* TODO: placeholder names/phone numbers below — replace with real
+                club head details before this page ships. */}
             <div className="space-y-4">
               <div className="flex justify-between items-center bg-black/30 p-3 rounded-xl border border-white/5">
                 <div>

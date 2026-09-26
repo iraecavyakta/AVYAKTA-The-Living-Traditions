@@ -14,7 +14,10 @@ export type EventItem = {
   date: string;
   status: EventStatus;
   domain: string;
-  poster: string;
+  /** Real uploaded image URL, or null if none was ever set. */
+  posterUrl: string | null;
+  /** CSS gradient (not wrapped in url(...)) shown when posterUrl is null. */
+  posterFallback: string;
   venue?: string;
   highlights: string[];
   timeline: EventTimelineItem[];

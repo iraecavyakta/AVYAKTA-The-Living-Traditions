@@ -4,7 +4,7 @@ import bgFormsImage from "@/components/forms/bg-forms.jpeg";
 import "../recruitment/recruitment.css"; // Reuse recruitment styles
 import { getEventsFromDb } from "@/lib/data/events";
 
-export const dynamic = "force-dynamic";
+export const revalidate = 60;
 
 export default async function RegistrationsPage() {
   const allEvents = await getEventsFromDb();

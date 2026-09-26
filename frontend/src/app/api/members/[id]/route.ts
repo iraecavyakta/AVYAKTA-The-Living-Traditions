@@ -1,5 +1,6 @@
 import { createClient } from "@supabase/supabase-js";
 import { NextRequest, NextResponse } from "next/server";
+import { verifyAdminAuth } from "../../../../lib/auth/session";
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -18,7 +19,7 @@ export async function GET(
       .from("members")
       .select("*")
       .eq("id", id)
-      .single();
+      .maybeSingle();
 
     if (error) throw new Error(error.message);
 
@@ -45,6 +46,17 @@ export async function PUT(
   { params }: { params: Promise<{ id: string }> },
 ) {
   try {
+    const isAuthenticated = await verifyAdminAuth();
+    if (!isAuthenticated) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: "Unauthorized: Admin authentication required",
+        },
+        { status: 401 },
+      );
+    }
+
     const { id } = await params;
     const body = await request.json();
     const { name, domain, role, photo_url } = body;
@@ -61,7 +73,7 @@ export async function PUT(
       .update({ name, domain, role, photo_url: photo_url || null })
       .eq("id", id)
       .select()
-      .single();
+      .maybeSingle();
 
     if (error) throw new Error(error.message);
 
@@ -88,6 +100,17 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> },
 ) {
   try {
+    const isAuthenticated = await verifyAdminAuth();
+    if (!isAuthenticated) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: "Unauthorized: Admin authentication required",
+        },
+        { status: 401 },
+      );
+    }
+
     const { id } = await params;
 
     const { error } = await supabase.from("members").delete().eq("id", id);

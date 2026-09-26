@@ -1,32 +1,39 @@
-import { promises as fs } from "fs";
-import path from "path";
+import "server-only";
+import { getSupabaseAdmin } from "@/lib/supabase/server";
 
-const CONFIG_PATH = path.join(
-  process.cwd(),
-  "src/config/recruitment-status.json",
-);
-
-type RecruitmentStatusConfig = {
-  isOpen: boolean;
-};
+// Backed by the `recruitment_config` table (a single row, id=true) instead
+// of a local JSON file — a file on disk doesn't survive on serverless
+// deployments (read-only/ephemeral FS, and each instance has its own copy),
+// which is why toggling it previously didn't reliably take effect.
 
 export async function getRecruitmentStatus(): Promise<boolean> {
   try {
-    const raw = await fs.readFile(CONFIG_PATH, "utf-8");
-    const parsed = JSON.parse(raw) as RecruitmentStatusConfig;
-    return Boolean(parsed.isOpen);
+    const supabase = getSupabaseAdmin();
+    const { data, error } = await supabase
+      .from("recruitment_config")
+      .select("is_open")
+      .eq("id", true)
+      .maybeSingle();
+
+    if (error || !data) {
+      // Missing row/unreachable DB - default to open so the site behaves
+      // normally until an admin explicitly closes recruitment.
+      return true;
+    }
+
+    return Boolean(data.is_open);
   } catch {
-    // Config file missing/unreadable - default to open so the site behaves
-    // normally until an admin explicitly closes recruitment.
     return true;
   }
 }
 
 export async function setRecruitmentStatus(isOpen: boolean): Promise<void> {
-  const config: RecruitmentStatusConfig = { isOpen };
-  await fs.writeFile(
-    CONFIG_PATH,
-    JSON.stringify(config, null, 2) + "\n",
-    "utf-8",
-  );
+  const supabase = getSupabaseAdmin();
+  const { error } = await supabase
+    .from("recruitment_config")
+    .upsert([{ id: true, is_open: isOpen }], { onConflict: "id" });
+
+  if (error) {
+    throw new Error(`Failed to update recruitment status: ${error.message}`);
+  }
 }

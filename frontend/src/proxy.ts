@@ -3,8 +3,8 @@ import { jwtVerify } from "jose";
 import { getSessionCookieName } from "./lib/auth/session";
 import { formatDomainToUrl } from "./lib/utils/domainFormatter";
 
-const PROTECTED_ROUTES = ["/dashboard", "/avyakta-control", "/domain"];
-const ADMIN_ONLY_ROUTES = ["/dashboard", "/avyakta-control"];
+const PROTECTED_ROUTES = ["/dashboard", "/domain"];
+const ADMIN_ONLY_ROUTES = ["/dashboard"];
 
 type SessionClaims = { domain: string | null } | null;
 
@@ -80,8 +80,6 @@ export const config = {
   matcher: [
     "/dashboard",
     "/dashboard/:path*",
-    "/avyakta-control",
-    "/avyakta-control/:path*",
     "/domain",
     "/domain/:path*",
     "/auth/login",

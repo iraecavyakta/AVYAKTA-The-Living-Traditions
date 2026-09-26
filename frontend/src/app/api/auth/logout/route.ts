@@ -8,7 +8,16 @@ export async function POST() {
       { status: 200 },
     );
 
-    response.cookies.delete(getSessionCookieName());
+    // Match the exact attributes used when the cookie was set (path,
+    // sameSite, secure) — the browser only clears a cookie when those
+    // attributes line up, a bare cookies.delete(name) can silently no-op.
+    response.cookies.set(getSessionCookieName(), "", {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax",
+      maxAge: 0,
+      path: "/",
+    });
 
     return response;
   } catch (error) {

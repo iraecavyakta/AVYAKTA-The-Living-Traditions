@@ -4,6 +4,17 @@ interface RetryResult {
   error: unknown;
 }
 
+// Postgrest/Postgres errors that will fail identically on every retry:
+// integrity constraint violations (23xxx), insufficient privilege, and
+// PostgREST schema/API errors (PGRST*, e.g. "column not found", "no rows").
+// Supabase errors carry a `code` like this, not an HTTP `status`.
+function isPermanentError(error: unknown): boolean {
+  if (typeof error !== "object" || error === null) return false;
+  const code = (error as { code?: string }).code;
+  if (typeof code !== "string") return false;
+  return code.startsWith("23") || code === "42501" || code.startsWith("PGRST");
+}
+
 export async function retryWithBackoff<T extends RetryResult>(
   fn: () => Promise<T>,
   maxAttempts = 3,
@@ -18,9 +29,8 @@ export async function retryWithBackoff<T extends RetryResult>(
 
       lastError = result.error;
 
-      // Don't retry if it's a client error (4xx)
-      const status = (result.error as { status?: number })?.status;
-      if (typeof status === "number" && status >= 400 && status < 500) {
+      // Don't retry errors that will fail the same way every time
+      if (isPermanentError(result.error)) {
         return result;
       }
 
