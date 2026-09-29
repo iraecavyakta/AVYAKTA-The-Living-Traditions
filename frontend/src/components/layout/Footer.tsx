@@ -103,8 +103,8 @@ export default function Footer({
           <div className="h-px bg-gold/20 mb-5" />
           <ul className="flex flex-col gap-3 list-none p-0 m-0">
             {[
-              { label: "Instagram", href: "https://instagram.com" },
-              { label: "Email Us", href: "mailto:avyakta@pesu.edu" },
+              { label: "Instagram", href: "https://instagram.com/avyakta_ira" },
+              { label: "Email Us", href: "mailto:avyakta@ecc.pes.edu" },
             ].map(({ label, href }) => (
               <li key={label}>
                 <a

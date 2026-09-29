@@ -1,4 +1,5 @@
 import { createClient } from "@supabase/supabase-js";
+import { revalidatePath } from "next/cache";
 import { NextRequest, NextResponse } from "next/server";
 import { verifyAdminAuth } from "../../../../lib/auth/session";
 
@@ -59,7 +60,7 @@ export async function PUT(
 
     const { id } = await params;
     const body = await request.json();
-    const { name, domain, role, photo_url } = body;
+    const { name, domain, role, photo_url, tags, year } = body;
 
     if (!name || !domain || !role) {
       return NextResponse.json(
@@ -70,7 +71,14 @@ export async function PUT(
 
     const { data, error } = await supabase
       .from("members")
-      .update({ name, domain, role, photo_url: photo_url || null })
+      .update({
+        name,
+        domain,
+        role,
+        photo_url: photo_url || null,
+        tags: Array.isArray(tags) ? tags : [],
+        year: Number.isInteger(year) ? year : null,
+      })
       .eq("id", id)
       .select()
       .maybeSingle();
@@ -83,6 +91,8 @@ export async function PUT(
         { status: 404 },
       );
     }
+
+    revalidatePath("/members");
 
     return NextResponse.json({ success: true, data });
   } catch (error) {
@@ -116,6 +126,8 @@ export async function DELETE(
     const { error } = await supabase.from("members").delete().eq("id", id);
 
     if (error) throw new Error(error.message);
+
+    revalidatePath("/members");
 
     return NextResponse.json({
       success: true,

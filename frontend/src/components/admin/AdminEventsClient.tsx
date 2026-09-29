@@ -22,6 +22,7 @@ interface Event {
   id: string;
   title: string;
   description: string | null;
+  highlights?: string | null;
   image_url: string | null;
   date: string | null;
   venue?: string | null;

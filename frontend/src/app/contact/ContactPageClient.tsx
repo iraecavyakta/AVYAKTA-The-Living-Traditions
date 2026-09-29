@@ -62,7 +62,7 @@ export default function ContactPageClient() {
         >
           {/* Instagram Card */}
           <motion.a
-            href="https://instagram.com/avyakta_pesu"
+            href="https://instagram.com/avyakta_ira"
             target="_blank"
             rel="noopener noreferrer"
             variants={fadeUp}
@@ -92,7 +92,7 @@ export default function ContactPageClient() {
             <h3 className="font-serif text-3xl font-bold text-[#1C1C1C] mb-2 group-hover:text-[#92791B] transition-colors">
               Instagram
             </h3>
-            <p className="text-[#1C1C1C]/70 font-medium">@avyakta_pesu</p>
+            <p className="text-[#1C1C1C]/70 font-medium">@avyakta_ira</p>
             <div className="mt-8 flex items-center text-sm font-bold text-[#92791B] uppercase tracking-wider group-hover:translate-x-2 transition-transform">
               Follow us <span>→</span>
             </div>
@@ -164,55 +164,41 @@ export default function ContactPageClient() {
               Club Heads
             </h3>
 
-            {/* TODO: placeholder names/phone numbers below — replace with real
-                club head details before this page ships. */}
-            <div className="space-y-4">
-              <div className="flex justify-between items-center bg-black/30 p-3 rounded-xl border border-white/5">
-                <div>
-                  <p className="text-[#F5F0E8] font-medium">
-                    Head of Operations
-                  </p>
-                  <p className="text-xs text-[#C9A84C]">John Doe</p>
-                </div>
-                <a
-                  href="tel:+919876543210"
-                  className="w-8 h-8 rounded-full bg-[#C9A84C]/20 flex items-center justify-center text-[#C9A84C] hover:bg-[#C9A84C] hover:text-[#1C1C1C] transition-colors"
+            <div className="space-y-3">
+              {[
+                { role: "Club Head", label: "Club Head" },
+                { role: "Head of Ops", label: "Head of Ops" },
+                { role: "Head of Tech", label: "Head of Tech" },
+              ].map(({ role, label }) => (
+                <div
+                  key={role}
+                  className="flex justify-between items-center bg-black/30 p-3 rounded-xl border border-white/5"
                 >
-                  <svg
-                    width="14"
-                    height="14"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
+                  <div>
+                    <p className="text-[#F5F0E8] font-medium">{label}</p>
+                    <p className="text-xs text-[#C9A84C]/60 italic">
+                      Contact via email
+                    </p>
+                  </div>
+                  <a
+                    href="mailto:avyakta@ecc.pes.edu"
+                    className="w-8 h-8 rounded-full bg-[#C9A84C]/20 flex items-center justify-center text-[#C9A84C] hover:bg-[#C9A84C] hover:text-[#1C1C1C] transition-colors"
+                    aria-label={`Email ${label}`}
                   >
-                    <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path>
-                  </svg>
-                </a>
-              </div>
-              <div className="flex justify-between items-center bg-black/30 p-3 rounded-xl border border-white/5">
-                <div>
-                  <p className="text-[#F5F0E8] font-medium">
-                    Head of Creations
-                  </p>
-                  <p className="text-xs text-[#C9A84C]">Jane Smith</p>
+                    <svg
+                      width="14"
+                      height="14"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                    >
+                      <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
+                      <polyline points="22,6 12,13 2,6"></polyline>
+                    </svg>
+                  </a>
                 </div>
-                <a
-                  href="tel:+919876543210"
-                  className="w-8 h-8 rounded-full bg-[#C9A84C]/20 flex items-center justify-center text-[#C9A84C] hover:bg-[#C9A84C] hover:text-[#1C1C1C] transition-colors"
-                >
-                  <svg
-                    width="14"
-                    height="14"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                  >
-                    <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path>
-                  </svg>
-                </a>
-              </div>
+              ))}
             </div>
           </motion.div>
         </motion.div>

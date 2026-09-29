@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
-import { motion, useScroll, useTransform } from "framer-motion";
+import { useEffect, useMemo, useState } from "react";
+import { motion } from "framer-motion";
 import type { GalleryEvent, GalleryImage } from "@/lib/data/gallery";
 
 type GalleryPageClientProps = {
@@ -9,20 +9,7 @@ type GalleryPageClientProps = {
 };
 
 const PAGE_SIZE = 8;
-const TOP_GRID_SIZE = 32;
-
-// Cycled to give the top showcase grid a mixed-rectangle collage look
-// instead of a uniform grid.
-const TILE_PATTERN = [
-  "col-span-2 row-span-2",
-  "col-span-1 row-span-1",
-  "col-span-1 row-span-2",
-  "col-span-1 row-span-1",
-  "col-span-1 row-span-1",
-  "col-span-2 row-span-1",
-  "col-span-1 row-span-1",
-  "col-span-1 row-span-2",
-];
+const SHOWCASE_DURATION_SECONDS = 30;
 
 type LightboxState = {
   images: GalleryImage[];
@@ -37,58 +24,6 @@ const sectionReveal = {
     transition: { duration: 0.7, ease: [0.22, 1, 0.36, 1] as const },
   },
 };
-
-// Shared pin-and-pan mechanics for a horizontal image wall: a tall spacer
-// holds a sticky viewport in place while the track inside slides left by
-// exactly however far its content overflows the viewport - measured, not
-// guessed, so the pan neither overshoots nor stops short.
-function useHorizontalPan(itemCount: number, enabled: boolean) {
-  const sectionRef = useRef<HTMLElement | null>(null);
-  const viewportRef = useRef<HTMLDivElement | null>(null);
-  const trackRef = useRef<HTMLDivElement | null>(null);
-  const [maxPanPx, setMaxPanPx] = useState(0);
-  const [runwayPx, setRunwayPx] = useState(0);
-
-  useEffect(() => {
-    // When disabled, skip measuring and leave maxPanPx/runwayPx as they
-    // were - the values below are only ever read while enabled, via the
-    // `enabled ? ... : 0` guards, so stale state here has no effect.
-    if (!enabled) {
-      return;
-    }
-
-    function measure() {
-      const track = trackRef.current;
-      const viewport = viewportRef.current;
-      if (!track || !viewport) return;
-      const pan = Math.max(0, track.scrollWidth - viewport.clientWidth);
-      setMaxPanPx(pan);
-      // Scroll runway roughly matches the pan distance (~1 scroll px per
-      // pan px) plus one viewport height to settle into, so the pace feels
-      // consistent regardless of how many images are in the wall.
-      setRunwayPx(pan + viewport.clientHeight);
-    }
-
-    measure();
-    window.addEventListener("resize", measure);
-    return () => window.removeEventListener("resize", measure);
-  }, [enabled, itemCount]);
-
-  const { scrollYProgress } = useScroll({
-    target: sectionRef,
-    offset: ["start start", "end end"],
-  });
-  const x = useTransform(scrollYProgress, [0, 1], [0, enabled ? -maxPanPx : 0]);
-
-  return {
-    sectionRef,
-    viewportRef,
-    trackRef,
-    x,
-    runwayPx: enabled ? runwayPx : 0,
-    scrollYProgress,
-  };
-}
 
 function JaaliOverlay() {
   return (
@@ -112,7 +47,6 @@ export default function GalleryPageClient({
   );
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
   const [lightbox, setLightbox] = useState<LightboxState | null>(null);
-  const [isWideEnoughToPan, setIsWideEnoughToPan] = useState(false);
 
   // Every uploaded image across every event, for the showcase grid at the
   // top of the page.
@@ -120,39 +54,6 @@ export default function GalleryPageClient({
     () => initialEvents.flatMap((event) => event.images),
     [initialEvents],
   );
-  const topGridImages = useMemo(
-    () => allImages.slice(0, TOP_GRID_SIZE),
-    [allImages],
-  );
-
-  // The horizontal pan only makes sense once there's a wall wider than the
-  // viewport to pan across - on narrow screens it just cut images off the
-  // edge with no way to reach them, so it's desktop/tablet only.
-  useEffect(() => {
-    const query = window.matchMedia("(min-width: 768px)");
-    const update = () => setIsWideEnoughToPan(query.matches);
-    update();
-    query.addEventListener("change", update);
-    return () => query.removeEventListener("change", update);
-  }, []);
-
-  const {
-    sectionRef: topWallSectionRef,
-    viewportRef: topWallViewportRef,
-    trackRef: topWallTrackRef,
-    x: topWallX,
-    runwayPx: topWallRunwayPx,
-    scrollYProgress: topWallScrollYProgress,
-  } = useHorizontalPan(topGridImages.length, isWideEnoughToPan);
-  // The wall fades out over the last stretch of its own pin instead of
-  // cutting straight to the next section - a soft dissolve rather than a
-  // hard scroll-snap handoff.
-  const topWallOpacity = useTransform(
-    topWallScrollYProgress,
-    [0, 0.82, 1],
-    [1, 1, 0],
-  );
-
   function activateEvent(eventId: string) {
     setActiveEventId(eventId);
     setVisibleCount(PAGE_SIZE);
@@ -169,14 +70,6 @@ export default function GalleryPageClient({
   const visibleImages = useMemo(
     () => (activeEvent ? activeEvent.images.slice(0, visibleCount) : []),
     [activeEvent, visibleCount],
-  );
-
-  // The wall grows as the gallery does: two rows for a small collection,
-  // adding rows only once there are enough images to justify them, so it
-  // never starts out needlessly tall.
-  const wallRows = Math.min(
-    4,
-    Math.max(2, Math.ceil(topGridImages.length / 10)),
   );
 
   useEffect(() => {
@@ -241,77 +134,75 @@ export default function GalleryPageClient({
         backgroundRepeat: "no-repeat",
       }}
     >
-      {topGridImages.length > 0 && (
-        // Tall spacer + sticky inner stage: the wall stays pinned in place
-        // while you scroll through this section, so the pan reads as pure
-        // horizontal motion instead of diagonal (vertical page-scroll and
-        // horizontal transform happening at once). Taller than before by
-        // adding more rows (4 instead of 2), not by stretching each tile -
-        // every tile stays the same size, there's just more of them stacked
-        // vertically before the pan flows sideways.
+      {allImages.length > 0 && (
         <section
-          ref={topWallSectionRef}
-          className="relative w-full"
-          style={
-            isWideEnoughToPan
-              ? { height: `${topWallRunwayPx || 1}px` }
-              : undefined
-          }
+          className="px-4 pb-8 pt-24 md:px-8 md:pt-28"
+          aria-label="All event photographs"
         >
-          <motion.div
-            ref={topWallViewportRef}
-            className={`w-full overflow-hidden pt-20 ${isWideEnoughToPan ? "sticky top-0 h-screen flex flex-col justify-center" : ""}`}
-            style={{
-              opacity: isWideEnoughToPan ? topWallOpacity : 1,
-              // Scoped to this box (not the whole page) so it stays static
-              // while the section is pinned instead of visibly scrolling
-              // underneath the frozen foreground - no backgroundAttachment:
-              // "fixed" needed (that forces a repaint every scroll frame).
-              backgroundImage: "url(/images/recruitment/recruit-bg-4.png)",
-              backgroundSize: "cover",
-              backgroundPosition: "center",
-              backgroundRepeat: "no-repeat",
-            }}
-          >
-            <motion.div
-              ref={topWallTrackRef}
-              className="grid w-full grid-cols-3 grid-flow-row-dense auto-rows-[110px] gap-3 sm:grid-cols-4 sm:auto-rows-[140px] sm:gap-4 md:w-fit md:grid-cols-none md:grid-flow-col-dense md:auto-cols-[160px]"
-              style={{
-                x: topWallX,
-                ...(isWideEnoughToPan
-                  ? { gridTemplateRows: `repeat(${wallRows}, 160px)` }
-                  : null),
-              }}
-            >
-              {topGridImages.map((image, index) => (
-                <button
-                  key={image.id}
-                  type="button"
-                  onClick={() => setLightbox({ images: allImages, index })}
-                  className={`group relative block overflow-hidden rounded-md border border-[#F5F0E8]/60 bg-[#EDE3D2] ${TILE_PATTERN[index % TILE_PATTERN.length]}`}
-                >
-                  <img
-                    src={image.url}
-                    alt={image.name}
-                    className="h-full w-full object-cover transition duration-300 group-hover:scale-[1.03]"
-                    loading="lazy"
-                  />
-                  <JaaliOverlay />
-                </button>
-              ))}
-            </motion.div>
-
-            <div
-              className={`flex justify-center py-6 ${isWideEnoughToPan ? "absolute inset-x-0 bottom-0" : ""}`}
-            >
+          <div className="mx-auto max-w-7xl">
+            <div className="mb-5 flex flex-wrap items-end justify-between gap-3 text-[#F5F0E8]">
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[#C9A84C]">
+                  Avyakta memories
+                </p>
+                <h1 className="mt-2 font-serif text-3xl font-bold md:text-4xl">
+                  A celebration in every frame
+                </h1>
+              </div>
               <a
                 href="#browse-by-event"
-                className="rounded-full bg-[#1C1C1C]/70 px-4 py-2 text-sm font-semibold uppercase tracking-[0.12em] text-[#F5F0E8] backdrop-blur-sm transition hover:bg-[#1C1C1C]/85"
+                className="rounded-full border border-[#C9A84C]/70 bg-[#1C1C1C]/60 px-4 py-2 text-xs font-semibold uppercase tracking-wider text-[#F5F0E8] backdrop-blur transition hover:bg-[#1C1C1C]/85"
               >
-                Browse by Event ↓
+                Browse by event ↓
               </a>
             </div>
-          </motion.div>
+            <div className="relative h-[250px] overflow-hidden rounded-2xl border border-[#C9A84C]/55 bg-[#1C1C1C]/55 shadow-[0_18px_55px_rgba(0,0,0,.3)] sm:h-[320px] lg:h-[420px]">
+              <div className="pointer-events-none absolute inset-y-0 left-0 z-10 w-8 bg-gradient-to-r from-[#1c1c1c]/65 to-transparent sm:w-16" />
+              <div className="pointer-events-none absolute inset-y-0 right-0 z-10 w-8 bg-gradient-to-l from-[#1c1c1c]/65 to-transparent sm:w-16" />
+              <motion.div
+                className="flex h-full w-max"
+                animate={{ x: ["0%", "-50%"] }}
+                transition={{
+                  duration: SHOWCASE_DURATION_SECONDS,
+                  repeat: Infinity,
+                  ease: "linear",
+                }}
+              >
+                {[0, 1].map((copy) => (
+                  <div
+                    key={copy}
+                    className="flex h-full shrink-0 gap-3 pr-3 sm:gap-4 sm:pr-4"
+                  >
+                    {allImages.map((image, index) => (
+                      <button
+                        key={`${copy}-${image.id}`}
+                        type="button"
+                        onClick={() =>
+                          setLightbox({ images: allImages, index })
+                        }
+                        aria-label={`View ${image.name}`}
+                        className="group relative my-3 h-[calc(100%-1.5rem)] w-[190px] shrink-0 overflow-hidden rounded-xl border border-[#F5F0E8]/55 bg-[#EDE3D2] sm:my-4 sm:h-[calc(100%-2rem)] sm:w-[250px]"
+                      >
+                        <img
+                          src={image.url}
+                          alt={image.name}
+                          className="h-full w-full object-cover transition duration-500 group-hover:scale-105"
+                          loading={index < 6 ? "eager" : "lazy"}
+                        />
+                        <JaaliOverlay />
+                        <span className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/75 to-transparent px-3 pb-3 pt-8 text-left text-xs font-semibold text-white">
+                          {image.name}
+                        </span>
+                      </button>
+                    ))}
+                  </div>
+                ))}
+              </motion.div>
+            </div>
+            <p className="mt-3 text-center text-xs text-[#F5F0E8]/70">
+              All event photos · Select a frame to view it larger
+            </p>
+          </div>
         </section>
       )}
 

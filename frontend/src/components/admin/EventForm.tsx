@@ -7,6 +7,7 @@ interface Event {
   id: string;
   title: string;
   description: string | null;
+  highlights?: string | null;
   image_url: string | null;
   date: string | null;
   venue?: string | null;
@@ -35,6 +36,7 @@ interface EventFormProps {
 export interface EventFormData {
   title: string;
   description: string;
+  highlights: string;
   image_url: string;
   date: string;
   venue?: string;
@@ -58,6 +60,7 @@ export default function EventForm({
   const [formData, setFormData] = useState<EventFormData>({
     title: event?.title || "",
     description: event?.description || "",
+    highlights: event?.highlights || "",
     image_url: event?.image_url || "",
     date: event?.date || "",
     venue: event?.venue || "",
@@ -89,6 +92,7 @@ export default function EventForm({
       setFormData({
         title: event?.title || "",
         description: event?.description || "",
+        highlights: event?.highlights || "",
         image_url: event?.image_url || "",
         date: event?.date || "",
         venue: event?.venue || "",
@@ -274,6 +278,7 @@ export default function EventForm({
       setFormData({
         title: "",
         description: "",
+        highlights: "",
         image_url: "",
         date: "",
         venue: "",
@@ -326,6 +331,23 @@ export default function EventForm({
             disabled={isLoading}
             maxLength={2048}
           />
+        </div>
+
+        <div className="form-group">
+          <label htmlFor="highlights">Highlights</label>
+          <textarea
+            id="highlights"
+            name="highlights"
+            value={formData.highlights}
+            onChange={handleInputChange}
+            placeholder="Add one highlight per line"
+            rows={4}
+            disabled={isLoading}
+            maxLength={2048}
+          />
+          <p className="help-text">
+            These appear as a short list on the event page.
+          </p>
         </div>
 
         <div className="form-group">
