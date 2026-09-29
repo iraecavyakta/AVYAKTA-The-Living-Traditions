@@ -19,16 +19,15 @@ export default async function Home() {
     getGalleryEventsFromDb(),
     getRecruitmentStatus(),
   ]);
-  const events = dbEvents
-    .map((e) => ({
-      id: e.id,
-      slug: e.slug,
-      name: e.title,
-      date: e.date,
-      description: toCardSummary(e.subtitle),
-      venue: e.venue,
-      highlights: e.highlights,
-    }));
+  const events = dbEvents.map((e) => ({
+    id: e.id,
+    slug: e.slug,
+    name: e.title,
+    date: e.date,
+    description: toCardSummary(e.subtitle),
+    venue: e.venue,
+    highlights: e.highlights,
+  }));
   return (
     <HomePageClient
       initialEvents={events}

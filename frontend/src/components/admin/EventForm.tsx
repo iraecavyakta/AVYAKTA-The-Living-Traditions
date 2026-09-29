@@ -345,7 +345,9 @@ export default function EventForm({
             disabled={isLoading}
             maxLength={2048}
           />
-          <p className="help-text">These appear as a short list on the event page.</p>
+          <p className="help-text">
+            These appear as a short list on the event page.
+          </p>
         </div>
 
         <div className="form-group">

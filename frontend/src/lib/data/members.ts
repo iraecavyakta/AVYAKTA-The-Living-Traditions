@@ -1,9 +1,7 @@
 import "server-only";
 
 import { createPublicClient } from "@/utils/supabase/server";
-import {
-  type MemberCard,
-} from "@/lib/data/memberSections";
+import { type MemberCard } from "@/lib/data/memberSections";
 
 function avatarFromName(name: string) {
   const safe = encodeURIComponent(name);
@@ -16,7 +14,9 @@ function tagsFromRow(raw: Record<string, unknown>, role: string): string[] {
     : [];
   if (explicit.length) return Array.from(new Set(explicit));
 
-  const oldSection = String(raw.section ?? "").toLowerCase().replace(/[_\s]+/g, "-");
+  const oldSection = String(raw.section ?? "")
+    .toLowerCase()
+    .replace(/[_\s]+/g, "-");
   if (oldSection.includes("faculty")) return ["faculty"];
   if (oldSection.includes("founder")) return ["founder", "previous"];
   if (oldSection.includes("previous-head")) return ["previous", "head"];
@@ -24,12 +24,22 @@ function tagsFromRow(raw: Record<string, unknown>, role: string): string[] {
   if (oldSection.includes("current")) return ["current"];
 
   const normalized = role.toLowerCase();
-  if (normalized.includes("faculty") || normalized.includes("advisor")) return ["faculty"];
-  if (normalized.includes("previous") || normalized.includes("former") || normalized.includes("alumni")) {
+  if (normalized.includes("faculty") || normalized.includes("advisor"))
+    return ["faculty"];
+  if (
+    normalized.includes("previous") ||
+    normalized.includes("former") ||
+    normalized.includes("alumni")
+  ) {
     return ["previous", ...(normalized.includes("head") ? ["head"] : [])];
   }
   if (normalized.includes("founder")) return ["founder", "previous"];
-  return ["current", ...(normalized.includes("head") || normalized.includes("president") ? ["head"] : [])];
+  return [
+    "current",
+    ...(normalized.includes("head") || normalized.includes("president")
+      ? ["head"]
+      : []),
+  ];
 }
 
 function sectionFromTags(tags: string[]): MemberCard["section"] {
@@ -82,12 +92,22 @@ export async function getMembersFromDb(): Promise<MemberCard[]> {
         const role = String(raw.role ?? "").trim();
         const designation =
           String(raw.designation ?? "").trim() ||
-          (role === "domain_head" ? "Domain Head" : role === "members" ? "Member" : role || "Member");
+          (role === "domain_head"
+            ? "Domain Head"
+            : role === "members"
+              ? "Member"
+              : role || "Member");
 
-        const tags = tagsFromRow(raw as Record<string, unknown>, role || designation);
+        const tags = tagsFromRow(
+          raw as Record<string, unknown>,
+          role || designation,
+        );
         const section = sectionFromTags(tags);
         const yearValue = Number(raw.year);
-        const year = Number.isInteger(yearValue) && yearValue >= 2000 && yearValue <= 2100 ? yearValue : null;
+        const year =
+          Number.isInteger(yearValue) && yearValue >= 2000 && yearValue <= 2100
+            ? yearValue
+            : null;
 
         const photoUrl =
           normalizeImageUrl(String(raw.photo_url ?? "").trim()) ??

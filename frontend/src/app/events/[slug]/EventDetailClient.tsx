@@ -8,7 +8,12 @@ import { useCursorSplash } from "@/hooks/useCursorSplash";
 import type { EventItem } from "@/lib/utils/events";
 import type { GalleryImage } from "@/lib/data/gallery";
 
-type EventManager = { id: string; name: string; domain: string; designation: string };
+type EventManager = {
+  id: string;
+  name: string;
+  domain: string;
+  designation: string;
+};
 
 type EventDetailClientProps = {
   event: EventItem;
@@ -33,7 +38,11 @@ const heroParticles = [
   { left: "86%", top: "26%", delay: 1.4, duration: 8.5 },
 ];
 
-export default function EventDetailClient({ event, galleryImages, eventManagers }: EventDetailClientProps) {
+export default function EventDetailClient({
+  event,
+  galleryImages,
+  eventManagers,
+}: EventDetailClientProps) {
   const heroRef = useRef<HTMLElement | null>(null);
   const [descriptionExpanded, setDescriptionExpanded] = useState(false);
   const longDescription = event.description.length > 480;
@@ -167,83 +176,122 @@ export default function EventDetailClient({ event, galleryImages, eventManagers 
           whileHover={{ y: -6 }}
           className="rounded-2xl border border-[#C9A84C]/40 bg-white p-6 shadow-[0_18px_40px_rgba(40,22,6,0.12)] md:p-8"
         >
-          <p className="text-xs font-bold uppercase tracking-[0.18em] text-[#8B1A1A]">The story so far</p>
-          <h2 className="mt-2 font-serif text-2xl font-semibold text-[#92791B]">About this event</h2>
-          <p className={`mt-4 whitespace-pre-line text-sm leading-7 text-[#1C1C1C]/80 md:text-base ${longDescription && !descriptionExpanded ? "line-clamp-5" : ""}`}>
+          <p className="text-xs font-bold uppercase tracking-[0.18em] text-[#8B1A1A]">
+            The story so far
+          </p>
+          <h2 className="mt-2 font-serif text-2xl font-semibold text-[#92791B]">
+            About this event
+          </h2>
+          <p
+            className={`mt-4 whitespace-pre-line text-sm leading-7 text-[#1C1C1C]/80 md:text-base ${longDescription && !descriptionExpanded ? "line-clamp-5" : ""}`}
+          >
             {event.description}
           </p>
           {longDescription && (
-            <button type="button" onClick={() => setDescriptionExpanded((expanded) => !expanded)} className="mt-4 rounded-full border border-[#92791B]/45 px-4 py-2 text-xs font-bold uppercase tracking-wider text-[#765F16] transition hover:bg-[#F5F0E8]">
+            <button
+              type="button"
+              onClick={() => setDescriptionExpanded((expanded) => !expanded)}
+              className="mt-4 rounded-full border border-[#92791B]/45 px-4 py-2 text-xs font-bold uppercase tracking-wider text-[#765F16] transition hover:bg-[#F5F0E8]"
+            >
               {descriptionExpanded ? "Show less" : "Read full description"}
             </button>
           )}
         </motion.article>
 
         <div className="grid gap-8 md:grid-cols-[0.9fr_1.1fr]">
-        <motion.article
-          initial="hidden"
-          whileInView="show"
-          viewport={{ once: true, amount: 0.28 }}
-          variants={reveal}
-          whileHover={{ y: -6 }}
-          className="rounded-2xl border border-[#C9A84C]/40 bg-white p-6 shadow-[0_18px_40px_rgba(40,22,6,0.12)]"
-        >
-          <h2 className="text-2xl font-semibold text-[#92791B]">Event Venue & Contact</h2>
-          <div className="mt-4 space-y-4">
-            <motion.div
-              whileHover={{ scale: 1.015 }}
-              className="flex flex-col gap-2 rounded-xl border border-[#C9A84C]/25 bg-[#F9F5EE] px-5 py-4"
-            >
-              <p className="text-xs font-bold uppercase tracking-[0.15em] text-[#8B1A1A]">
-                Venue Location
-              </p>
-              <p className="text-base text-[#1C1C1C]/90 font-medium">
-                {event.venue || "Venue will be announced shortly."}
-              </p>
-            </motion.div>
+          <motion.article
+            initial="hidden"
+            whileInView="show"
+            viewport={{ once: true, amount: 0.28 }}
+            variants={reveal}
+            whileHover={{ y: -6 }}
+            className="rounded-2xl border border-[#C9A84C]/40 bg-white p-6 shadow-[0_18px_40px_rgba(40,22,6,0.12)]"
+          >
+            <h2 className="text-2xl font-semibold text-[#92791B]">
+              Event Venue & Contact
+            </h2>
+            <div className="mt-4 space-y-4">
+              <motion.div
+                whileHover={{ scale: 1.015 }}
+                className="flex flex-col gap-2 rounded-xl border border-[#C9A84C]/25 bg-[#F9F5EE] px-5 py-4"
+              >
+                <p className="text-xs font-bold uppercase tracking-[0.15em] text-[#8B1A1A]">
+                  Venue Location
+                </p>
+                <p className="text-base text-[#1C1C1C]/90 font-medium">
+                  {event.venue || "Venue will be announced shortly."}
+                </p>
+              </motion.div>
 
-            <motion.div
-              whileHover={{ scale: 1.015 }}
-              className="flex flex-col gap-2 rounded-xl border border-[#C9A84C]/25 bg-[#F9F5EE] px-5 py-4"
-            >
-              <p className="text-xs font-bold uppercase tracking-[0.15em] text-[#8B1A1A]">Current Event Management & Operations Heads</p>
-              {eventManagers.length ? (
-                <div className="mt-1 flex flex-wrap gap-2">
-                  {eventManagers.map((manager) => (
-                    <span key={manager.id} className="rounded-full border border-[#C9A84C]/35 bg-white px-3 py-2 text-sm text-[#1C1C1C]/85">
-                      <span className="font-semibold">{manager.name}</span><span className="ml-2 text-xs text-[#737955]">{manager.domain} Head</span>
+              <motion.div
+                whileHover={{ scale: 1.015 }}
+                className="flex flex-col gap-2 rounded-xl border border-[#C9A84C]/25 bg-[#F9F5EE] px-5 py-4"
+              >
+                <p className="text-xs font-bold uppercase tracking-[0.15em] text-[#8B1A1A]">
+                  Current Event Management & Operations Heads
+                </p>
+                {eventManagers.length ? (
+                  <div className="mt-1 flex flex-wrap gap-2">
+                    {eventManagers.map((manager) => (
+                      <span
+                        key={manager.id}
+                        className="rounded-full border border-[#C9A84C]/35 bg-white px-3 py-2 text-sm text-[#1C1C1C]/85"
+                      >
+                        <span className="font-semibold">{manager.name}</span>
+                        <span className="ml-2 text-xs text-[#737955]">
+                          {manager.domain} Head
+                        </span>
+                      </span>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-sm text-[#1C1C1C]/70">
+                    Current team contacts will be listed here shortly.
+                  </p>
+                )}
+                <Link
+                  href="/contact"
+                  className="mt-2 w-fit text-xs font-bold uppercase tracking-wider text-[#8B1A1A] hover:underline"
+                >
+                  Contact Avyakta →
+                </Link>
+              </motion.div>
+            </div>
+          </motion.article>
+
+          <motion.article
+            initial="hidden"
+            whileInView="show"
+            viewport={{ once: true, amount: 0.28 }}
+            variants={reveal}
+            className="rounded-2xl border border-[#C9A84C]/40 bg-white p-6 shadow-[0_18px_40px_rgba(40,22,6,0.12)]"
+          >
+            <p className="text-xs font-bold uppercase tracking-[0.18em] text-[#8B1A1A]">
+              The highlights
+            </p>
+            <h2 className="mt-2 text-2xl font-semibold text-[#92791B]">
+              What made it special
+            </h2>
+            {event.highlights.length ? (
+              <ul className="mt-4 space-y-3 text-sm leading-7 text-[#1C1C1C]/86">
+                {event.highlights.map((point, index) => (
+                  <li
+                    key={`${index}-${point}`}
+                    className="flex gap-3 rounded-xl border border-[#C9A84C]/25 bg-[#F9F5EE] px-4 py-3"
+                  >
+                    <span className="text-[#8B1A1A]" aria-hidden="true">
+                      ✦
                     </span>
-                  ))}
-                </div>
-              ) : (
-                <p className="text-sm text-[#1C1C1C]/70">Current team contacts will be listed here shortly.</p>
-              )}
-              <Link href="/contact" className="mt-2 w-fit text-xs font-bold uppercase tracking-wider text-[#8B1A1A] hover:underline">Contact Avyakta →</Link>
-            </motion.div>
-          </div>
-        </motion.article>
-
-        <motion.article
-          initial="hidden"
-          whileInView="show"
-          viewport={{ once: true, amount: 0.28 }}
-          variants={reveal}
-          className="rounded-2xl border border-[#C9A84C]/40 bg-white p-6 shadow-[0_18px_40px_rgba(40,22,6,0.12)]"
-        >
-          <p className="text-xs font-bold uppercase tracking-[0.18em] text-[#8B1A1A]">The highlights</p>
-          <h2 className="mt-2 text-2xl font-semibold text-[#92791B]">What made it special</h2>
-          {event.highlights.length ? (
-            <ul className="mt-4 space-y-3 text-sm leading-7 text-[#1C1C1C]/86">
-              {event.highlights.map((point, index) => (
-                <li key={`${index}-${point}`} className="flex gap-3 rounded-xl border border-[#C9A84C]/25 bg-[#F9F5EE] px-4 py-3">
-                  <span className="text-[#8B1A1A]" aria-hidden="true">✦</span><span>{point}</span>
-                </li>
-              ))}
-            </ul>
-          ) : (
-            <p className="mt-4 rounded-xl border border-[#C9A84C]/25 bg-[#F9F5EE] px-4 py-3 text-sm leading-7 text-[#1C1C1C]/72">Event highlights will be added soon.</p>
-          )}
-        </motion.article>
+                    <span>{point}</span>
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p className="mt-4 rounded-xl border border-[#C9A84C]/25 bg-[#F9F5EE] px-4 py-3 text-sm leading-7 text-[#1C1C1C]/72">
+                Event highlights will be added soon.
+              </p>
+            )}
+          </motion.article>
         </div>
 
         <motion.article
@@ -254,19 +302,44 @@ export default function EventDetailClient({ event, galleryImages, eventManagers 
           className="rounded-2xl border border-[#C9A84C]/40 bg-white p-6 shadow-[0_18px_40px_rgba(40,22,6,0.12)] md:p-8"
         >
           <div className="flex flex-wrap items-end justify-between gap-4">
-            <div><p className="text-xs font-bold uppercase tracking-[0.18em] text-[#8B1A1A]">From the album</p><h2 className="mt-2 font-serif text-2xl font-semibold text-[#92791B]">Event Gallery</h2></div>
-            {galleryImages.length > 0 && <Link href={`/gallery#event-${event.id}`} className="rounded-full border border-[#92791B]/50 px-4 py-2 text-xs font-bold uppercase tracking-wider text-[#765F16] transition hover:bg-[#F5F0E8]">View full gallery →</Link>}
+            <div>
+              <p className="text-xs font-bold uppercase tracking-[0.18em] text-[#8B1A1A]">
+                From the album
+              </p>
+              <h2 className="mt-2 font-serif text-2xl font-semibold text-[#92791B]">
+                Event Gallery
+              </h2>
+            </div>
+            {galleryImages.length > 0 && (
+              <Link
+                href={`/gallery#event-${event.id}`}
+                className="rounded-full border border-[#92791B]/50 px-4 py-2 text-xs font-bold uppercase tracking-wider text-[#765F16] transition hover:bg-[#F5F0E8]"
+              >
+                View full gallery →
+              </Link>
+            )}
           </div>
           {galleryImages.length ? (
             <div className="mt-5 grid grid-cols-2 gap-3 md:grid-cols-4">
               {galleryImages.map((image) => (
-                <Link key={image.id} href={`/gallery#event-${event.id}`} className="group relative block aspect-[4/3] overflow-hidden rounded-xl border border-[#C9A84C]/35 bg-[#1C1C1C]">
-                  <img src={image.url} alt={image.name} className="h-full w-full object-contain p-2 transition duration-500 group-hover:opacity-90" loading="lazy" />
+                <Link
+                  key={image.id}
+                  href={`/gallery#event-${event.id}`}
+                  className="group relative block aspect-[4/3] overflow-hidden rounded-xl border border-[#C9A84C]/35 bg-[#1C1C1C]"
+                >
+                  <img
+                    src={image.url}
+                    alt={image.name}
+                    className="h-full w-full object-contain p-2 transition duration-500 group-hover:opacity-90"
+                    loading="lazy"
+                  />
                 </Link>
               ))}
             </div>
           ) : (
-            <p className="mt-5 rounded-xl border border-dashed border-[#C9A84C]/45 bg-[#F9F5EE] px-4 py-6 text-sm text-[#1C1C1C]/70">Photos from this celebration will appear here as they are added.</p>
+            <p className="mt-5 rounded-xl border border-dashed border-[#C9A84C]/45 bg-[#F9F5EE] px-4 py-6 text-sm text-[#1C1C1C]/70">
+              Photos from this celebration will appear here as they are added.
+            </p>
           )}
         </motion.article>
       </section>

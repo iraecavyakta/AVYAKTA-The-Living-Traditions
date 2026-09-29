@@ -71,7 +71,14 @@ export async function PUT(
 
     const { data, error } = await supabase
       .from("members")
-      .update({ name, domain, role, photo_url: photo_url || null, tags: Array.isArray(tags) ? tags : [], year: Number.isInteger(year) ? year : null })
+      .update({
+        name,
+        domain,
+        role,
+        photo_url: photo_url || null,
+        tags: Array.isArray(tags) ? tags : [],
+        year: Number.isInteger(year) ? year : null,
+      })
       .eq("id", id)
       .select()
       .maybeSingle();

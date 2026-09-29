@@ -12,7 +12,10 @@ export type MemberCard = {
   year: number | null;
 };
 
-export const memberSectionOrder: Array<{ key: MemberSectionKey; title: string }> = [
+export const memberSectionOrder: Array<{
+  key: MemberSectionKey;
+  title: string;
+}> = [
   { key: "current-team", title: "Current Team" },
   { key: "past-teams", title: "Past Teams" },
   { key: "faculty", title: "Faculty" },

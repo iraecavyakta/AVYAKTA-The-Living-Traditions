@@ -74,7 +74,7 @@ const ORIGINAL_FLOAT_SLOTS = [
   { x: 94, y: 26, z: -1720, w: 195 },
   { x: 26, y: 50, z: -2550, w: 215 },
 ];
-const slotRandom = createSeededRandom(0xA7A4C7A);
+const slotRandom = createSeededRandom(0xa7a4c7a);
 const FLOAT_SLOTS = [
   ...ORIGINAL_FLOAT_SLOTS,
   ...Array.from({ length: 24 }, () => ({
@@ -87,11 +87,17 @@ const FLOAT_SLOTS = [
 
 // Pick half the positions with a seeded shuffle, rather than placing every
 // event in alternating positions. Keep the chosen order stable for event cycling.
-const eventSlotRandom = createSeededRandom(0x51A77E);
-const EVENT_SLOT_ORDER = Array.from({ length: FLOAT_SLOTS.length }, (_, index) => index);
+const eventSlotRandom = createSeededRandom(0x51a77e);
+const EVENT_SLOT_ORDER = Array.from(
+  { length: FLOAT_SLOTS.length },
+  (_, index) => index,
+);
 for (let index = EVENT_SLOT_ORDER.length - 1; index > 0; index -= 1) {
   const swapIndex = Math.floor(eventSlotRandom() * (index + 1));
-  [EVENT_SLOT_ORDER[index], EVENT_SLOT_ORDER[swapIndex]] = [EVENT_SLOT_ORDER[swapIndex], EVENT_SLOT_ORDER[index]];
+  [EVENT_SLOT_ORDER[index], EVENT_SLOT_ORDER[swapIndex]] = [
+    EVENT_SLOT_ORDER[swapIndex],
+    EVENT_SLOT_ORDER[index],
+  ];
 }
 EVENT_SLOT_ORDER.length = FLOAT_SLOTS.length / 2;
 EVENT_SLOT_ORDER.sort((a, b) => a - b);
@@ -191,19 +197,46 @@ function FloatingFestivalCard({
 }) {
   const z = useTransform(progress, [0, 1], [slot.z, slot.z + TRAVEL]);
   const exitAt = (EXIT_Z - slot.z) / TRAVEL;
-  const opacity = useTransform(progress, [0, Math.max(0.02, exitAt - 0.12), exitAt], [1, 1, 0]);
+  const opacity = useTransform(
+    progress,
+    [0, Math.max(0.02, exitAt - 0.12), exitAt],
+    [1, 1, 0],
+  );
   const accents = ["#F4C766", "#E7BCA0", "#A7C6A5"];
   const accent = accents[index % accents.length];
 
   return (
     <motion.div
       className="absolute"
-      style={{ left: `${slot.x}%`, top: `${slot.y}%`, width: slot.w, x: "-50%", y: "-50%", z, opacity, willChange: "transform, opacity" }}
+      style={{
+        left: `${slot.x}%`,
+        top: `${slot.y}%`,
+        width: slot.w,
+        x: "-50%",
+        y: "-50%",
+        z,
+        opacity,
+        willChange: "transform, opacity",
+      }}
     >
       <div className="relative aspect-[4/5] overflow-hidden rounded-2xl border border-white/20 bg-white/[0.055] shadow-[0_18px_50px_rgba(0,0,0,0.22)] backdrop-blur-[2px]">
-        <div className="pointer-events-none absolute inset-2 rounded-xl border border-dashed" style={{ borderColor: `${accent}40` }} />
-        <div className="pointer-events-none absolute inset-0 opacity-35" style={{ backgroundImage: `radial-gradient(circle at 50% 50%, ${accent}30 0 2px, transparent 3px), radial-gradient(circle at 50% 50%, transparent 0 22%, ${accent}24 22.4% 22.8%, transparent 23.2%), radial-gradient(circle at 50% 50%, transparent 0 38%, ${accent}18 38.3% 38.7%, transparent 39.1%), linear-gradient(135deg, transparent 47%, ${accent}15 49.5%, transparent 52%)`, backgroundSize: "100% 100%, 100% 100%, 100% 100%, 100% 100%" }} />
-        <svg className="pointer-events-none absolute left-1/2 top-1/2 h-24 w-24 -translate-x-1/2 -translate-y-1/2 opacity-25" viewBox="0 0 100 100" fill="none" aria-hidden="true">
+        <div
+          className="pointer-events-none absolute inset-2 rounded-xl border border-dashed"
+          style={{ borderColor: `${accent}40` }}
+        />
+        <div
+          className="pointer-events-none absolute inset-0 opacity-35"
+          style={{
+            backgroundImage: `radial-gradient(circle at 50% 50%, ${accent}30 0 2px, transparent 3px), radial-gradient(circle at 50% 50%, transparent 0 22%, ${accent}24 22.4% 22.8%, transparent 23.2%), radial-gradient(circle at 50% 50%, transparent 0 38%, ${accent}18 38.3% 38.7%, transparent 39.1%), linear-gradient(135deg, transparent 47%, ${accent}15 49.5%, transparent 52%)`,
+            backgroundSize: "100% 100%, 100% 100%, 100% 100%, 100% 100%",
+          }}
+        />
+        <svg
+          className="pointer-events-none absolute left-1/2 top-1/2 h-24 w-24 -translate-x-1/2 -translate-y-1/2 opacity-25"
+          viewBox="0 0 100 100"
+          fill="none"
+          aria-hidden="true"
+        >
           <g stroke={accent} strokeWidth="1.1">
             <circle cx="50" cy="50" r="8" />
             <circle cx="50" cy="28" r="13" />
@@ -299,14 +332,18 @@ export default function EventsPageClient({
 
   // Repeat published events through the fly-through for eighteen event
   // cards, balanced with eighteen text-free decorative fillers.
-  const orderedEvents = useMemo(() => stableEventOrder(initialEvents), [initialEvents]);
+  const orderedEvents = useMemo(
+    () => stableEventOrder(initialEvents),
+    [initialEvents],
+  );
   const floatingEvents = useMemo(
-    () => orderedEvents.length
-      ? Array.from(
-          { length: Math.ceil(FLOAT_SLOTS.length / 2) },
-          (_, index) => orderedEvents[index % orderedEvents.length],
-        )
-      : [],
+    () =>
+      orderedEvents.length
+        ? Array.from(
+            { length: Math.ceil(FLOAT_SLOTS.length / 2) },
+            (_, index) => orderedEvents[index % orderedEvents.length],
+          )
+        : [],
     [orderedEvents],
   );
 
@@ -417,12 +454,25 @@ export default function EventsPageClient({
               style={{ perspective: `${PERSPECTIVE}px` }}
             >
               {FLOAT_SLOTS.map((slot, index) => {
-                const hasEvent = floatingEvents.length > 0 && EVENT_SLOT_INDICES.has(index);
-                const event = hasEvent ? floatingEvents[EVENT_SLOT_ORDER.indexOf(index)] : null;
+                const hasEvent =
+                  floatingEvents.length > 0 && EVENT_SLOT_INDICES.has(index);
+                const event = hasEvent
+                  ? floatingEvents[EVENT_SLOT_ORDER.indexOf(index)]
+                  : null;
                 return event ? (
-                  <FloatingEventCard key={`event-${event.id}-${index}`} event={event} slot={slot} progress={flyProgress} />
+                  <FloatingEventCard
+                    key={`event-${event.id}-${index}`}
+                    event={event}
+                    slot={slot}
+                    progress={flyProgress}
+                  />
                 ) : (
-                  <FloatingFestivalCard key={`festival-${index}`} slot={slot} progress={flyProgress} index={index} />
+                  <FloatingFestivalCard
+                    key={`festival-${index}`}
+                    slot={slot}
+                    progress={flyProgress}
+                    index={index}
+                  />
                 );
               })}
             </div>
@@ -581,10 +631,19 @@ export default function EventsPageClient({
 
         {activeFilter === "all" && visibleEvents.length > 0 && (
           <div className="mt-8 rounded-3xl border border-dashed border-[#C9A84C]/55 bg-[#1C1C1C]/50 px-6 py-10 text-center text-[#F5F0E8]">
-            <p className="text-3xl" aria-hidden="true">🪔 ✦ 🌼</p>
-            <p className="mt-4 text-xs font-bold uppercase tracking-[.24em] text-[#F4C766]">The next celebration is taking shape</p>
-            <h3 className="mt-2 font-serif text-3xl font-bold">More events coming soon</h3>
-            <p className="mx-auto mt-3 max-w-xl text-sm leading-7 text-white/70">That’s everything on the calendar for now. We’ll add the next Avyakta event here as soon as it’s ready.</p>
+            <p className="text-3xl" aria-hidden="true">
+              🪔 ✦ 🌼
+            </p>
+            <p className="mt-4 text-xs font-bold uppercase tracking-[.24em] text-[#F4C766]">
+              The next celebration is taking shape
+            </p>
+            <h3 className="mt-2 font-serif text-3xl font-bold">
+              More events coming soon
+            </h3>
+            <p className="mx-auto mt-3 max-w-xl text-sm leading-7 text-white/70">
+              That’s everything on the calendar for now. We’ll add the next
+              Avyakta event here as soon as it’s ready.
+            </p>
           </div>
         )}
       </section>

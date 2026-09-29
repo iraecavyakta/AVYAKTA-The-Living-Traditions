@@ -1,5 +1,9 @@
 const LEGACY_DOMAIN_ALIASES: Record<string, string[]> = {
-  "Finance and Ethics": ["Finance and Ethics", "Ethics and Discipline", "Finance"],
+  "Finance and Ethics": [
+    "Finance and Ethics",
+    "Ethics and Discipline",
+    "Finance",
+  ],
   Logistics: ["Logistics"],
   Operations: ["Operations", "Logistics and Operations"],
 };

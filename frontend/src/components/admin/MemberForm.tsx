@@ -13,7 +13,8 @@ interface FormData {
 }
 
 interface MemberFormProps {
-  member?: Partial<FormData> & Pick<FormData, "name" | "domain" | "role"> & { id: string };
+  member?: Partial<FormData> &
+    Pick<FormData, "name" | "domain" | "role"> & { id: string };
   onSubmit: (data: FormData) => Promise<void>;
   onCancel: () => void;
   isLoading?: boolean;
@@ -35,7 +36,14 @@ export default function MemberForm({
           tags: member.tags || [],
           year: member.year ?? null,
         }
-      : { name: "", domain: "", role: "", photo_url: "", tags: ["current"], year: null },
+      : {
+          name: "",
+          domain: "",
+          role: "",
+          photo_url: "",
+          tags: ["current"],
+          year: null,
+        },
   );
   const [error, setError] = useState("");
   const [isUploading, setIsUploading] = useState(false);
@@ -123,7 +131,14 @@ export default function MemberForm({
     try {
       await onSubmit(formData);
       if (!member) {
-        setFormData({ name: "", domain: "", role: "", photo_url: "", tags: ["current"], year: null });
+        setFormData({
+          name: "",
+          domain: "",
+          role: "",
+          photo_url: "",
+          tags: ["current"],
+          year: null,
+        });
         setPhotoPreview(null);
       }
     } catch (err) {
@@ -195,7 +210,18 @@ export default function MemberForm({
             <div className="flex flex-wrap gap-3">
               {["current", "previous", "founder", "faculty"].map((tag) => (
                 <label key={tag} className="flex items-center gap-2 text-sm">
-                  <input type="checkbox" checked={formData.tags.includes(tag)} onChange={(event) => setFormData((prev) => ({ ...prev, tags: event.target.checked ? [...prev.tags, tag] : prev.tags.filter((item) => item !== tag) }))} />
+                  <input
+                    type="checkbox"
+                    checked={formData.tags.includes(tag)}
+                    onChange={(event) =>
+                      setFormData((prev) => ({
+                        ...prev,
+                        tags: event.target.checked
+                          ? [...prev.tags, tag]
+                          : prev.tags.filter((item) => item !== tag),
+                      }))
+                    }
+                  />
                   {tag[0].toUpperCase() + tag.slice(1)}
                 </label>
               ))}
@@ -204,7 +230,22 @@ export default function MemberForm({
           {formData.tags.includes("previous") && (
             <div className="form-group">
               <label htmlFor="year">Team year</label>
-              <input id="year" type="number" min="2000" max="2100" value={formData.year ?? ""} onChange={(event) => setFormData((prev) => ({ ...prev, year: event.target.value ? Number(event.target.value) : null }))} placeholder="e.g. 2026" />
+              <input
+                id="year"
+                type="number"
+                min="2000"
+                max="2100"
+                value={formData.year ?? ""}
+                onChange={(event) =>
+                  setFormData((prev) => ({
+                    ...prev,
+                    year: event.target.value
+                      ? Number(event.target.value)
+                      : null,
+                  }))
+                }
+                placeholder="e.g. 2026"
+              />
             </div>
           )}
 

@@ -22,15 +22,19 @@ export default async function EventDetailPage({ params }: Props) {
     notFound();
   }
 
-  const galleryImages = galleryEvents
-    .find((galleryEvent) => galleryEvent.id === event.id)
-    ?.images.filter((image) => !image.url.startsWith("https://picsum.photos/"))
-    .slice(0, 4) ?? [];
+  const galleryImages =
+    galleryEvents
+      .find((galleryEvent) => galleryEvent.id === event.id)
+      ?.images.filter(
+        (image) => !image.url.startsWith("https://picsum.photos/"),
+      )
+      .slice(0, 4) ?? [];
   const eventManagers = members
     .filter(
       (member) =>
         member.tags.includes("current") &&
-        (member.tags.includes("head") || member.designation.toLowerCase().includes("head")) &&
+        (member.tags.includes("head") ||
+          member.designation.toLowerCase().includes("head")) &&
         ["Event Management", "Operations"].includes(member.domain),
     )
     .map((member) => ({

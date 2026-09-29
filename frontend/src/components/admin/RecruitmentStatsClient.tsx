@@ -45,7 +45,9 @@ export default function RecruitmentStatsClient() {
     const canonical = domainIndicators.find((entry) => entry.domain === domain);
     if (canonical) return canonical.indicator;
     return domainReadAliases(domain).some((alias) =>
-      domainIndicators.some((entry) => entry.domain === alias && entry.indicator),
+      domainIndicators.some(
+        (entry) => entry.domain === alias && entry.indicator,
+      ),
     );
   };
 
@@ -182,9 +184,11 @@ export default function RecruitmentStatsClient() {
 
       setDomainIndicators((currentIndicators) =>
         currentIndicators.some((entry) => entry.domain === selectedDomain)
-          ? currentIndicators.map((entry) => entry.domain === selectedDomain
-              ? { ...entry, indicator: nextStatus }
-              : entry)
+          ? currentIndicators.map((entry) =>
+              entry.domain === selectedDomain
+                ? { ...entry, indicator: nextStatus }
+                : entry,
+            )
           : [
               ...currentIndicators,
               {
@@ -468,9 +472,7 @@ export default function RecruitmentStatsClient() {
                 className={`indicator-dot ${domainIndicatorActive(selectedDomain) ? "active" : ""}`}
               />
               <span>
-                {domainIndicatorActive(selectedDomain)
-                  ? "Open"
-                  : "Closed"}
+                {domainIndicatorActive(selectedDomain) ? "Open" : "Closed"}
               </span>
             </div>
           </div>

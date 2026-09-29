@@ -90,15 +90,34 @@ export default function HistoryPage() {
       <section className="relative flex min-h-[60vh] flex-col items-center justify-center overflow-hidden px-6 py-28 text-center">
         {/* Mandala background */}
         <div className="pointer-events-none absolute inset-0 flex items-center justify-center opacity-[0.06]">
-          <svg width="700" height="700" viewBox="0 0 220 220" aria-hidden className="animate-spin-slow">
+          <svg
+            width="700"
+            height="700"
+            viewBox="0 0 220 220"
+            aria-hidden
+            className="animate-spin-slow"
+          >
             {[98, 80, 62, 44, 28].map((r, i) => (
-              <circle key={r} cx="110" cy="110" r={r} stroke="#C9A84C" fill="none" strokeWidth={i === 0 ? "0.8" : "0.5"} strokeDasharray={i % 2 === 1 ? "2 4" : undefined} />
+              <circle
+                key={r}
+                cx="110"
+                cy="110"
+                r={r}
+                stroke="#C9A84C"
+                fill="none"
+                strokeWidth={i === 0 ? "0.8" : "0.5"}
+                strokeDasharray={i % 2 === 1 ? "2 4" : undefined}
+              />
             ))}
             {[0, 45, 90, 135, 180, 225, 270, 315].map((angle) => (
               <line
                 key={angle}
-                x1="110" y1="12" x2="110" y2="208"
-                stroke="#C9A84C" strokeWidth="0.4"
+                x1="110"
+                y1="12"
+                x2="110"
+                y2="208"
+                stroke="#C9A84C"
+                strokeWidth="0.4"
                 transform={`rotate(${angle} 110 110)`}
               />
             ))}
@@ -106,7 +125,13 @@ export default function HistoryPage() {
         </div>
 
         {/* Ambient colour blobs */}
-        <div className="pointer-events-none absolute inset-0" style={{ backgroundImage: "radial-gradient(circle at 20% 30%, rgba(201,168,76,0.18) 0, transparent 40%), radial-gradient(circle at 80% 70%, rgba(139,26,26,0.14) 0, transparent 40%)" }} />
+        <div
+          className="pointer-events-none absolute inset-0"
+          style={{
+            backgroundImage:
+              "radial-gradient(circle at 20% 30%, rgba(201,168,76,0.18) 0, transparent 40%), radial-gradient(circle at 80% 70%, rgba(139,26,26,0.14) 0, transparent 40%)",
+          }}
+        />
 
         <div className="relative">
           <div className="mb-6 flex items-center justify-center gap-4">
@@ -115,19 +140,24 @@ export default function HistoryPage() {
             <div className="h-px w-16 bg-gradient-to-l from-transparent to-[#C9A84C]" />
           </div>
 
-          <p className="mb-3 text-xs uppercase tracking-[0.36em] text-[#C9A84C]">Our Story</p>
+          <p className="mb-3 text-xs uppercase tracking-[0.36em] text-[#C9A84C]">
+            Our Story
+          </p>
           <h1 className="font-serif text-5xl font-bold leading-tight text-[#F5F0E8] drop-shadow-[0_0_20px_rgba(201,168,76,0.3)] md:text-7xl">
-            The History of<br />
+            The History of
+            <br />
             <span className="text-[#C9A84C]">Avyakta</span>
           </h1>
           <p className="mx-auto mt-6 max-w-2xl text-base leading-8 text-[#F5F0E8]/75 md:text-lg">
-            A cultural collective woven from tradition, creativity, and the belief
-            that every student deserves a stage.
+            A cultural collective woven from tradition, creativity, and the
+            belief that every student deserves a stage.
           </p>
 
           <div className="mt-8 flex items-center justify-center gap-3">
             <span className="text-[#C9A84C]/50">◈</span>
-            <span className="text-sm italic text-[#C9A84C]/80">अव्यक्त — The Unmanifest Becoming Manifest</span>
+            <span className="text-sm italic text-[#C9A84C]/80">
+              अव्यक्त — The Unmanifest Becoming Manifest
+            </span>
             <span className="text-[#C9A84C]/50">◈</span>
           </div>
         </div>
@@ -136,12 +166,40 @@ export default function HistoryPage() {
       {/* Kolam divider */}
       <div className="relative flex items-center justify-center py-2">
         <div className="h-px flex-1 bg-gradient-to-r from-transparent to-[#C9A84C]/40 mx-8" />
-        <svg width="48" height="48" viewBox="0 0 48 48" fill="none" aria-hidden className="mx-4 shrink-0">
-          <circle cx="24" cy="24" r="20" stroke="#C9A84C" strokeWidth="0.8" opacity="0.5" />
-          <circle cx="24" cy="24" r="12" stroke="#C9A84C" strokeWidth="0.8" opacity="0.5" />
+        <svg
+          width="48"
+          height="48"
+          viewBox="0 0 48 48"
+          fill="none"
+          aria-hidden
+          className="mx-4 shrink-0"
+        >
+          <circle
+            cx="24"
+            cy="24"
+            r="20"
+            stroke="#C9A84C"
+            strokeWidth="0.8"
+            opacity="0.5"
+          />
+          <circle
+            cx="24"
+            cy="24"
+            r="12"
+            stroke="#C9A84C"
+            strokeWidth="0.8"
+            opacity="0.5"
+          />
           <circle cx="24" cy="24" r="4" fill="#C9A84C" opacity="0.6" />
           {[0, 60, 120, 180, 240, 300].map((a) => (
-            <circle key={a} cx={24 + 16 * Math.cos((a * Math.PI) / 180)} cy={24 + 16 * Math.sin((a * Math.PI) / 180)} r="2" fill="#C9A84C" opacity="0.4" />
+            <circle
+              key={a}
+              cx={24 + 16 * Math.cos((a * Math.PI) / 180)}
+              cy={24 + 16 * Math.sin((a * Math.PI) / 180)}
+              r="2"
+              fill="#C9A84C"
+              opacity="0.4"
+            />
           ))}
         </svg>
         <div className="h-px flex-1 bg-gradient-to-l from-transparent to-[#C9A84C]/40 mx-8" />
@@ -149,7 +207,9 @@ export default function HistoryPage() {
 
       {/* Timeline */}
       <section className="mx-auto max-w-4xl px-6 py-16 md:px-8">
-        <p className="mb-2 text-center text-xs uppercase tracking-[0.28em] text-[#C9A84C]/70">Chronicle</p>
+        <p className="mb-2 text-center text-xs uppercase tracking-[0.28em] text-[#C9A84C]/70">
+          Chronicle
+        </p>
         <h2 className="mb-14 text-center font-serif text-3xl text-[#F5F0E8] md:text-4xl">
           Milestones & Memories
         </h2>
@@ -168,7 +228,11 @@ export default function HistoryPage() {
                 <div className="relative z-10 flex-none">
                   <div
                     className="mt-1 flex h-8 w-8 items-center justify-center rounded-full border-2 text-sm shadow-[0_0_12px_rgba(201,168,76,0.3)]"
-                    style={{ borderColor: m.accent, backgroundColor: "#1C1C1C", color: m.accent }}
+                    style={{
+                      borderColor: m.accent,
+                      backgroundColor: "#1C1C1C",
+                      color: m.accent,
+                    }}
                   >
                     {m.symbol}
                   </div>
@@ -177,16 +241,27 @@ export default function HistoryPage() {
                 {/* Card */}
                 <div
                   className="flex-1 rounded-2xl border p-5 shadow-[0_8px_30px_rgba(0,0,0,0.3)] transition-transform duration-300 hover:-translate-y-1 md:max-w-[calc(50%-2rem)]"
-                  style={{ borderColor: `${m.accent}30`, background: "linear-gradient(135deg, rgba(28,28,28,0.95) 0%, rgba(40,32,20,0.9) 100%)" }}
+                  style={{
+                    borderColor: `${m.accent}30`,
+                    background:
+                      "linear-gradient(135deg, rgba(28,28,28,0.95) 0%, rgba(40,32,20,0.9) 100%)",
+                  }}
                 >
                   <div className="mb-2 flex items-center gap-3">
-                    <span className="rounded-full px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-[0.14em]" style={{ background: `${m.accent}22`, color: m.accent }}>
+                    <span
+                      className="rounded-full px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-[0.14em]"
+                      style={{ background: `${m.accent}22`, color: m.accent }}
+                    >
                       {m.season}
                     </span>
                     <span className="text-xs text-[#F5F0E8]/40">{m.year}</span>
                   </div>
-                  <h3 className="mb-3 font-serif text-xl font-bold text-[#F5F0E8]">{m.title}</h3>
-                  <p className="text-sm leading-7 text-[#F5F0E8]/75">{m.description}</p>
+                  <h3 className="mb-3 font-serif text-xl font-bold text-[#F5F0E8]">
+                    {m.title}
+                  </h3>
+                  <p className="text-sm leading-7 text-[#F5F0E8]/75">
+                    {m.description}
+                  </p>
                 </div>
               </div>
             ))}
@@ -203,7 +278,9 @@ export default function HistoryPage() {
 
       {/* Values / What We Stand For */}
       <section className="mx-auto max-w-6xl px-6 py-20 md:px-8">
-        <p className="mb-2 text-center text-xs uppercase tracking-[0.28em] text-[#C9A84C]/70">Our Foundation</p>
+        <p className="mb-2 text-center text-xs uppercase tracking-[0.28em] text-[#C9A84C]/70">
+          Our Foundation
+        </p>
         <h2 className="mb-12 text-center font-serif text-3xl text-[#F5F0E8] md:text-4xl">
           What We Stand For
         </h2>
@@ -213,10 +290,15 @@ export default function HistoryPage() {
             <div
               key={v.title}
               className="rounded-2xl border border-[#C9A84C]/20 p-6 shadow-[0_8px_30px_rgba(0,0,0,0.25)] transition-all duration-300 hover:border-[#C9A84C]/50 hover:-translate-y-1"
-              style={{ background: "linear-gradient(135deg, rgba(40,32,20,0.9) 0%, rgba(28,28,28,0.95) 100%)" }}
+              style={{
+                background:
+                  "linear-gradient(135deg, rgba(40,32,20,0.9) 0%, rgba(28,28,28,0.95) 100%)",
+              }}
             >
               <div className="mb-4 text-3xl">{v.icon}</div>
-              <h3 className="mb-3 font-serif text-lg font-semibold text-[#C9A84C]">{v.title}</h3>
+              <h3 className="mb-3 font-serif text-lg font-semibold text-[#C9A84C]">
+                {v.title}
+              </h3>
               <p className="text-sm leading-7 text-[#F5F0E8]/70">{v.body}</p>
             </div>
           ))}
@@ -225,12 +307,22 @@ export default function HistoryPage() {
 
       {/* Quote section */}
       <section className="relative overflow-hidden px-6 py-20 text-center">
-        <div className="pointer-events-none absolute inset-0" style={{ backgroundImage: "radial-gradient(circle at 50% 50%, rgba(201,168,76,0.06) 0, transparent 60%)" }} />
+        <div
+          className="pointer-events-none absolute inset-0"
+          style={{
+            backgroundImage:
+              "radial-gradient(circle at 50% 50%, rgba(201,168,76,0.06) 0, transparent 60%)",
+          }}
+        />
         <div className="relative mx-auto max-w-3xl">
-          <div className="mb-6 text-5xl text-[#C9A84C]/30 font-serif">&ldquo;</div>
+          <div className="mb-6 text-5xl text-[#C9A84C]/30 font-serif">
+            &ldquo;
+          </div>
           <blockquote className="font-serif text-xl italic leading-9 text-[#F5F0E8]/90 md:text-2xl">
-            Culture is not what we perform on stage.<br />
-            It is what we carry into the room<br />
+            Culture is not what we perform on stage.
+            <br />
+            It is what we carry into the room
+            <br />
             before the lights come on.
           </blockquote>
           <div className="mt-6 text-sm font-medium tracking-[0.2em] text-[#C9A84C]">
@@ -241,10 +333,15 @@ export default function HistoryPage() {
 
       {/* CTA Footer */}
       <section className="border-t border-[#C9A84C]/20 px-6 py-16 text-center">
-        <p className="mb-2 text-xs uppercase tracking-[0.28em] text-[#C9A84C]/70">Be Part of the Story</p>
-        <h2 className="mb-4 font-serif text-3xl text-[#F5F0E8] md:text-4xl">Your Chapter Awaits</h2>
+        <p className="mb-2 text-xs uppercase tracking-[0.28em] text-[#C9A84C]/70">
+          Be Part of the Story
+        </p>
+        <h2 className="mb-4 font-serif text-3xl text-[#F5F0E8] md:text-4xl">
+          Your Chapter Awaits
+        </h2>
         <p className="mx-auto mb-8 max-w-xl text-sm leading-7 text-[#F5F0E8]/65">
-          Every year, Avyakta grows because new people bring new energy. Join a domain, attend an event, or simply stay curious.
+          Every year, Avyakta grows because new people bring new energy. Join a
+          domain, attend an event, or simply stay curious.
         </p>
         <div className="flex flex-wrap items-center justify-center gap-4">
           <Link

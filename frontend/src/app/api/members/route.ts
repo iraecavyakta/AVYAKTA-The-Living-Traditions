@@ -55,7 +55,16 @@ export async function POST(request: NextRequest) {
 
     const { data, error } = await supabase
       .from("members")
-      .insert([{ name, domain, role, photo_url: photo_url || null, tags: Array.isArray(tags) ? tags : [], year: Number.isInteger(year) ? year : null }])
+      .insert([
+        {
+          name,
+          domain,
+          role,
+          photo_url: photo_url || null,
+          tags: Array.isArray(tags) ? tags : [],
+          year: Number.isInteger(year) ? year : null,
+        },
+      ])
       .select();
 
     if (error) throw new Error(error.message);

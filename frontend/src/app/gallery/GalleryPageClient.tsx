@@ -135,14 +135,26 @@ export default function GalleryPageClient({
       }}
     >
       {allImages.length > 0 && (
-        <section className="px-4 pb-8 pt-24 md:px-8 md:pt-28" aria-label="All event photographs">
+        <section
+          className="px-4 pb-8 pt-24 md:px-8 md:pt-28"
+          aria-label="All event photographs"
+        >
           <div className="mx-auto max-w-7xl">
             <div className="mb-5 flex flex-wrap items-end justify-between gap-3 text-[#F5F0E8]">
               <div>
-                <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[#C9A84C]">Avyakta memories</p>
-                <h1 className="mt-2 font-serif text-3xl font-bold md:text-4xl">A celebration in every frame</h1>
+                <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[#C9A84C]">
+                  Avyakta memories
+                </p>
+                <h1 className="mt-2 font-serif text-3xl font-bold md:text-4xl">
+                  A celebration in every frame
+                </h1>
               </div>
-              <a href="#browse-by-event" className="rounded-full border border-[#C9A84C]/70 bg-[#1C1C1C]/60 px-4 py-2 text-xs font-semibold uppercase tracking-wider text-[#F5F0E8] backdrop-blur transition hover:bg-[#1C1C1C]/85">Browse by event ↓</a>
+              <a
+                href="#browse-by-event"
+                className="rounded-full border border-[#C9A84C]/70 bg-[#1C1C1C]/60 px-4 py-2 text-xs font-semibold uppercase tracking-wider text-[#F5F0E8] backdrop-blur transition hover:bg-[#1C1C1C]/85"
+              >
+                Browse by event ↓
+              </a>
             </div>
             <div className="relative h-[250px] overflow-hidden rounded-2xl border border-[#C9A84C]/55 bg-[#1C1C1C]/55 shadow-[0_18px_55px_rgba(0,0,0,.3)] sm:h-[320px] lg:h-[420px]">
               <div className="pointer-events-none absolute inset-y-0 left-0 z-10 w-8 bg-gradient-to-r from-[#1c1c1c]/65 to-transparent sm:w-16" />
@@ -150,28 +162,46 @@ export default function GalleryPageClient({
               <motion.div
                 className="flex h-full w-max"
                 animate={{ x: ["0%", "-50%"] }}
-                transition={{ duration: SHOWCASE_DURATION_SECONDS, repeat: Infinity, ease: "linear" }}
+                transition={{
+                  duration: SHOWCASE_DURATION_SECONDS,
+                  repeat: Infinity,
+                  ease: "linear",
+                }}
               >
                 {[0, 1].map((copy) => (
-                  <div key={copy} className="flex h-full shrink-0 gap-3 pr-3 sm:gap-4 sm:pr-4">
+                  <div
+                    key={copy}
+                    className="flex h-full shrink-0 gap-3 pr-3 sm:gap-4 sm:pr-4"
+                  >
                     {allImages.map((image, index) => (
                       <button
                         key={`${copy}-${image.id}`}
                         type="button"
-                        onClick={() => setLightbox({ images: allImages, index })}
+                        onClick={() =>
+                          setLightbox({ images: allImages, index })
+                        }
                         aria-label={`View ${image.name}`}
                         className="group relative my-3 h-[calc(100%-1.5rem)] w-[190px] shrink-0 overflow-hidden rounded-xl border border-[#F5F0E8]/55 bg-[#EDE3D2] sm:my-4 sm:h-[calc(100%-2rem)] sm:w-[250px]"
                       >
-                        <img src={image.url} alt={image.name} className="h-full w-full object-cover transition duration-500 group-hover:scale-105" loading={index < 6 ? "eager" : "lazy"} />
+                        <img
+                          src={image.url}
+                          alt={image.name}
+                          className="h-full w-full object-cover transition duration-500 group-hover:scale-105"
+                          loading={index < 6 ? "eager" : "lazy"}
+                        />
                         <JaaliOverlay />
-                        <span className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/75 to-transparent px-3 pb-3 pt-8 text-left text-xs font-semibold text-white">{image.name}</span>
+                        <span className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/75 to-transparent px-3 pb-3 pt-8 text-left text-xs font-semibold text-white">
+                          {image.name}
+                        </span>
                       </button>
                     ))}
                   </div>
                 ))}
               </motion.div>
             </div>
-            <p className="mt-3 text-center text-xs text-[#F5F0E8]/70">All event photos · Select a frame to view it larger</p>
+            <p className="mt-3 text-center text-xs text-[#F5F0E8]/70">
+              All event photos · Select a frame to view it larger
+            </p>
           </div>
         </section>
       )}

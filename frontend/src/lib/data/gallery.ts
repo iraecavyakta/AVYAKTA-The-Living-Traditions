@@ -26,9 +26,13 @@ type GalleryRow = {
 };
 
 function slugify(value: string) {
-  return value.toLowerCase().trim().replace(/[^a-z0-9\s-]/g, "").replace(/\s+/g, "-").replace(/-+/g, "-");
+  return value
+    .toLowerCase()
+    .trim()
+    .replace(/[^a-z0-9\s-]/g, "")
+    .replace(/\s+/g, "-")
+    .replace(/-+/g, "-");
 }
-
 
 function splitUrls(input: string | null | undefined): string[] {
   if (!input) return [];
@@ -159,11 +163,18 @@ export async function getGalleryEventsFromDb(): Promise<GalleryEvent[]> {
         image_url: row.image_url,
         slug_image_url: slugRows
           .map((slug: { image_url?: string | null }) => slug?.image_url)
-          .filter((url: string | null | undefined): url is string => Boolean(url))
+          .filter((url: string | null | undefined): url is string =>
+            Boolean(url),
+          )
           .join("\n"),
         poster_image_url: posterRows
-          .map((poster: { poster_image_url?: string | null }) => poster?.poster_image_url)
-          .filter((url: string | null | undefined): url is string => Boolean(url))
+          .map(
+            (poster: { poster_image_url?: string | null }) =>
+              poster?.poster_image_url,
+          )
+          .filter((url: string | null | undefined): url is string =>
+            Boolean(url),
+          )
           .join("\n"),
       };
     });

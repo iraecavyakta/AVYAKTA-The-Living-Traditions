@@ -118,10 +118,13 @@ function mapRowToEvent(row: {
   const computedSlug = slugify(row.title);
   const subtitleFallback = `Explore ${row.title} with Avyakta.`;
 
-  const posterUrl = [row.poster_image_url, row.slug_image_url, row.image_url]
-    .flatMap((value) => (value || "").split(/[\n|]/))
-    .map((value) => value.trim())
-    .find((value) => /^https?:\/\//i.test(value) || /^data:image\//i.test(value)) || null;
+  const posterUrl =
+    [row.poster_image_url, row.slug_image_url, row.image_url]
+      .flatMap((value) => (value || "").split(/[\n|]/))
+      .map((value) => value.trim())
+      .find(
+        (value) => /^https?:\/\//i.test(value) || /^data:image\//i.test(value),
+      ) || null;
 
   return {
     id: row.id,

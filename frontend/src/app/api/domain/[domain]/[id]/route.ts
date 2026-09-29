@@ -164,7 +164,8 @@ export async function GET(
     const aliases = domainReadAliases(displayDomain);
     const isFirstPreference = aliases.includes(recruit.first_preference_domain);
     const isSecondPreference = Boolean(
-      recruit.second_domain_preference && aliases.includes(recruit.second_domain_preference),
+      recruit.second_domain_preference &&
+      aliases.includes(recruit.second_domain_preference),
     );
 
     if (!isFirstPreference && !isSecondPreference) {
