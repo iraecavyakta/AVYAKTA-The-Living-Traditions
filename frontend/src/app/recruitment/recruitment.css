@@ -181,14 +181,12 @@
   margin-bottom: 1rem;
   position: relative;
   z-index: 2;
-  text-shadow:
-    0 0 7px rgba(228, 56, 56, 0.986),
-    0 0 9px rgba(97, 26, 26, 0.959);
+  text-shadow: 0 2px 8px rgba(146, 121, 27, 0.25);
 }
 
 .ethics-content {
   font-size: 0.95rem;
-  color: var(--muted-warm-white);
+  color: var(--charcoal-black);
   line-height: 1.7;
   position: relative;
   z-index: 2;

@@ -5,16 +5,26 @@ import { motion, useScroll, useTransform } from "framer-motion";
 import Link from "next/link";
 
 type HomeEventCard = {
+  id: string;
   slug: string;
   name: string;
   date: string;
-  type: string;
   description: string;
   venue?: string;
+  highlights: string[];
+};
+
+type HomeGalleryEvent = {
+  id: string;
+  name: string;
+  year: string;
+  coverUrl: string | null;
+  imageCount: number;
 };
 
 type HomePageClientProps = {
   initialEvents: HomeEventCard[];
+  galleryEvents: HomeGalleryEvent[];
   isRecruitmentOpen: boolean;
 };
 
@@ -22,74 +32,39 @@ const domains = [
   {
     name: "Event Management",
     detail: "Thematic ideation, structure, and execution",
+    icon: "🎪",
   },
   {
-    name: "Logistics & Ops",
-    detail: "Venue setup, time management, and execution",
+    name: "Finance and Ethics",
+    detail: "Budgets, sponsorships, fair practice, and club wellbeing",
+    icon: "💰",
+  },
+  {
+    name: "Logistics",
+    detail: "Venues, materials, setup, and event-day coordination",
+    icon: "📦",
+  },
+  {
+    name: "Operations",
+    detail: "Planning, schedules, team flow, and smooth execution",
+    icon: "⚙️",
   },
   {
     name: "Media & Visibility",
     detail: "Photography, reels, and digital narrative",
+    icon: "📸",
   },
-  { name: "Marketing", detail: "Engagement, promotion, and outreach" },
-  { name: "Finance", detail: "Sponsorships, budgets, and partnerships" },
-  { name: "Tech & Systems", detail: "Digital workflows, forms, and archives" },
-  { name: "Design", detail: "Posters, visual identity, and branding" },
-];
-
-const timeline = [
+  { name: "Marketing", detail: "Engagement, promotion, and outreach", icon: "📣" },
   {
-    year: "2026",
-    milestone:
-      "Founding season with inaugural orientation showcase and open mics.",
+    name: "Tech & Systems",
+    detail: "Digital workflows, forms, and archives",
+    icon: "💻",
   },
   {
-    year: "2027",
-    milestone:
-      "Large-scale collaborative productions across stage, design, and media.",
+    name: "Design",
+    detail: "Posters, visual identity, and branding",
+    icon: "🎨",
   },
-  {
-    year: "2028",
-    milestone:
-      "Expanded campus outreach with curated festivals and mentorship circles.",
-  },
-];
-
-const fallbackEvents: HomeEventCard[] = [
-  {
-    slug: "rangotsav-night",
-    name: "Rangotsav Night",
-    date: "August 12",
-    type: "Cultural showcase",
-    description:
-      "An evening of colour and rhythm, bringing together dance, live percussion, and improvised stagecraft from every domain of the collective.",
-    venue: "Open Air Theatre",
-  },
-  {
-    slug: "swar-stage",
-    name: "Swar & Stage",
-    date: "September 03",
-    type: "Music and theatre",
-    description:
-      "Carnatic vocals meet contemporary theatre in a shared set, built by writers, musicians, and performers rehearsing side by side for weeks.",
-    venue: "Main Auditorium",
-  },
-  {
-    slug: "creative-confluence",
-    name: "Creative Confluence",
-    date: "October 21",
-    type: "Design x performance",
-    description:
-      "Posters, installations, and performance collide - a showcase of what happens when the design and event-management domains plan a show together.",
-    venue: "Design Studio Courtyard",
-  },
-];
-
-const galleryStills = [
-  "Mandala stage setup",
-  "Folk ensemble rehearsal",
-  "Craft and decor lab",
-  "Audience and performance",
 ];
 
 const storiesParticles = [
@@ -101,269 +76,134 @@ const storiesParticles = [
   { left: "90%", top: "74%", delay: 0.3, duration: 7.6 },
 ];
 
-// Simple original line-art doodles (not sourced images) for the postcard
-// back - hand-drawn-looking sketches in the site's own palette.
-function DiyaDoodle({ className }: { className?: string }) {
+// Rangoli-inspired SVG section divider
+function RangoliDivider({ color = "#C9A84C" }: { color?: string }) {
   return (
-    <svg
-      viewBox="0 0 120 100"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      className={className}
-    >
-      <path d="M18 66 Q60 92 102 66 Q94 80 60 84 Q26 80 18 66Z" />
-      <path d="M14 64 Q60 78 106 64" />
-      <path d="M60 52 Q52 42 60 30 Q68 42 60 52Z" />
-      <path d="M60 30 Q57 22 60 15" />
-      <path d="M34 64 q0 -4 4 -4" opacity="0.6" />
-      <path d="M82 64 q0 -4 -4 -4" opacity="0.6" />
-    </svg>
+    <div className="flex items-center justify-center gap-4 py-2">
+      <div
+        className="h-px flex-1"
+        style={{ background: `linear-gradient(to right, transparent, ${color}60)` }}
+      />
+      <svg width="36" height="36" viewBox="0 0 36 36" fill="none" aria-hidden className="shrink-0">
+        <circle cx="18" cy="18" r="14" stroke={color} strokeWidth="0.8" opacity="0.5" />
+        <circle cx="18" cy="18" r="7" stroke={color} strokeWidth="0.8" opacity="0.5" />
+        <circle cx="18" cy="18" r="3" fill={color} opacity="0.7" />
+        {[0, 60, 120, 180, 240, 300].map((a) => (
+          <circle
+            key={a}
+            cx={18 + 11 * Math.cos((a * Math.PI) / 180)}
+            cy={18 + 11 * Math.sin((a * Math.PI) / 180)}
+            r="1.5"
+            fill={color}
+            opacity="0.4"
+          />
+        ))}
+      </svg>
+      <div
+        className="h-px flex-1"
+        style={{ background: `linear-gradient(to left, transparent, ${color}60)` }}
+      />
+    </div>
   );
 }
 
-function MandalaDoodle({ className }: { className?: string }) {
-  return (
-    <svg
-      viewBox="0 0 100 100"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="1.5"
-      strokeLinecap="round"
-      className={className}
-    >
-      <circle cx="50" cy="50" r="7" />
-      <circle cx="50" cy="50" r="22" strokeDasharray="3 4" />
-      <circle cx="50" cy="50" r="37" strokeDasharray="1.5 5" />
-      <path d="M50 10 Q55 20 50 27 Q45 20 50 10Z" />
-      <path d="M50 90 Q55 80 50 73 Q45 80 50 90Z" />
-      <path d="M10 50 Q20 45 27 50 Q20 55 10 50Z" />
-      <path d="M90 50 Q80 45 73 50 Q80 55 90 50Z" />
-    </svg>
-  );
-}
-
-function PaisleyDoodle({ className }: { className?: string }) {
-  return (
-    <svg
-      viewBox="0 0 100 100"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      className={className}
-    >
-      <path d="M50 18 Q82 24 76 56 Q72 78 48 82 Q60 64 44 54 Q32 46 38 32 Q42 22 50 18Z" />
-      <circle cx="56" cy="34" r="2" fill="currentColor" stroke="none" />
-    </svg>
-  );
-}
-
-const postcardDoodles = [DiyaDoodle, MandalaDoodle, PaisleyDoodle];
-
-function EventStoriesSection({ events }: { events: HomeEventCard[] }) {
-  const scrollerRef = useRef<HTMLDivElement | null>(null);
-  const [activeIndex, setActiveIndex] = useState(0);
-
-  const scrollToIndex = (index: number) => {
-    const scroller = scrollerRef.current;
-    const card = scroller?.children[index] as HTMLElement | undefined;
-    if (scroller && card) {
-      scroller.scrollTo({ left: card.offsetLeft - 24, behavior: "smooth" });
-    }
-  };
+function EventStoriesSection({ events, galleryEvents }: { events: HomeEventCard[]; galleryEvents: HomeGalleryEvent[] }) {
+  const eventsRef = useRef<HTMLDivElement | null>(null);
+  const [activeEvent, setActiveEvent] = useState(0);
 
   useEffect(() => {
-    const scroller = scrollerRef.current;
-    if (!scroller) return;
-
-    let ticking = false;
-    const handleScroll = () => {
-      if (ticking) return;
-      ticking = true;
-      requestAnimationFrame(() => {
-        const cards = Array.from(scroller.children) as HTMLElement[];
-        const center = scroller.scrollLeft + scroller.clientWidth / 2;
-        let closest = 0;
-        let closestDistance = Infinity;
-        cards.forEach((card, index) => {
-          const cardCenter = card.offsetLeft + card.offsetWidth / 2;
-          const distance = Math.abs(cardCenter - center);
-          if (distance < closestDistance) {
-            closestDistance = distance;
-            closest = index;
-          }
-        });
-        setActiveIndex(closest);
-        ticking = false;
-      });
+    const node = eventsRef.current;
+    if (!node) return;
+    const update = () => {
+      const slides = Array.from(node.querySelectorAll<HTMLElement>("[data-event-slide]"));
+      const nodeRect = node.getBoundingClientRect();
+      const center = nodeRect.left + node.clientWidth / 2;
+      const closest = slides.reduce((best, slide, index) => {
+        const distance = Math.abs(slide.getBoundingClientRect().left + slide.offsetWidth / 2 - center);
+        return distance < best.distance ? { index, distance } : best;
+      }, { index: 0, distance: Infinity });
+      setActiveEvent(closest.index);
     };
+    node.addEventListener("scroll", update, { passive: true });
+    return () => node.removeEventListener("scroll", update);
+  }, [events.length]);
 
-    scroller.addEventListener("scroll", handleScroll, { passive: true });
-    return () => scroller.removeEventListener("scroll", handleScroll);
-  }, []);
-
-  if (events.length === 0) {
-    return null;
+  function scrollToSlide(node: HTMLDivElement | null, index: number, selector: string) {
+    const slide = node?.querySelectorAll<HTMLElement>(selector)[index];
+    if (node && slide) {
+      const left = node.scrollLeft + slide.getBoundingClientRect().left - node.getBoundingClientRect().left;
+      node.scrollTo({ left, behavior: "smooth" });
+    }
   }
 
   return (
-    <section className="relative flex min-h-screen flex-col justify-center overflow-hidden bg-[#1C1C1C] px-6 py-24 text-[#F5F0E8] md:px-16">
-      <div
-        className="pointer-events-none absolute inset-0 opacity-55"
-        style={{
-          backgroundImage:
-            "radial-gradient(circle at 15% 20%, rgba(201,168,76,0.32) 0, transparent 36%), radial-gradient(circle at 88% 16%, rgba(139,26,26,0.26) 0, transparent 38%), linear-gradient(140deg, #1A120C 0%, #2B1610 48%, #15120F 100%)",
-        }}
-        aria-hidden
-      />
-      <div className="pointer-events-none absolute inset-0" aria-hidden>
-        {storiesParticles.map((particle, index) => (
-          <motion.span
-            key={index}
-            className="absolute h-2.5 w-2.5 rounded-full bg-[#C9A84C]/80"
-            style={{ left: particle.left, top: particle.top }}
-            animate={{
-              y: [0, -20, 0],
-              opacity: [0.35, 1, 0.35],
-              scale: [0.75, 1.15, 0.75],
-            }}
-            transition={{
-              repeat: Infinity,
-              ease: "easeInOut",
-              duration: particle.duration,
-              delay: particle.delay,
-            }}
-          />
-        ))}
-      </div>
+    <>
+      <section className="relative overflow-hidden bg-[#1A0A06] px-5 py-20 text-[#FFF7E8] md:px-10 md:py-24">
+        <div className="pointer-events-none absolute inset-0 opacity-20" style={{ backgroundImage: "radial-gradient(circle at 10% 20%, #C9A84C 0 1px, transparent 2px), radial-gradient(circle at 80% 70%, #8B1A1A 0 2px, transparent 3px)", backgroundSize: "38px 38px, 61px 61px" }} />
+        <div className="relative mx-auto max-w-6xl">
+          <RangoliDivider />
+          <div className="mt-5 text-center">
+            <p className="text-xs font-bold uppercase tracking-[0.28em] text-[#F4C766]">✦ Campus celebrations ✦</p>
+            <h2 className="mt-3 font-serif text-4xl font-bold md:text-5xl">One club. Many ways to celebrate.</h2>
+            <p className="mx-auto mt-4 max-w-2xl text-sm leading-7 text-white/70 md:text-base">Real Avyakta events, made together on campus. Swipe, scroll, or tap a marker to explore each story.</p>
+          </div>
 
-      <div className="relative mx-auto max-w-6xl text-center">
-        <p className="text-xs uppercase tracking-[0.24em] text-[#C9A84C]">
-          Events Section
-        </p>
-        <h2 className="mb-4 mt-3 font-heading text-3xl text-[#F5F0E8] md:text-4xl">
-          Stories Behind the Events
-        </h2>
-        <p className="mx-auto max-w-2xl text-sm leading-7 text-[#F5F0E8]/78 md:text-base">
-          Behind every Avyakta event is weeks of planning, rehearsal, and craft
-          across every domain of the collective. Here&apos;s a look at a few of
-          them.
-        </p>
-      </div>
-
-      <div
-        ref={scrollerRef}
-        className="relative mx-auto mt-12 flex max-w-[1400px] snap-x snap-mandatory gap-6 overflow-x-auto px-6 pb-14 pt-2 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden md:px-16"
-      >
-        {events.map((event, eventIndex) => {
-          const Doodle = postcardDoodles[eventIndex % postcardDoodles.length];
-          return (
-            <Link
-              key={event.slug}
-              href={`/events/${event.slug}`}
-              className="group flex min-h-[70vh] w-[min(92vw,1200px)] flex-none snap-start flex-col overflow-hidden rounded-3xl border-2 border-[#C9A84C]/45 bg-white shadow-[0_10px_28px_rgba(73,44,8,0.1)] transition duration-300 hover:-translate-y-1 hover:shadow-[0_16px_36px_rgba(73,44,8,0.16)] md:flex-row"
-            >
-              {/* Text side */}
-              <div className="flex flex-1 flex-col justify-between p-10 md:p-14">
-                <div>
-                  <div className="flex flex-wrap items-center gap-3">
-                    <span className="rounded-full bg-[#92791B]/10 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.12em] text-[#92791B]">
-                      {event.type}
-                    </span>
-                    <span className="text-xs uppercase tracking-[0.1em] text-[#737955]">
-                      {event.date}
-                    </span>
+          <div ref={eventsRef} className="mt-10 flex snap-x snap-mandatory gap-5 overflow-x-auto scroll-smooth pb-5 [scrollbar-color:#C9A84C_transparent]">
+            {events.map((event, index) => {
+              const cover = galleryEvents.find((item) => item.id === event.id)?.coverUrl;
+              return (
+                <article key={event.id} data-event-slide className="grid h-[690px] w-[min(88vw,960px)] flex-none snap-center grid-rows-[280px_minmax(0,1fr)] overflow-hidden rounded-[28px] border border-[#D5B466]/60 bg-[#FFF9ED] text-[#24150E] shadow-[0_22px_60px_rgba(0,0,0,0.4)] md:h-[470px] md:grid-cols-[1.05fr_0.95fr] md:grid-rows-1">
+                  <Link href={`/events/${event.slug}`} aria-label={`See details for ${event.name}`} className="group relative flex min-h-0 items-center justify-center overflow-hidden bg-[#2B1610]">
+                    {cover ? <img src={cover} alt={`${event.name} event`} className="h-full w-full object-contain p-3 transition duration-500 group-hover:opacity-90 md:p-5" loading={index === 0 ? "eager" : "lazy"} /> : <div className="absolute inset-0 flex items-center justify-center bg-[radial-gradient(circle_at_50%_40%,rgba(201,168,76,.45),transparent_25%),linear-gradient(145deg,#8B1A1A,#2B1610_55%,#1B5E3B)]"><span className="font-serif text-8xl text-[#F4C766]/70">✦</span></div>}
+                    <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-[#170A07]/75 via-transparent to-transparent" />
+                    <span className="absolute bottom-5 left-5 rounded-full border border-white/40 bg-black/35 px-4 py-2 text-xs font-semibold uppercase tracking-wider text-white backdrop-blur">Avyakta · {event.date}</span>
+                  </Link>
+                  <div className="flex min-h-0 flex-col justify-center overflow-hidden p-5 md:p-8">
+                    <p className="text-xs font-bold uppercase tracking-[0.2em] text-[#8B1A1A]">A campus celebration</p>
+                    <h3 className="mt-3 line-clamp-2 font-serif text-3xl font-bold leading-tight text-[#24150E] md:text-4xl">{event.name}</h3>
+                    <p className="mt-3 line-clamp-3 text-sm leading-6 text-[#24150E]/75">{event.description}</p>
+                    {event.highlights.length > 0 && <ul className="mt-3 flex max-h-14 flex-wrap gap-2 overflow-hidden">{event.highlights.slice(0, 3).map((highlight) => <li key={highlight} className="line-clamp-1 rounded-full border border-[#C9A84C]/45 bg-[#F5EDD8] px-3 py-1 text-xs font-medium">{highlight}</li>)}</ul>}
+                    <div className="mt-4 flex flex-wrap items-center gap-x-5 gap-y-2 border-t border-[#C9A84C]/35 pt-3 text-xs font-semibold uppercase tracking-wider text-[#6E5940]">
+                      <span>◷ {event.date}</span>{event.venue && <span>⌖ {event.venue}</span>}
+                    </div>
+                    <Link href={`/events/${event.slug}`} className="mt-4 inline-flex w-fit shrink-0 items-center gap-2 rounded-full bg-[#8B1A1A] px-5 py-3 text-sm font-bold text-white transition hover:bg-[#641313]">Explore event <span aria-hidden="true">→</span></Link>
                   </div>
-                  <h3 className="mt-5 font-heading text-3xl font-semibold text-[#1C1C1C] md:text-4xl">
-                    {event.name}
-                  </h3>
-                  <p className="mt-6 max-w-2xl text-base leading-8 text-[#1C1C1C]/78">
-                    {event.description}
-                  </p>
-                </div>
-                <p className="font-accent mt-8 text-lg italic text-[#92791B]">
-                  — {event.type}
-                </p>
-              </div>
-
-              {/* Postcard-back side */}
-              <div className="hidden w-[320px] shrink-0 flex-col border-l-2 border-dashed border-[#C9A84C]/30 bg-[#FFFBF3] p-8 md:flex">
-                <div className="self-end rotate-2 rounded-md border border-dashed border-[#8B1A1A]/50 px-3 py-2 text-center text-[10px] font-semibold uppercase leading-tight tracking-[0.08em] text-[#8B1A1A]/80">
-                  ✦ Avyakta
-                  <br />
-                  Archives
-                </div>
-                <div className="mt-10 space-y-5">
-                  <div className="border-b border-dashed border-[#C9A84C]/40 pb-1.5">
-                    <p className="font-accent truncate text-base italic text-[#1C1C1C]/70">
-                      Venue: {event.venue || "TBA"}
-                    </p>
-                  </div>
-                  <div className="border-b border-dashed border-[#C9A84C]/40 pb-1.5">
-                    <p className="font-accent truncate text-base italic text-[#1C1C1C]/70">
-                      Date: {event.date}
-                    </p>
-                  </div>
-                  <div className="border-b border-dashed border-[#C9A84C]/40 pb-1.5">
-                    <p className="font-accent truncate text-base italic text-[#1C1C1C]/70">
-                      Domain: {event.type}
-                    </p>
-                  </div>
-                </div>
-
-                <Doodle className="mx-auto my-auto h-24 w-24 text-[#92791B]/35" />
-
-                <p className="pt-6 text-xs font-semibold uppercase tracking-[0.12em] text-[#1B5E3B] opacity-0 transition-opacity duration-300 group-hover:opacity-100">
-                  Open event details →
-                </p>
-              </div>
-            </Link>
-          );
-        })}
-      </div>
-
-      <div className="relative mt-2 flex items-center justify-center gap-4">
-        <div className="flex items-center gap-2">
-          {events.map((event, index) => (
-            <button
-              key={event.slug}
-              type="button"
-              onClick={() => scrollToIndex(index)}
-              aria-label={`Go to ${event.name}`}
-              className={`h-2 rounded-full transition-all duration-300 ${
-                index === activeIndex
-                  ? "w-6 bg-[#C9A84C]"
-                  : "w-2 bg-[#F5F0E8]/25 hover:bg-[#F5F0E8]/50"
-              }`}
-            />
-          ))}
+                </article>
+              );
+            })}
+            <div data-event-slide className="flex h-[690px] w-[min(78vw,380px)] flex-none snap-center flex-col items-center justify-center rounded-[28px] border border-dashed border-[#F4C766]/60 bg-[#2B1610]/80 px-8 text-center md:h-[470px]">
+              <span className="text-5xl" aria-hidden="true">🪔</span><p className="mt-5 text-xs font-bold uppercase tracking-[0.24em] text-[#F4C766]">The next story is in the making</p><h3 className="mt-3 font-serif text-3xl font-bold">More coming soon</h3><p className="mt-3 text-sm leading-6 text-white/70">We’re planning the next campus celebration. Check back for the next date.</p><Link href="/events" className="mt-6 rounded-full border border-[#F4C766]/60 px-5 py-2.5 text-sm font-semibold text-[#FFF7E8] hover:bg-white/10">All events →</Link>
+            </div>
+          </div>
+          {events.length > 0 && <div className="mt-3 flex items-center justify-center gap-2" aria-label="Choose an event card">{Array.from({ length: events.length + 1 }, (_, index) => <button key={index} type="button" onClick={() => scrollToSlide(eventsRef.current, index, "[data-event-slide]")} aria-label={index === events.length ? "More events coming soon" : `Show event ${index + 1}`} className={`h-2.5 rounded-full transition-all ${activeEvent === index ? "w-8 bg-[#F4C766]" : "w-2.5 bg-white/35 hover:bg-white/70"}`} />)}</div>}
         </div>
-        <Link
-          href="/events"
-          className="text-sm font-medium text-[#C9A84C] underline"
-        >
-          View all events
-        </Link>
-      </div>
-    </section>
+      </section>
+
+      <section className="overflow-hidden bg-[#F5EDD8] px-5 py-20 text-[#24150E] md:px-10 md:py-24">
+        <div className="mx-auto max-w-6xl">
+          <RangoliDivider color="#1B5E3B" />
+          <div className="mt-5 flex flex-wrap items-end justify-between gap-4">
+            <div><p className="text-xs font-bold uppercase tracking-[0.25em] text-[#1B5E3B]">✦ The Avyakta album ✦</p><h2 className="mt-3 font-serif text-4xl font-bold text-[#24150E] md:text-5xl">Moments worth keeping.</h2><p className="mt-3 max-w-xl text-sm leading-7 text-[#24150E]/70">Each album begins with a favourite frame. Open a celebration to see the photographs collected so far.</p></div>
+            <Link href="/gallery" className="rounded-full border border-[#1B5E3B]/50 px-5 py-2.5 text-sm font-bold text-[#1B5E3B] transition hover:bg-[#1B5E3B] hover:text-white">Browse all albums →</Link>
+          </div>
+          <div className="mt-9 flex snap-x snap-mandatory gap-5 overflow-x-auto scroll-smooth pb-5 [scrollbar-color:#1B5E3B_transparent]">
+            {galleryEvents.map((event, index) => <Link key={event.id} href={`/gallery#event-${event.id}`} className="group relative h-[360px] w-[min(82vw,420px)] flex-none snap-start overflow-hidden rounded-[28px] border-2 border-[#C9A84C]/55 bg-[#1A0A06] shadow-[0_18px_45px_rgba(36,21,14,.2)]">{event.coverUrl ? <img src={event.coverUrl} alt={`${event.name} album cover`} className="absolute inset-0 h-full w-full object-cover transition duration-700 group-hover:scale-105" loading={index === 0 ? "eager" : "lazy"} /> : <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_35%,rgba(201,168,76,.48),transparent_26%),linear-gradient(145deg,#8B1A1A,#2B1610_58%,#1B5E3B)]" />}<div className="absolute inset-0 bg-gradient-to-t from-[#140906] via-[#140906]/25 to-transparent" /><div className="absolute inset-x-0 bottom-0 p-6 text-white"><p className="text-xs font-bold uppercase tracking-[.22em] text-[#F4C766]">{event.year} · {event.imageCount} {event.imageCount === 1 ? "photo" : "photos"}</p><h3 className="mt-2 font-serif text-3xl font-bold">{event.name}</h3><p className="mt-3 inline-flex rounded-full border border-white/40 bg-black/25 px-4 py-2 text-xs font-bold uppercase tracking-wider backdrop-blur">{event.imageCount ? "Open album →" : "Photos coming soon"}</p></div></Link>)}
+            <div className="flex h-[360px] w-[min(74vw,340px)] flex-none snap-start flex-col items-center justify-center rounded-[28px] border border-dashed border-[#92791B]/60 bg-[#FFF9ED] px-8 text-center"><span className="text-4xl" aria-hidden="true">🌼</span><p className="mt-4 text-xs font-bold uppercase tracking-[.22em] text-[#8B1A1A]">More memories soon</p><h3 className="mt-2 font-serif text-2xl font-bold">The album is growing</h3><p className="mt-3 text-sm leading-6 text-[#24150E]/70">New photographs will appear here after each celebration.</p></div>
+          </div>
+        </div>
+      </section>
+    </>
   );
 }
 
 export default function HomePageClient({
   initialEvents,
+  galleryEvents,
   isRecruitmentOpen,
 }: HomePageClientProps) {
-  const [events] = useState<HomeEventCard[]>(
-    initialEvents.length ? initialEvents : fallbackEvents,
-  );
+  const [events] = useState<HomeEventCard[]>(initialEvents);
   const [showAnnouncement, setShowAnnouncement] = useState(true);
-  const recruitmentHref = isRecruitmentOpen
-    ? "/recruitment"
-    : "/recruitment-closed";
+  const recruitmentHref = isRecruitmentOpen ? "/recruitment" : "/recruitment-closed";
   const { scrollYProgress } = useScroll();
 
   const heroY = useTransform(scrollYProgress, [0, 0.35], [0, 120]);
@@ -387,10 +227,7 @@ export default function HomePageClient({
     hidden: { opacity: 0 },
     show: {
       opacity: 1,
-      transition: {
-        delayChildren: 0.08,
-        staggerChildren: 0.16,
-      },
+      transition: { delayChildren: 0.08, staggerChildren: 0.16 },
     },
   };
 
@@ -409,108 +246,133 @@ export default function HomePageClient({
   };
 
   return (
-    <main className="overflow-x-hidden bg-[#F5F0E8] text-[#1C1C1C]">
+    <main
+      className="overflow-x-hidden text-[#1C1C1C]"
+      style={{
+        background:
+          "linear-gradient(160deg, #c4bba5 0%, #d1ccbd 25%, #cac4b1 55%, #d4d0c5 80%, #d4c9ad 100%)",
+      }}
+    >
       <motion.div
         className="fixed left-0 right-0 top-0 z-[80] h-1 origin-left bg-[linear-gradient(90deg,#8B1A1A,#C9A84C,#1B5E3B)]"
         style={{ scaleX: scrollYProgress }}
       />
 
-      {/* HERO */}
+      {/* ═══════════════ HERO ═══════════════ */}
       <section className="relative flex min-h-[95vh] items-center justify-center overflow-hidden px-6 py-24">
-        <div className="absolute inset-0 bg-[#1C1C1C]" aria-hidden />
+        {/* Deep background */}
         <div
-          className="absolute inset-0 opacity-90"
+          className="absolute inset-0"
           style={{
-            backgroundImage:
-              "radial-gradient(circle at 10% 20%, rgba(201,168,76,0.3) 0, transparent 40%), radial-gradient(circle at 82% 14%, rgba(139,26,26,0.2) 0, transparent 45%), radial-gradient(circle at 76% 82%, rgba(27,94,59,0.15) 0, transparent 50%), linear-gradient(130deg, #1C1C1C 0%, #2A2A2A 38%, #1C1C1C 100%)",
-          }}
-          aria-hidden
-        />
-        <div
-          className="absolute inset-0 opacity-40"
-          style={{
-            backgroundImage:
-              "repeating-radial-gradient(circle at center, rgba(201,168,76,0.22), rgba(201,168,76,0.22) 1px, transparent 1px, transparent 14px)",
+            background:
+              "linear-gradient(150deg, #1A0A06 0%, #2B1610 30%, #0F1A0A 60%, #1C1C1C 100%)",
           }}
           aria-hidden
         />
 
+        {/* Saffron/turmeric glow blobs */}
+        <div
+          className="pointer-events-none absolute inset-0 opacity-80"
+          style={{
+            backgroundImage:
+              "radial-gradient(circle at 15% 25%, rgba(201,168,76,0.38) 0, transparent 40%), radial-gradient(circle at 85% 18%, rgba(139,26,26,0.28) 0, transparent 42%), radial-gradient(circle at 50% 85%, rgba(27,94,59,0.22) 0, transparent 45%)",
+          }}
+          aria-hidden
+        />
+
+        {/* Fine paisley overlay */}
+        <div
+          className="pointer-events-none absolute inset-0 opacity-[0.04]"
+          style={{
+            backgroundImage:
+              "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 200'%3E%3Cdefs%3E%3Cpattern id='paisley' patternUnits='userSpaceOnUse' width='200' height='200'%3E%3Cpath d='M100,50 Q130,80 115,110 Q130,140 100,160 Q70,140 85,110 Q70,80 100,50 Z' fill='%23C9A84C'/%3E%3C/pattern%3E%3C/defs%3E%3Crect width='200' height='200' fill='url(%23paisley)'/%3E%3C/svg%3E\")",
+          }}
+          aria-hidden
+        />
+
+        {/* Spinning mandala */}
+        <div className="pointer-events-none absolute inset-0 flex items-center justify-center opacity-[0.08]">
+          <svg width="700" height="700" viewBox="0 0 220 220" className="animate-spin-slow" aria-hidden>
+            {[98, 80, 62, 44, 28].map((r, i) => (
+              <circle key={r} cx="110" cy="110" r={r} stroke="#C9A84C" fill="none" strokeWidth={i === 0 ? "0.8" : "0.5"} strokeDasharray={i % 2 === 1 ? "2 4" : undefined} />
+            ))}
+            {[0, 45, 90, 135, 180, 225, 270, 315].map((angle) => (
+              <line key={angle} x1="110" y1="12" x2="110" y2="208" stroke="#C9A84C" strokeWidth="0.4" transform={`rotate(${angle} 110 110)`} />
+            ))}
+            {[0, 30, 60, 90, 120, 150, 180, 210, 240, 270, 300, 330].map((a) => (
+              <circle key={`petal-${a}`} cx={110 + 80 * Math.cos((a * Math.PI) / 180)} cy={110 + 80 * Math.sin((a * Math.PI) / 180)} r="3" fill="#C9A84C" opacity="0.5" />
+            ))}
+          </svg>
+        </div>
+
+        {/* Floating diya glow orbs */}
         <motion.div
-          className="pointer-events-none absolute -left-14 top-20 h-48 w-48 rounded-full bg-[#C9A84C]/25 blur-3xl"
+          className="pointer-events-none absolute -left-14 top-20 h-56 w-56 rounded-full blur-3xl"
+          style={{ background: "radial-gradient(circle, rgba(201,168,76,0.35) 0%, transparent 70%)" }}
           animate={{ y: [0, -24, 0], x: [0, 18, 0] }}
           transition={{ duration: 11, repeat: Infinity, ease: "easeInOut" }}
         />
         <motion.div
-          className="pointer-events-none absolute -right-10 bottom-20 h-56 w-56 rounded-full bg-[#1B5E3B]/25 blur-3xl"
+          className="pointer-events-none absolute -right-10 bottom-20 h-64 w-64 rounded-full blur-3xl"
+          style={{ background: "radial-gradient(circle, rgba(27,94,59,0.3) 0%, transparent 70%)" }}
           animate={{ y: [0, 26, 0], x: [0, -16, 0] }}
           transition={{ duration: 13, repeat: Infinity, ease: "easeInOut" }}
         />
+        <motion.div
+          className="pointer-events-none absolute left-1/2 top-10 h-40 w-40 -translate-x-1/2 rounded-full blur-3xl"
+          style={{ background: "radial-gradient(circle, rgba(139,26,26,0.25) 0%, transparent 70%)" }}
+          animate={{ y: [0, 16, 0] }}
+          transition={{ duration: 9, repeat: Infinity, ease: "easeInOut" }}
+        />
 
-        {/* Kolam */}
-        <div className="pointer-events-none absolute inset-0 flex items-center justify-center opacity-30">
-          <svg
-            width="620"
-            height="620"
-            viewBox="0 0 220 220"
-            className="animate-spin-slow"
-            aria-hidden
-          >
-            <circle
-              cx="110"
-              cy="110"
-              r="98"
-              stroke="#C9A84C"
-              fill="none"
-              strokeWidth="0.75"
-            />
-            <circle
-              cx="110"
-              cy="110"
-              r="78"
-              stroke="#92791B"
-              fill="none"
-              strokeWidth="0.75"
-            />
-            <circle
-              cx="110"
-              cy="110"
-              r="58"
-              stroke="#8B1A1A"
-              fill="none"
-              strokeWidth="0.75"
-            />
-            <circle
-              cx="110"
-              cy="110"
-              r="38"
-              stroke="#1B5E3B"
-              fill="none"
-              strokeWidth="0.75"
-            />
-          </svg>
-        </div>
-
-        <div className="pointer-events-none absolute left-0 right-0 top-0 h-8 border-b border-[#C9A84C]/55 bg-[linear-gradient(90deg,rgba(201,168,76,0.15)_0,rgba(245,240,232,0.2)_50%,rgba(201,168,76,0.15)_100%)]" />
-        <div className="pointer-events-none absolute bottom-0 left-0 right-0 h-8 border-t border-[#C9A84C]/55 bg-[linear-gradient(90deg,rgba(201,168,76,0.15)_0,rgba(245,240,232,0.2)_50%,rgba(201,168,76,0.15)_100%)]" />
+        {/* Top + bottom gold trim lines */}
+        <div className="pointer-events-none absolute left-0 right-0 top-0 h-8 border-b border-[#C9A84C]/40 bg-[linear-gradient(90deg,rgba(201,168,76,0.1)_0,rgba(245,240,232,0.15)_50%,rgba(201,168,76,0.1)_100%)]" />
+        <div className="pointer-events-none absolute bottom-0 left-0 right-0 h-8 border-t border-[#C9A84C]/40 bg-[linear-gradient(90deg,rgba(201,168,76,0.1)_0,rgba(245,240,232,0.15)_50%,rgba(201,168,76,0.1)_100%)]" />
 
         <motion.div
           initial="hidden"
           animate="show"
           variants={fadeUp}
           transition={{ duration: 1.1, ease: [0.22, 1, 0.36, 1] }}
-          style={{ y: heroY, scale: heroScale }}
-          className="relative mx-auto max-w-4xl rounded-[2rem] border-2 border-[#C9A84C]/40 bg-[#1C1C1C]/80 px-6 py-10 text-center text-white shadow-[0_0_0_8px_rgba(201,168,76,0.1),0_30px_80px_rgba(0,0,0,0.6)] backdrop-blur-md md:px-12 md:py-14"
+          className="relative mx-auto max-w-4xl rounded-[2rem] border-2 border-[#C9A84C]/50 bg-[#1C1C1C]/80 px-6 py-10 text-center text-white shadow-[0_0_0_8px_rgba(201,168,76,0.12),0_30px_80px_rgba(0,0,0,0.65)] backdrop-blur-md md:px-12 md:py-14"
+          style={{
+            y: heroY,
+            scale: heroScale,
+          }}
         >
-          <p className="mb-4 text-xs uppercase tracking-[0.35em] text-[#C9A84C]">
-            The Living Traditions
+          {/* Corner ornaments */}
+          {(["tl","tr","bl","br"] as const).map((pos) => (
+            <span
+              key={pos}
+              className="pointer-events-none absolute h-8 w-8"
+              style={{
+                top: pos.includes("t") ? 12 : "auto",
+                bottom: pos.includes("b") ? 12 : "auto",
+                left: pos.includes("l") ? 12 : "auto",
+                right: pos.includes("r") ? 12 : "auto",
+                borderTop: pos.includes("t") ? "2px solid rgba(201,168,76,0.7)" : undefined,
+                borderBottom: pos.includes("b") ? "2px solid rgba(201,168,76,0.7)" : undefined,
+                borderLeft: pos.includes("l") ? "2px solid rgba(201,168,76,0.7)" : undefined,
+                borderRight: pos.includes("r") ? "2px solid rgba(201,168,76,0.7)" : undefined,
+                borderRadius: pos === "tl" ? "8px 0 0 0" : pos === "tr" ? "0 8px 0 0" : pos === "bl" ? "0 0 0 8px" : "0 0 8px 0",
+              }}
+              aria-hidden
+            />
+          ))}
+
+          <p className="mb-4 text-xs uppercase tracking-[0.4em] text-[#C9A84C]">
+            ✦ The Living Traditions ✦
           </p>
-          <h1 className="font-serif text-5xl leading-none text-[#C9A84C] md:text-8xl">
+          <h1 className="font-serif text-5xl leading-none text-[#C9A84C] md:text-8xl drop-shadow-[0_0_30px_rgba(201,168,76,0.5)]">
             Avyakta
           </h1>
+          <p className="mt-2 text-xs uppercase tracking-[0.2em] text-[#C9A84C]/60">
+            अव्यक्त
+          </p>
           <p className="mt-6 text-lg italic text-[#F5F0E8] md:text-2xl">
             Where culture breathes through creativity
           </p>
-          <p className="mx-auto mt-6 max-w-2xl text-sm leading-8 text-[#F5F0E8]/85 md:text-base">
+          <p className="mx-auto mt-6 max-w-2xl text-sm leading-8 text-[#F5F0E8]/80 md:text-base">
             A cultural multi-domain collective where performance, craft, design,
             and technology converge to produce unforgettable campus experiences.
           </p>
@@ -518,13 +380,13 @@ export default function HomePageClient({
           <div className="mt-10 flex flex-col items-center justify-center gap-3 sm:flex-row">
             <Link
               href="/about"
-              className="inline-block rounded-full border border-[#92791B] bg-[#92791B] px-8 py-3 font-semibold text-black transition hover:scale-[1.03] hover:bg-[#C9A84C]"
+              className="inline-block rounded-full border border-[#92791B] bg-[#92791B] px-8 py-3 font-semibold text-[#F5F0E8] transition hover:scale-[1.03] hover:bg-[#C9A84C] hover:text-[#1C1C1C]"
             >
               Know More
             </Link>
             <Link
               href={recruitmentHref}
-              className="inline-block rounded-full border border-white/40 px-8 py-3 text-[#F5F0E8] transition hover:scale-[1.03] hover:bg-white hover:text-[#1C1C1C]"
+              className="inline-block rounded-full border border-[#C9A84C]/50 px-8 py-3 text-[#F5F0E8] transition hover:scale-[1.03] hover:bg-[#C9A84C]/15"
             >
               Join Avyakta
             </Link>
@@ -532,7 +394,8 @@ export default function HomePageClient({
         </motion.div>
       </section>
 
-      <section className="border-y-2 border-[#C9A84C]/45 bg-[#1C1C1C] py-3 text-[#F5F0E8]">
+      {/* ═══════════════ TICKER ═══════════════ */}
+      <section className="border-y-2 border-[#C9A84C]/50 bg-[#1C1C1C] py-3 text-[#F5F0E8]">
         <motion.div
           className="flex w-max items-center gap-10 pr-10 text-sm uppercase tracking-[0.2em]"
           animate={{ x: ["0%", "-50%"] }}
@@ -540,47 +403,43 @@ export default function HomePageClient({
         >
           {Array.from({ length: 6 }).map((_, i) => (
             <div key={i} className="flex items-center gap-10">
+              <span className="text-[#C9A84C]">🪔</span>
               <span>Tradition</span>
-              <span className="text-[#C9A84C]">•</span>
+              <span className="text-[#C9A84C]">◈</span>
               <span>Performance</span>
-              <span className="text-[#C9A84C]">•</span>
+              <span className="text-[#C9A84C]">✦</span>
               <span>Community</span>
-              <span className="text-[#C9A84C]">•</span>
+              <span className="text-[#C9A84C]">◈</span>
               <span>Craft</span>
-              <span className="text-[#C9A84C]">•</span>
+              <span className="text-[#C9A84C]">✦</span>
               <span>Expression</span>
-              <span className="text-[#C9A84C]">•</span>
+              <span className="text-[#C9A84C]">🎭</span>
             </div>
           ))}
         </motion.div>
       </section>
 
-      {/* ANNOUNCEMENT */}
+      {/* ═══════════════ ANNOUNCEMENT ═══════════════ */}
       {showAnnouncement && isRecruitmentOpen && (
         <motion.div
           initial={{ opacity: 0, y: 80 }}
           animate={{ opacity: 1, y: 0 }}
-          className="fixed bottom-4 right-4 z-50 w-[92%] rounded-2xl border border-[#C9A84C] bg-[#1B5E3B] p-4 text-white shadow-2xl sm:w-[380px]"
+          className="fixed bottom-4 right-4 z-50 w-[92%] rounded-2xl border-2 border-[#C9A84C]/60 bg-[#1B5E3B] p-4 text-white shadow-2xl sm:w-[380px]"
         >
-          <p className="text-xs uppercase tracking-[0.18em] text-[#C9A84C]">
-            Announcement
-          </p>
+          <p className="text-xs uppercase tracking-[0.18em] text-[#C9A84C]">🪔 Announcement</p>
           <h3 className="mt-1 text-lg font-semibold">Recruitments Open</h3>
-          <p className="mt-1 text-sm text-white/90">
+          <p className="mt-1 text-sm text-white/85">
             Applications are live for all domains this semester.
           </p>
           <div className="mt-3 flex items-center gap-3">
-            <Link
-              href="/recruitment"
-              className="rounded-md bg-[#C9A84C] px-3 py-2 text-sm font-medium text-black"
-            >
+            <Link href="/recruitment" className="rounded-md bg-[#C9A84C] px-3 py-2 text-sm font-bold text-[#1C1C1C]">
               Apply Now
             </Link>
             <button
               type="button"
               aria-label="Close announcement"
               onClick={() => setShowAnnouncement(false)}
-              className="rounded-md px-2 py-1 text-sm text-white/90 hover:bg-white/10"
+              className="rounded-md px-2 py-1 text-sm text-white/80 hover:bg-white/10"
             >
               Dismiss
             </button>
@@ -588,26 +447,34 @@ export default function HomePageClient({
         </motion.div>
       )}
 
-      {/* ABOUT */}
+      {/* ═══════════════ ABOUT ═══════════════ */}
       <section className="px-6 py-24 md:px-16">
+        <RangoliDivider />
         <motion.div
           variants={fadeUp}
           initial="hidden"
           whileInView="show"
           viewport={{ once: false }}
           transition={sectionTransition}
-          className="mx-auto max-w-5xl rounded-[2rem] border-2 border-[#C9A84C]/40 bg-white/70 px-6 py-12 text-center shadow-[0_18px_55px_rgba(40,22,6,0.15)] backdrop-blur-sm md:px-10"
+          className="mx-auto mt-8 max-w-5xl rounded-[2rem] border-2 border-[#C9A84C]/50 px-6 py-12 text-center shadow-[0_20px_60px_rgba(40,22,6,0.18)] md:px-10"
+          style={{
+            background: "radial-gradient(circle, rgba(226, 221, 211, 0.92) 10%, rgba(197, 186, 160, 0.97) 100%)",
+          }}
+
         >
-          <p className="text-xs uppercase tracking-[0.24em] text-[#737955]">
-            About Section
-          </p>
-          <h2 className="mb-4 mt-3 text-3xl text-[#92791B] md:text-4xl">
+          {/* Rangoli corner accents */}
+          <div className="pointer-events-none absolute -left-2 -top-2 h-12 w-12 rounded-tl-[2rem] border-l-4 border-t-4 border-[#C9A84C]/60" />
+          <div className="pointer-events-none absolute -right-2 -top-2 h-12 w-12 rounded-tr-[2rem] border-r-4 border-t-4 border-[#C9A84C]/60" />
+
+          <p className="text-xs uppercase tracking-[0.28em] text-[#737955]">✦ About Section ✦</p>
+          <h2 className="mb-4 mt-3 font-serif text-3xl text-[#92791B] md:text-4xl">
             About Avyakta
           </h2>
           <p className="mx-auto max-w-3xl leading-8 text-[#1C1C1C]/85">
             Founded in 2026, Avyakta is a cultural collective that blends
             tradition with modern creativity. It creates spaces for expression,
-            collaboration, and immersive cultural experiences.
+            collaboration, and immersive cultural experiences — rooted in the
+            living traditions of India.
           </p>
           <motion.div
             className="mt-8 grid gap-4 text-left md:grid-cols-3"
@@ -616,125 +483,47 @@ export default function HomePageClient({
             whileInView="show"
             viewport={{ once: false, amount: 0.3 }}
           >
-            <motion.article
-              variants={revealItem}
-              whileHover={{ y: -8, scale: 1.02 }}
-              className="rounded-2xl border border-[#C9A84C]/50 bg-[#FFF9EF] p-5 shadow-sm"
-            >
-              <h3 className="font-semibold text-[#1B5E3B]">Perform</h3>
-              <p className="mt-2 text-sm text-[#1C1C1C]/80">
-                Dance, music, theatre, and stage expression.
-              </p>
-            </motion.article>
-            <motion.article
-              variants={revealItem}
-              whileHover={{ y: -8, scale: 1.02 }}
-              className="rounded-2xl border border-[#C9A84C]/50 bg-[#FFF9EF] p-5 shadow-sm"
-            >
-              <h3 className="font-semibold text-[#1B5E3B]">Create</h3>
-              <p className="mt-2 text-sm text-[#1C1C1C]/80">
-                Design, visuals, and storytelling across formats.
-              </p>
-            </motion.article>
-            <motion.article
-              variants={revealItem}
-              whileHover={{ y: -8, scale: 1.02 }}
-              className="rounded-2xl border border-[#C9A84C]/50 bg-[#FFF9EF] p-5 shadow-sm"
-            >
-              <h3 className="font-semibold text-[#1B5E3B]">Lead</h3>
-              <p className="mt-2 text-sm text-[#1C1C1C]/80">
-                Plan, manage, and deliver cultural experiences.
-              </p>
-            </motion.article>
-          </motion.div>
-        </motion.div>
-      </section>
-
-      {/* EVENTS */}
-      <EventStoriesSection events={events} />
-
-      {/* IRA – commented out, kept out of production for now
-      <section className="px-6 py-14 text-center md:px-16">
-        <motion.div
-          variants={fadeUp}
-          initial="hidden"
-          whileInView="show"
-          viewport={{ once: false }}
-          transition={sectionTransition}
-          className="mx-auto max-w-3xl rounded-3xl border-2 border-[#C9A84C]/45 bg-[#FFF9EF] px-6 py-8 shadow-[0_12px_30px_rgba(73,44,8,0.12)]"
-        >
-          <p className="text-xs uppercase tracking-[0.24em] text-[#737955]">
-            Affiliation
-          </p>
-          <p className="mt-3 text-lg text-[#1C1C1C]">
-            A proud branch of{" "}
-            <Link
-              href="/about-ira"
-              className="font-semibold text-[#92791B] underline decoration-[#C9A84C]"
-            >
-              Club IRA
-            </Link>
-          </p>
-        </motion.div>
-      </section>
-      */}
-
-      {/* TIMELINE */}
-      <section className="px-6 py-24 md:px-16">
-        <motion.div
-          variants={fadeUp}
-          initial="hidden"
-          whileInView="show"
-          viewport={{ once: false }}
-          transition={sectionTransition}
-          className="mx-auto max-w-6xl"
-        >
-          <p className="text-xs uppercase tracking-[0.24em] text-[#737955]">
-            Timeline Section
-          </p>
-          <h2 className="mb-8 mt-3 text-3xl text-[#92791B] md:text-4xl">
-            Our Journey
-          </h2>
-          <motion.div
-            className="grid gap-4 md:grid-cols-3"
-            variants={staggerContainer}
-            initial="hidden"
-            whileInView="show"
-            viewport={{ once: false, amount: 0.3 }}
-          >
-            {timeline.map((item) => (
+            {[
+              { title: "🎭 Perform", body: "Dance, music, theatre, and stage expression across classical and folk traditions.", color: "#8B1A1A" },
+              { title: "🎨 Create", body: "Design, visuals, and storytelling inspired by India's visual heritage.", color: "#1B5E3B" },
+              { title: "⚡ Lead", body: "Plan, manage, and deliver cultural experiences that leave a mark.", color: "#92791B" },
+            ].map(({ title, body, color }) => (
               <motion.article
-                key={item.year}
+                key={title}
                 variants={revealItem}
-                whileHover={{ y: -6, scale: 1.01 }}
-                className="rounded-2xl border-2 border-[#C9A84C]/45 bg-[#FFF9EF] p-5"
+                whileHover={{ y: -8, scale: 1.02 }}
+                className="rounded-2xl border p-5 shadow-sm"
+                style={{ borderColor: `${color}30`, background: `linear-gradient(135deg, ${color}08 0%, rgba(255,249,239,0.9) 100%)` }}
               >
-                <h3 className="text-xl font-semibold text-[#92791B]">
-                  {item.year}
-                </h3>
-                <p className="mt-2 text-sm leading-7 text-[#1C1C1C]/80">
-                  {item.milestone}
-                </p>
+                <h3 className="font-semibold" style={{ color }}>{title}</h3>
+                <p className="mt-2 text-sm text-[#1C1C1C]/80">{body}</p>
               </motion.article>
             ))}
           </motion.div>
         </motion.div>
       </section>
 
-      {/* DOMAINS */}
-      <section className="px-6 py-24 md:px-16">
+      {/* ═══════════════ EVENTS ═══════════════ */}
+      <EventStoriesSection events={events} galleryEvents={galleryEvents} />
+
+      {/* ═══════════════ DOMAINS ═══════════════ */}
+      <section
+        className="px-6 py-24 md:px-16"
+        style={{
+          background: "linear-gradient(160deg, #1A0A06 0%, #2B1610 40%, #0F1A0A 100%)",
+        }}
+      >
+        <RangoliDivider />
         <motion.div
           variants={fadeUp}
           initial="hidden"
           whileInView="show"
           viewport={{ once: false }}
           transition={sectionTransition}
-          className="mx-auto max-w-6xl"
+          className="mx-auto mt-8 max-w-6xl"
         >
-          <p className="text-xs uppercase tracking-[0.24em] text-[#737955]">
-            Domains Section
-          </p>
-          <h2 className="mb-8 mt-3 text-3xl text-[#92791B] md:text-4xl">
+          <p className="text-xs uppercase tracking-[0.28em] text-[#C9A84C]/70">✦ Domains Section ✦</p>
+          <h2 className="mb-10 mt-3 font-serif text-3xl text-[#F5F0E8] md:text-4xl">
             Explore Our Domains
           </h2>
           <motion.div
@@ -752,14 +541,12 @@ export default function HomePageClient({
               >
                 <Link
                   href={recruitmentHref}
-                  className="block rounded-2xl border-2 border-[#737955]/45 bg-[#FFF9EF] p-6 text-center transition hover:border-[#92791B] hover:shadow-lg"
+                  className="block rounded-2xl border-2 border-[#C9A84C]/30 p-5 text-center transition hover:border-[#C9A84C]/70 hover:shadow-[0_12px_30px_rgba(201,168,76,0.2)]"
+                  style={{ background: "linear-gradient(135deg, rgba(40,28,12,0.9) 0%, rgba(28,28,28,0.95) 100%)" }}
                 >
-                  <h3 className="text-base font-semibold text-[#1C1C1C]">
-                    {domain.name}
-                  </h3>
-                  <p className="mt-2 text-xs leading-6 text-[#1C1C1C]/75">
-                    {domain.detail}
-                  </p>
+                  <div className="mb-2 text-2xl">{domain.icon}</div>
+                  <h3 className="text-sm font-semibold text-[#F5F0E8]">{domain.name}</h3>
+                  <p className="mt-2 text-xs leading-5 text-[#F5F0E8]/60">{domain.detail}</p>
                 </Link>
               </motion.div>
             ))}
@@ -767,82 +554,44 @@ export default function HomePageClient({
         </motion.div>
       </section>
 
-      {/* GALLERY */}
-      <section className="px-6 py-24 md:px-16">
+      {/* ═══════════════ CTA ═══════════════ */}
+      <section className="px-6 pb-28 pt-4 text-center md:px-16">
+        <RangoliDivider />
         <motion.div
           variants={fadeUp}
           initial="hidden"
           whileInView="show"
           viewport={{ once: false }}
           transition={sectionTransition}
-          className="mx-auto max-w-6xl"
+          className="relative mx-auto mt-8 max-w-3xl overflow-hidden rounded-3xl border-2 border-[#C9A84C]/50 px-8 py-12 shadow-[0_20px_60px_rgba(73,44,8,0.2)]"
+          style={{ background: "linear-gradient(135deg, #FFF9EF 0%, #FFEFD0 100%)" }}
         >
-          <div className="flex items-end justify-between gap-4">
-            <div>
-              <p className="text-xs uppercase tracking-[0.24em] text-[#737955]">
-                Gallery Section
-              </p>
-              <h2 className="mb-1 mt-3 text-3xl text-[#92791B] md:text-4xl">
-                Moments & Memories
-              </h2>
-            </div>
-            <Link
-              href="/gallery"
-              className="text-sm font-medium text-[#1B5E3B] underline"
-            >
-              Open gallery
-            </Link>
+          {/* Decorative mandala bg */}
+          <div className="pointer-events-none absolute inset-0 flex items-center justify-center opacity-[0.04]">
+            <svg width="400" height="400" viewBox="0 0 220 220" aria-hidden>
+              <circle cx="110" cy="110" r="98" stroke="#C9A84C" fill="none" strokeWidth="1" />
+              <circle cx="110" cy="110" r="72" stroke="#C9A84C" fill="none" strokeWidth="0.6" />
+              <circle cx="110" cy="110" r="46" stroke="#C9A84C" fill="none" strokeWidth="0.4" />
+            </svg>
           </div>
+          <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-[#8B1A1A] via-[#C9A84C] to-[#1B5E3B]" />
 
-          <motion.div
-            className="mt-8 grid grid-cols-2 gap-4 md:grid-cols-4"
-            variants={staggerContainer}
-            initial="hidden"
-            whileInView="show"
-            viewport={{ once: false, amount: 0.25 }}
-          >
-            {galleryStills.map((title) => (
-              <motion.div
-                key={title}
-                variants={revealItem}
-                whileHover={{ y: -8, scale: 1.02 }}
-                className="flex h-44 items-end rounded-2xl border-2 border-[#C9A84C]/35 bg-[linear-gradient(120deg,#f0e3c4,#d2dbc6,#f6eddd)] p-3"
-              >
-                <p className="rounded-md bg-[#1C1C1C]/70 px-2 py-1 text-xs text-[#F5F0E8]">
-                  {title}
-                </p>
-              </motion.div>
-            ))}
-          </motion.div>
-        </motion.div>
-      </section>
-
-      {/* CTA */}
-      <section className="px-6 pb-28 pt-20 text-center md:px-16">
-        <motion.div
-          variants={fadeUp}
-          initial="hidden"
-          whileInView="show"
-          viewport={{ once: false }}
-          transition={sectionTransition}
-          className="mx-auto max-w-3xl rounded-3xl border-2 border-[#C9A84C]/50 bg-[#FFF9EF] px-8 py-12 shadow-[0_20px_55px_rgba(73,44,8,0.16)]"
-        >
-          <p className="text-xs uppercase tracking-[0.24em] text-[#737955]">
-            Recruitment Section
+          <p className="relative text-xs uppercase tracking-[0.28em] text-[#737955]">
+            🪔 Recruitment Section 🪔
           </p>
-          <h2 className="mb-4 mt-3 text-3xl text-[#92791B] md:text-4xl">
+          <h2 className="relative mb-4 mt-3 font-serif text-3xl text-[#92791B] md:text-4xl">
             Become a Part of Avyakta
           </h2>
-          <p className="mx-auto max-w-xl text-[#1C1C1C]/80">
+          <p className="relative mx-auto max-w-xl text-[#1C1C1C]/80">
             If you are ready to perform, design, document, or organize, we would
             love to see you in the next cohort.
           </p>
 
           <Link
             href={recruitmentHref}
-            className="mt-8 inline-block rounded-full bg-[#92791B] px-8 py-3 text-white transition hover:bg-[#7A6518]"
+            className="relative mt-8 inline-block rounded-full bg-gradient-to-r from-[#8B1A1A] to-[#92791B] px-8 py-3 font-semibold text-white shadow-[0_8px_24px_rgba(139,26,26,0.3)] transition hover:shadow-[0_12px_32px_rgba(201,168,76,0.4)] hover:scale-[1.03]"
           >
-            {isRecruitmentOpen ? "Join Now" : "Recruitment Closed"}
+            {isRecruitmentOpen ? "🪔 Join Now" : "Recruitment Closed"}
           </Link>
         </motion.div>
       </section>

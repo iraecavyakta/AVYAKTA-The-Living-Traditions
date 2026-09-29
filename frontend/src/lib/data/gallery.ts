@@ -26,13 +26,9 @@ type GalleryRow = {
 };
 
 function slugify(value: string) {
-  return value
-    .toLowerCase()
-    .trim()
-    .replace(/[^a-z0-9\s-]/g, "")
-    .replace(/\s+/g, "-")
-    .replace(/-+/g, "-");
+  return value.toLowerCase().trim().replace(/[^a-z0-9\s-]/g, "").replace(/\s+/g, "-").replace(/-+/g, "-");
 }
+
 
 function splitUrls(input: string | null | undefined): string[] {
   if (!input) return [];
@@ -48,12 +44,13 @@ function splitUrls(input: string | null | undefined): string[] {
     );
 }
 
+// Keep the original seeded gallery previews for events with no uploaded
+// photos. These are deterministic Picsum placeholders, not stored event photos.
 function fallbackEventImages(title: string, count = 8): string[] {
   const slug = slugify(title) || "avyakta-event";
   return Array.from({ length: count }, (_, index) => {
-    const width = 900;
     const height = index % 3 === 0 ? 1200 : index % 2 === 0 ? 980 : 1100;
-    return `https://picsum.photos/seed/${slug}-${index + 1}/${width}/${height}`;
+    return `https://picsum.photos/seed/${slug}-${index + 1}/900/${height}`;
   });
 }
 
@@ -77,7 +74,6 @@ function mapRowsToGalleryEvents(rows: GalleryRow[]): GalleryEvent[] {
       title: string;
       date: string | null;
       images: Set<string>;
-      thumbnail: string | null;
     }
   >();
 
@@ -86,7 +82,6 @@ function mapRowsToGalleryEvents(rows: GalleryRow[]): GalleryEvent[] {
       title: row.title,
       date: row.date,
       images: new Set<string>(),
-      thumbnail: null,
     };
 
     const urls = [
@@ -98,12 +93,6 @@ function mapRowsToGalleryEvents(rows: GalleryRow[]): GalleryEvent[] {
     for (const url of urls) {
       current.images.add(url);
     }
-
-    current.thumbnail =
-      current.thumbnail ||
-      row.poster_image_url ||
-      row.slug_image_url ||
-      row.image_url;
 
     grouped.set(row.id, current);
   }
@@ -123,32 +112,7 @@ function mapRowsToGalleryEvents(rows: GalleryRow[]): GalleryEvent[] {
       id,
       name: value.title,
       year: yearFromDate(value.date),
-      thumbnail: value.thumbnail || imageUrls[0],
-      images,
-    };
-  });
-}
-
-function fallbackGalleryEvents(): GalleryEvent[] {
-  const templates = [
-    "Rangotsav Night",
-    "Swar and Stage",
-    "Creative Confluence",
-    "Alaap Collective",
-  ];
-
-  return templates.map((title, index) => {
-    const images = fallbackEventImages(title, 9).map((url, imageIndex) => ({
-      id: `fallback-${index + 1}-${imageIndex + 1}`,
-      url,
-      name: `${title} • Frame ${String(imageIndex + 1).padStart(2, "0")}`,
-    }));
-
-    return {
-      id: `fallback-${index + 1}`,
-      name: title,
-      year: String(2023 + index),
-      thumbnail: images[0].url,
+      thumbnail: imageUrls[0],
       images,
     };
   });
@@ -172,32 +136,44 @@ export async function getGalleryEventsFromDb(): Promise<GalleryEvent[]> {
     if (error) throw error;
 
     if (!rows || !rows.length) {
-      return fallbackGalleryEvents();
+      return [];
     }
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const mappedRows = rows.map((row: any) => {
-      const es = Array.isArray(row.event_slug)
-        ? row.event_slug[0]
-        : row.event_slug;
-      const p = Array.isArray(row.posters) ? row.posters[0] : row.posters;
+      const slugRows = Array.isArray(row.event_slug)
+        ? row.event_slug
+        : row.event_slug
+          ? [row.event_slug]
+          : [];
+      const posterRows = Array.isArray(row.posters)
+        ? row.posters
+        : row.posters
+          ? [row.posters]
+          : [];
 
       return {
         id: row.id,
         title: row.title,
         date: row.date,
         image_url: row.image_url,
-        slug_image_url: es?.image_url,
-        poster_image_url: p?.poster_image_url,
+        slug_image_url: slugRows
+          .map((slug: { image_url?: string | null }) => slug?.image_url)
+          .filter((url: string | null | undefined): url is string => Boolean(url))
+          .join("\n"),
+        poster_image_url: posterRows
+          .map((poster: { poster_image_url?: string | null }) => poster?.poster_image_url)
+          .filter((url: string | null | undefined): url is string => Boolean(url))
+          .join("\n"),
       };
     });
 
     return mapRowsToGalleryEvents(mappedRows);
   } catch (error) {
     console.warn(
-      "[gallery] Database unavailable, serving fallback gallery.",
+      "[gallery] Database unavailable; gallery records could not be loaded.",
       error,
     );
-    return fallbackGalleryEvents();
+    return [];
   }
 }

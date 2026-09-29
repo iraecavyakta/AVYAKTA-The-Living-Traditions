@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSupabaseAdmin } from "@/lib/supabase/server";
 import { formatDomainFromUrl } from "@/lib/utils/domainFormatter";
+import { domainReadAliases } from "@/lib/utils/domains";
 import { isValidDomain } from "@/lib/utils/domainValidator";
 
 type RecruitRow = {
@@ -160,9 +161,11 @@ export async function GET(
       return NextResponse.json({ error: "Recruit not found" }, { status: 404 });
     }
 
-    const isFirstPreference = recruit.first_preference_domain === displayDomain;
-    const isSecondPreference =
-      recruit.second_domain_preference === displayDomain;
+    const aliases = domainReadAliases(displayDomain);
+    const isFirstPreference = aliases.includes(recruit.first_preference_domain);
+    const isSecondPreference = Boolean(
+      recruit.second_domain_preference && aliases.includes(recruit.second_domain_preference),
+    );
 
     if (!isFirstPreference && !isSecondPreference) {
       return NextResponse.json(

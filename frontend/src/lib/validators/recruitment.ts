@@ -4,11 +4,11 @@ export const RECRUITMENT_DOMAINS = [
   "Technical",
   "Design",
   "Event Management",
-  "Ethics and Discipline",
+  "Finance and Ethics",
+  "Logistics",
+  "Operations",
   "Media and Visibility",
-  "Logistics and Operations",
   "Marketing",
-  "Finance",
 ] as const;
 
 export const RECRUITMENT_BRANCHES = [

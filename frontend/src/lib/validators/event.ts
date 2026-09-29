@@ -9,6 +9,7 @@ const MAX_IMAGE_LIST_CHARS = 20_000_000;
 export const eventWriteSchema = z.object({
   title: z.string().trim().min(2, "Title is required").max(200),
   description: z.string().trim().max(2000).optional().or(z.literal("")),
+  highlights: z.string().trim().max(2048).optional().or(z.literal("")),
   // Admin uploads arrive as base64 data URLs (compressImage caps each image
   // at ~300 KB, roughly 400k characters), so limits are sized for that.
   image_url: z

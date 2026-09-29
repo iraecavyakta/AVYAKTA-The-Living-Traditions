@@ -5,6 +5,7 @@ import MemberForm from "./MemberForm";
 import MembersTable from "./MembersTable";
 import DashboardPageBackground from "../layout/DashboardPageBackground";
 import membersBackground from "../../../Admin_Dash_Img/1.png";
+import { canonicalDomainName } from "../../lib/utils/domains";
 
 interface Member {
   id: string;
@@ -12,6 +13,8 @@ interface Member {
   domain: string;
   role: string;
   photo_url?: string;
+  tags?: string[];
+  year?: number | null;
 }
 
 interface FormData {
@@ -19,6 +22,8 @@ interface FormData {
   domain: string;
   role: string;
   photo_url?: string;
+  tags: string[];
+  year: number | null;
 }
 
 export default function AdminMembersClient() {
@@ -149,7 +154,7 @@ export default function AdminMembersClient() {
 
   // Handle edit member
   const handleEditMember = (member: Member) => {
-    setEditingMember(member);
+    setEditingMember({ ...member, domain: canonicalDomainName(member.domain) });
     setActiveTab("add");
   };
 
@@ -162,10 +167,11 @@ export default function AdminMembersClient() {
   // Group members by domain
   const membersByDomain = members.reduce(
     (acc, member) => {
-      if (!acc[member.domain]) {
-        acc[member.domain] = [];
+      const domain = canonicalDomainName(member.domain);
+      if (!acc[domain]) {
+        acc[domain] = [];
       }
-      acc[member.domain].push(member);
+      acc[domain].push({ ...member, domain });
       return acc;
     },
     {} as Record<string, Member[]>,

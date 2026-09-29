@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import { getSupabaseAdmin } from "../../../../lib/supabase/server";
+import { canonicalDomainName } from "../../../../lib/utils/domains";
 import {
   verifySessionId,
   getSessionCookieName,
@@ -101,7 +102,7 @@ export async function POST() {
         .filter((record) => record.name && record.second_domain_preference)
         .map((record) => ({
           name: record.name.trim(),
-          domain: record.second_domain_preference.trim(),
+          domain: canonicalDomainName(record.second_domain_preference.trim()),
           role: "members",
         }));
 
@@ -139,7 +140,7 @@ export async function POST() {
       .filter((record) => record.name && record.first_preference_domain)
       .map((record) => ({
         name: record.name.trim(),
-        domain: record.first_preference_domain.trim(),
+        domain: canonicalDomainName(record.first_preference_domain.trim()),
         role: "members",
       }));
 

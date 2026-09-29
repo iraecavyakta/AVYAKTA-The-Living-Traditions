@@ -1,4 +1,5 @@
 import { createClient } from "@supabase/supabase-js";
+import { revalidatePath } from "next/cache";
 import { NextRequest, NextResponse } from "next/server";
 import { retryWithBackoff } from "../../../lib/api/retry";
 import { verifyAdminAuth } from "../../../lib/auth/session";
@@ -12,6 +13,7 @@ const supabase = createClient(
 type EventWritePayload = {
   title: string;
   description: string | null;
+  highlights?: string | null;
   image_url: string | null;
   date: string | null;
   venue?: string | null;
@@ -81,6 +83,7 @@ export async function POST(request: NextRequest) {
     const {
       title,
       description,
+      highlights,
       image_url,
       date,
       venue,
@@ -103,6 +106,9 @@ export async function POST(request: NextRequest) {
     // Only add optional fields if they're provided
     if (venue !== undefined) {
       insertPayload.venue = venue?.trim() || null;
+    }
+    if (highlights !== undefined) {
+      insertPayload.highlights = highlights?.trim() || null;
     }
     if (registration_enabled !== undefined) {
       insertPayload.registration_enabled = registration_enabled;
@@ -236,6 +242,12 @@ export async function POST(request: NextRequest) {
         data[0] = refetchResult.data;
       }
     }
+
+    // Bust the ISR cache for all event-related public pages so the new event
+    // appears immediately rather than after the next 60-second revalidation.
+    revalidatePath("/events");
+    revalidatePath("/gallery");
+    revalidatePath("/");
 
     return NextResponse.json(
       { success: true, data: data?.[0] },

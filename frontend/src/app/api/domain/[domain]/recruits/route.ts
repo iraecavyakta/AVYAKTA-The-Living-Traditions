@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getSupabaseAdmin } from "@/lib/supabase/server";
 import { formatDomainFromUrl } from "@/lib/utils/domainFormatter";
 import { isValidDomain } from "@/lib/utils/domainValidator";
+import { domainReadAliases } from "@/lib/utils/domains";
 
 type RecruitmentRow = {
   id: string;
@@ -65,7 +66,7 @@ export async function GET(
     const { data: firstPreferenceData, error: firstError } = await supabaseAdmin
       .from("recruitment")
       .select(RECRUIT_COLUMNS)
-      .eq("first_preference_domain", displayDomain)
+      .in("first_preference_domain", domainReadAliases(displayDomain))
       .order("name", { ascending: true });
 
     if (firstError) {
@@ -79,7 +80,7 @@ export async function GET(
       await supabaseAdmin
         .from("recruitment")
         .select("id")
-        .eq("second_domain_preference", displayDomain);
+        .in("second_domain_preference", domainReadAliases(displayDomain));
 
     if (secondPrefLinkError) {
       return NextResponse.json(

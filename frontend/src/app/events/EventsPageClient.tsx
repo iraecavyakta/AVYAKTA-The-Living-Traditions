@@ -50,10 +50,17 @@ const gridReveal = {
 const PAGE_BACKGROUND =
   "radial-gradient(circle at 15% 20%, rgba(201,168,76,0.32) 0, transparent 36%), radial-gradient(circle at 88% 16%, rgba(139,26,26,0.26) 0, transparent 38%), linear-gradient(140deg, #1A120C 0%, #2B1610 48%, #15120F 100%)";
 
-// Where each event floats in the 3D field: x/y are viewport percentages,
-// z is how far back it starts, w is its width. Deliberately uneven so the
-// field reads as scattered depth rather than a grid.
-const FLOAT_SLOTS = [
+function createSeededRandom(seed: number) {
+  let state = seed >>> 0;
+  return () => {
+    state = (Math.imul(state, 1664525) + 1013904223) >>> 0;
+    return state / 0x1_0000_0000;
+  };
+}
+
+// Preserve the original hand-placed spread that kept cards visible around
+// the full scene, then add independently scattered positions and depths.
+const ORIGINAL_FLOAT_SLOTS = [
   { x: 20, y: 24, z: -260, w: 210 },
   { x: 74, y: 18, z: -900, w: 250 },
   { x: 46, y: 40, z: -1650, w: 190 },
@@ -67,6 +74,28 @@ const FLOAT_SLOTS = [
   { x: 94, y: 26, z: -1720, w: 195 },
   { x: 26, y: 50, z: -2550, w: 215 },
 ];
+const slotRandom = createSeededRandom(0xA7A4C7A);
+const FLOAT_SLOTS = [
+  ...ORIGINAL_FLOAT_SLOTS,
+  ...Array.from({ length: 24 }, () => ({
+    x: 7 + slotRandom() * 86,
+    y: 10 + slotRandom() * 80,
+    z: -180 - slotRandom() * 2370,
+    w: 170 + Math.floor(slotRandom() * 96),
+  })),
+];
+
+// Pick half the positions with a seeded shuffle, rather than placing every
+// event in alternating positions. Keep the chosen order stable for event cycling.
+const eventSlotRandom = createSeededRandom(0x51A77E);
+const EVENT_SLOT_ORDER = Array.from({ length: FLOAT_SLOTS.length }, (_, index) => index);
+for (let index = EVENT_SLOT_ORDER.length - 1; index > 0; index -= 1) {
+  const swapIndex = Math.floor(eventSlotRandom() * (index + 1));
+  [EVENT_SLOT_ORDER[index], EVENT_SLOT_ORDER[swapIndex]] = [EVENT_SLOT_ORDER[swapIndex], EVENT_SLOT_ORDER[index]];
+}
+EVENT_SLOT_ORDER.length = FLOAT_SLOTS.length / 2;
+EVENT_SLOT_ORDER.sort((a, b) => a - b);
+const EVENT_SLOT_INDICES = new Set(EVENT_SLOT_ORDER);
 
 // Perspective depth of the stage. A card sitting at z = PERSPECTIVE would
 // be infinitely large (right at the camera), so cards are faded out well
@@ -75,6 +104,17 @@ const FLOAT_SLOTS = [
 const PERSPECTIVE = 1000;
 const EXIT_Z = 600;
 const TRAVEL = 3400;
+
+function stableEventOrder(events: EventItem[]) {
+  const hash = (value: string) => {
+    let result = 2166136261;
+    for (let index = 0; index < value.length; index += 1) {
+      result = Math.imul(result ^ value.charCodeAt(index), 16777619);
+    }
+    return result >>> 0;
+  };
+  return [...events].sort((a, b) => hash(a.id) - hash(b.id));
+}
 
 function FloatingEventCard({
   event,
@@ -136,6 +176,47 @@ function FloatingEventCard({
           <h3 className="font-serif text-lg leading-tight">{event.title}</h3>
         </div>
       </Link>
+    </motion.div>
+  );
+}
+
+function FloatingFestivalCard({
+  slot,
+  progress,
+  index,
+}: {
+  slot: (typeof FLOAT_SLOTS)[number];
+  progress: MotionValue<number>;
+  index: number;
+}) {
+  const z = useTransform(progress, [0, 1], [slot.z, slot.z + TRAVEL]);
+  const exitAt = (EXIT_Z - slot.z) / TRAVEL;
+  const opacity = useTransform(progress, [0, Math.max(0.02, exitAt - 0.12), exitAt], [1, 1, 0]);
+  const accents = ["#F4C766", "#E7BCA0", "#A7C6A5"];
+  const accent = accents[index % accents.length];
+
+  return (
+    <motion.div
+      className="absolute"
+      style={{ left: `${slot.x}%`, top: `${slot.y}%`, width: slot.w, x: "-50%", y: "-50%", z, opacity, willChange: "transform, opacity" }}
+    >
+      <div className="relative aspect-[4/5] overflow-hidden rounded-2xl border border-white/20 bg-white/[0.055] shadow-[0_18px_50px_rgba(0,0,0,0.22)] backdrop-blur-[2px]">
+        <div className="pointer-events-none absolute inset-2 rounded-xl border border-dashed" style={{ borderColor: `${accent}40` }} />
+        <div className="pointer-events-none absolute inset-0 opacity-35" style={{ backgroundImage: `radial-gradient(circle at 50% 50%, ${accent}30 0 2px, transparent 3px), radial-gradient(circle at 50% 50%, transparent 0 22%, ${accent}24 22.4% 22.8%, transparent 23.2%), radial-gradient(circle at 50% 50%, transparent 0 38%, ${accent}18 38.3% 38.7%, transparent 39.1%), linear-gradient(135deg, transparent 47%, ${accent}15 49.5%, transparent 52%)`, backgroundSize: "100% 100%, 100% 100%, 100% 100%, 100% 100%" }} />
+        <svg className="pointer-events-none absolute left-1/2 top-1/2 h-24 w-24 -translate-x-1/2 -translate-y-1/2 opacity-25" viewBox="0 0 100 100" fill="none" aria-hidden="true">
+          <g stroke={accent} strokeWidth="1.1">
+            <circle cx="50" cy="50" r="8" />
+            <circle cx="50" cy="28" r="13" />
+            <circle cx="50" cy="72" r="13" />
+            <circle cx="28" cy="50" r="13" />
+            <circle cx="72" cy="50" r="13" />
+            <circle cx="34.5" cy="34.5" r="12" />
+            <circle cx="65.5" cy="34.5" r="12" />
+            <circle cx="34.5" cy="65.5" r="12" />
+            <circle cx="65.5" cy="65.5" r="12" />
+          </g>
+        </svg>
+      </div>
     </motion.div>
   );
 }
@@ -216,15 +297,18 @@ export default function EventsPageClient({
   // Whole-page progress, for the top progress bar.
   const { scrollYProgress: pageScrollProgress } = useScroll();
 
-  // The floating field cycles through the available events so the depth
-  // reads as a field rather than a handful of stragglers when the club
-  // only has a few events published.
-  const floatingEvents = useMemo(() => {
-    if (initialEvents.length === 0) return [];
-    return FLOAT_SLOTS.map(
-      (_, index) => initialEvents[index % initialEvents.length],
-    );
-  }, [initialEvents]);
+  // Repeat published events through the fly-through for eighteen event
+  // cards, balanced with eighteen text-free decorative fillers.
+  const orderedEvents = useMemo(() => stableEventOrder(initialEvents), [initialEvents]);
+  const floatingEvents = useMemo(
+    () => orderedEvents.length
+      ? Array.from(
+          { length: Math.ceil(FLOAT_SLOTS.length / 2) },
+          (_, index) => orderedEvents[index % orderedEvents.length],
+        )
+      : [],
+    [orderedEvents],
+  );
 
   const [immersive, setImmersive] = useState(false);
   useEffect(() => {
@@ -332,14 +416,15 @@ export default function EventsPageClient({
               className="absolute inset-0"
               style={{ perspective: `${PERSPECTIVE}px` }}
             >
-              {floatingEvents.map((event, index) => (
-                <FloatingEventCard
-                  key={`${event.id}-${index}`}
-                  event={event}
-                  slot={FLOAT_SLOTS[index]}
-                  progress={flyProgress}
-                />
-              ))}
+              {FLOAT_SLOTS.map((slot, index) => {
+                const hasEvent = floatingEvents.length > 0 && EVENT_SLOT_INDICES.has(index);
+                const event = hasEvent ? floatingEvents[EVENT_SLOT_ORDER.indexOf(index)] : null;
+                return event ? (
+                  <FloatingEventCard key={`event-${event.id}-${index}`} event={event} slot={slot} progress={flyProgress} />
+                ) : (
+                  <FloatingFestivalCard key={`festival-${index}`} slot={slot} progress={flyProgress} index={index} />
+                );
+              })}
             </div>
 
             <motion.div
@@ -467,16 +552,17 @@ export default function EventsPageClient({
                       {event.title}
                     </h3>
                     <span className="shrink-0 rounded-full bg-black/35 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.12em] text-[#F5F0E8]">
-                      {event.domain}
+                      {event.status}
                     </span>
                   </div>
 
                   <p className="mt-3 line-clamp-2 text-sm leading-7 text-[#F5F0E8]/82">
                     {event.subtitle}
                   </p>
-                  <p className="mt-3 text-[11px] uppercase tracking-[0.12em] text-[#C9A84C]">
-                    {event.date}
-                  </p>
+                  <div className="mt-4 flex flex-wrap gap-x-5 gap-y-2 text-[11px] uppercase tracking-[0.12em] text-[#C9A84C]">
+                    <span>◷ {event.date}</span>
+                    {event.venue && <span>⌖ {event.venue}</span>}
+                  </div>
 
                   <span className="mt-5 inline-block w-fit rounded-full border border-[#C9A84C]/80 bg-black/30 px-5 py-2.5 text-[11px] font-semibold uppercase tracking-[0.12em] text-[#F5F0E8]">
                     Read Full Details →
@@ -490,6 +576,15 @@ export default function EventsPageClient({
         {visibleEvents.length === 0 && (
           <div className="mt-10 rounded-2xl border border-[#C9A84C]/45 bg-black/25 p-8 text-center text-[#F5F0E8]/75">
             No events match this filter right now.
+          </div>
+        )}
+
+        {activeFilter === "all" && visibleEvents.length > 0 && (
+          <div className="mt-8 rounded-3xl border border-dashed border-[#C9A84C]/55 bg-[#1C1C1C]/50 px-6 py-10 text-center text-[#F5F0E8]">
+            <p className="text-3xl" aria-hidden="true">🪔 ✦ 🌼</p>
+            <p className="mt-4 text-xs font-bold uppercase tracking-[.24em] text-[#F4C766]">The next celebration is taking shape</p>
+            <h3 className="mt-2 font-serif text-3xl font-bold">More events coming soon</h3>
+            <p className="mx-auto mt-3 max-w-xl text-sm leading-7 text-white/70">That’s everything on the calendar for now. We’ll add the next Avyakta event here as soon as it’s ready.</p>
           </div>
         )}
       </section>

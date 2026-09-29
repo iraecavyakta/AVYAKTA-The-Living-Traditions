@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import { RECRUITMENT_DOMAINS } from "../../lib/validators/recruitment";
+import { domainReadAliases } from "../../lib/utils/domains";
 import RecruitmentCtaToggle from "../dashboard/RecruitmentCtaToggle";
 import DashboardPageBackground from "../layout/DashboardPageBackground";
 import recruitmentBackground from "../../../Admin_Dash_Img/4.png";
@@ -34,12 +35,62 @@ export default function RecruitmentStatsClient() {
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
 
+  // WhatsApp link state
+  const [whatsappUrl, setWhatsappUrl] = useState("");
+  const [whatsappInput, setWhatsappInput] = useState("");
+  const [savingWhatsapp, setSavingWhatsapp] = useState(false);
+  const [whatsappMsg, setWhatsappMsg] = useState("");
+
+  const domainIndicatorActive = (domain: string) => {
+    const canonical = domainIndicators.find((entry) => entry.domain === domain);
+    if (canonical) return canonical.indicator;
+    return domainReadAliases(domain).some((alias) =>
+      domainIndicators.some((entry) => entry.domain === alias && entry.indicator),
+    );
+  };
+
   // Fetch data on mount only; fetchData is intentionally excluded since it
   // is redefined every render and this effect must not re-run on refetch.
   useEffect(() => {
     fetchData();
+    fetchWhatsappLink();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  const fetchWhatsappLink = async () => {
+    try {
+      const res = await fetch("/api/recruitment/whatsapp");
+      const data = await res.json();
+      const url = String(data.url ?? "");
+      setWhatsappUrl(url);
+      setWhatsappInput(url);
+    } catch {
+      // non-critical
+    }
+  };
+
+  const handleSaveWhatsapp = async () => {
+    setSavingWhatsapp(true);
+    setWhatsappMsg("");
+    try {
+      const res = await fetch("/api/recruitment/whatsapp", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ url: whatsappInput.trim() }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Failed to save");
+      setWhatsappUrl(String(data.url ?? ""));
+      setWhatsappMsg("✓ WhatsApp link saved successfully");
+    } catch (err) {
+      setWhatsappMsg(
+        `✕ ${err instanceof Error ? err.message : "Failed to save"}`,
+      );
+    } finally {
+      setSavingWhatsapp(false);
+      setTimeout(() => setWhatsappMsg(""), 4000);
+    }
+  };
 
   const fetchData = async () => {
     try {
@@ -131,11 +182,9 @@ export default function RecruitmentStatsClient() {
 
       setDomainIndicators((currentIndicators) =>
         currentIndicators.some((entry) => entry.domain === selectedDomain)
-          ? currentIndicators.map((entry) =>
-              entry.domain === selectedDomain
-                ? { ...entry, indicator: nextStatus }
-                : entry,
-            )
+          ? currentIndicators.map((entry) => entry.domain === selectedDomain
+              ? { ...entry, indicator: nextStatus }
+              : entry)
           : [
               ...currentIndicators,
               {
@@ -268,6 +317,69 @@ export default function RecruitmentStatsClient() {
             </div>
           </header>
 
+          {/* WhatsApp Group Link Panel */}
+          <div className="stats-header">
+            <div className="header-left">
+              <h3>📱 WhatsApp Group Link</h3>
+              <p className="panel-hint">
+                After submitting the recruitment form, applicants see this link
+                to join the provisional members group. Leave blank to hide it.
+              </p>
+            </div>
+            <div className="header-actions" style={{ flex: 1, maxWidth: 560 }}>
+              <input
+                type="url"
+                value={whatsappInput}
+                onChange={(e) => setWhatsappInput(e.target.value)}
+                placeholder="https://chat.whatsapp.com/..."
+                style={{
+                  flex: 1,
+                  padding: "10px 14px",
+                  border: "1px solid rgba(146,121,27,0.35)",
+                  borderRadius: 10,
+                  fontSize: 14,
+                  fontFamily: "var(--font-body), sans-serif",
+                  color: "var(--av-charcoal)",
+                  background: "#fff",
+                  minWidth: 0,
+                }}
+              />
+              <button
+                onClick={handleSaveWhatsapp}
+                className="btn-toggle-global active"
+                disabled={savingWhatsapp}
+              >
+                {savingWhatsapp ? "Saving…" : "Save"}
+              </button>
+              {whatsappUrl && (
+                <a
+                  href={whatsappUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="btn-refresh"
+                  style={{ textDecoration: "none" }}
+                >
+                  Preview
+                </a>
+              )}
+            </div>
+            {whatsappMsg && (
+              <div
+                style={{
+                  width: "100%",
+                  marginTop: 8,
+                  fontSize: 13,
+                  fontFamily: "var(--font-body), sans-serif",
+                  color: whatsappMsg.startsWith("✓")
+                    ? "var(--av-emerald)"
+                    : "var(--av-crimson)",
+                }}
+              >
+                {whatsappMsg}
+              </div>
+            )}
+          </div>
+
           <div className="stats-header">
             <div className="header-left">
               <h3>Recruitment Stats</h3>
@@ -353,12 +465,10 @@ export default function RecruitmentStatsClient() {
             </div>
             <div className="selected-domain-state">
               <span
-                className={`indicator-dot ${domainIndicators.find((entry) => entry.domain === selectedDomain)?.indicator ? "active" : ""}`}
+                className={`indicator-dot ${domainIndicatorActive(selectedDomain) ? "active" : ""}`}
               />
               <span>
-                {domainIndicators.find(
-                  (entry) => entry.domain === selectedDomain,
-                )?.indicator
+                {domainIndicatorActive(selectedDomain)
                   ? "Open"
                   : "Closed"}
               </span>
@@ -371,10 +481,7 @@ export default function RecruitmentStatsClient() {
           <div className="recruitment-grid">
             {RECRUITMENT_DOMAINS.map((domain) => {
               const counter = counters.find((c) => c.domain === domain);
-              const domainIndic = domainIndicators.find(
-                (d) => d.domain === domain,
-              );
-              const isActive = domainIndic?.indicator ?? false;
+              const isActive = domainIndicatorActive(domain);
               const total = counter ? getTotal(counter) : 0;
 
               return (

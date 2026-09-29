@@ -8,10 +8,12 @@ interface FormData {
   domain: string;
   role: string;
   photo_url?: string;
+  tags: string[];
+  year: number | null;
 }
 
 interface MemberFormProps {
-  member?: FormData & { id: string };
+  member?: Partial<FormData> & Pick<FormData, "name" | "domain" | "role"> & { id: string };
   onSubmit: (data: FormData) => Promise<void>;
   onCancel: () => void;
   isLoading?: boolean;
@@ -30,8 +32,10 @@ export default function MemberForm({
           domain: member.domain,
           role: member.role,
           photo_url: member.photo_url,
+          tags: member.tags || [],
+          year: member.year ?? null,
         }
-      : { name: "", domain: "", role: "", photo_url: "" },
+      : { name: "", domain: "", role: "", photo_url: "", tags: ["current"], year: null },
   );
   const [error, setError] = useState("");
   const [isUploading, setIsUploading] = useState(false);
@@ -109,16 +113,17 @@ export default function MemberForm({
     if (
       !formData.name.trim() ||
       !formData.domain.trim() ||
-      !formData.role.trim()
+      !formData.role.trim() ||
+      formData.tags.length === 0
     ) {
-      setError("All fields are required");
+      setError("Name, domain, role, and at least one team tag are required");
       return;
     }
 
     try {
       await onSubmit(formData);
       if (!member) {
-        setFormData({ name: "", domain: "", role: "", photo_url: "" });
+        setFormData({ name: "", domain: "", role: "", photo_url: "", tags: ["current"], year: null });
         setPhotoPreview(null);
       }
     } catch (err) {
@@ -184,6 +189,24 @@ export default function MemberForm({
               <option value="members">Members</option>
             </select>
           </div>
+
+          <fieldset className="form-group">
+            <legend>Team tags</legend>
+            <div className="flex flex-wrap gap-3">
+              {["current", "previous", "founder", "faculty"].map((tag) => (
+                <label key={tag} className="flex items-center gap-2 text-sm">
+                  <input type="checkbox" checked={formData.tags.includes(tag)} onChange={(event) => setFormData((prev) => ({ ...prev, tags: event.target.checked ? [...prev.tags, tag] : prev.tags.filter((item) => item !== tag) }))} />
+                  {tag[0].toUpperCase() + tag.slice(1)}
+                </label>
+              ))}
+            </div>
+          </fieldset>
+          {formData.tags.includes("previous") && (
+            <div className="form-group">
+              <label htmlFor="year">Team year</label>
+              <input id="year" type="number" min="2000" max="2100" value={formData.year ?? ""} onChange={(event) => setFormData((prev) => ({ ...prev, year: event.target.value ? Number(event.target.value) : null }))} placeholder="e.g. 2026" />
+            </div>
+          )}
 
           <div className="form-group">
             <label htmlFor="photo">

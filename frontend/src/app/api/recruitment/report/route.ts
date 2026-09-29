@@ -7,6 +7,7 @@ import {
 } from "../../../../lib/auth/session";
 import { formatDomainFromUrl } from "@/lib/utils/domainFormatter";
 import { isValidDomain } from "@/lib/utils/domainValidator";
+import { domainReadAliases } from "@/lib/utils/domains";
 
 async function verifyAdminAuth(): Promise<boolean> {
   try {
@@ -73,7 +74,7 @@ export async function POST(request: NextRequest) {
           .select(
             "id, name, email, phone_no, srn, branch, section, year, first_preference_domain, second_domain_preference, experience, why_you, why_us, first_preference_status, interview, created_at",
           )
-          .eq("first_preference_domain", domain)
+          .in("first_preference_domain", domainReadAliases(domain))
           .order("created_at", { ascending: false })
           .returns<RecruitmentReportRow[]>(),
         supabaseAdmin
