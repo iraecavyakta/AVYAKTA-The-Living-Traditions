@@ -8,6 +8,11 @@ const nextConfig: NextConfig = {
   turbopack: {
     root: appRoot,
   },
+  experimental: {
+    // Lets route navigations run through the browser View Transitions API
+    // (used for the login → dashboard scroll).
+    viewTransition: true,
+  },
 };
 
 export default nextConfig;

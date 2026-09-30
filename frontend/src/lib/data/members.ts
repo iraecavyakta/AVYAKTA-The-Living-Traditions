@@ -1,88 +1,51 @@
 import "server-only";
 
 import { createPublicClient } from "@/utils/supabase/server";
-import {
-  type MemberCard,
-  type MemberSectionKey,
-} from "@/lib/data/memberSections";
+import { type MemberCard } from "@/lib/data/memberSections";
 
 function avatarFromName(name: string) {
   const safe = encodeURIComponent(name);
   return `https://ui-avatars.com/api/?name=${safe}&background=1C1C1C&color=C9A84C&size=400&bold=true`;
 }
 
-function sectionFromRole(role: string): MemberSectionKey {
+function tagsFromRow(raw: Record<string, unknown>, role: string): string[] {
+  const explicit = Array.isArray(raw.tags)
+    ? raw.tags.map((tag) => String(tag).trim().toLowerCase()).filter(Boolean)
+    : [];
+  if (explicit.length) return Array.from(new Set(explicit));
+
+  const oldSection = String(raw.section ?? "")
+    .toLowerCase()
+    .replace(/[_\s]+/g, "-");
+  if (oldSection.includes("faculty")) return ["faculty"];
+  if (oldSection.includes("founder")) return ["founder", "previous"];
+  if (oldSection.includes("previous-head")) return ["previous", "head"];
+  if (oldSection.includes("previous-member")) return ["previous"];
+  if (oldSection.includes("current")) return ["current"];
+
   const normalized = role.toLowerCase();
-
-  if (normalized.includes("founder")) {
-    return "founders";
-  }
-
-  if (normalized.includes("faculty") || normalized.includes("advisor")) {
-    return "faculty-advisors";
-  }
-
-  if (normalized.includes("head") || normalized.includes("president")) {
-    return "previous-heads";
-  }
-
+  if (normalized.includes("faculty") || normalized.includes("advisor"))
+    return ["faculty"];
   if (
-    normalized.includes("alumni") ||
+    normalized.includes("previous") ||
     normalized.includes("former") ||
-    normalized.includes("previous")
+    normalized.includes("alumni")
   ) {
-    return "previous-members";
+    return ["previous", ...(normalized.includes("head") ? ["head"] : [])];
   }
-
-  return "current-core-team";
+  if (normalized.includes("founder")) return ["founder", "previous"];
+  return [
+    "current",
+    ...(normalized.includes("head") || normalized.includes("president")
+      ? ["head"]
+      : []),
+  ];
 }
 
-function normalizeSection(
-  value: string | null | undefined,
-): MemberSectionKey | null {
-  if (!value) {
-    return null;
-  }
-
-  const normalized = value
-    .toLowerCase()
-    .replace(/[_\s]+/g, "-")
-    .replace(/[^a-z-]/g, "");
-
-  if (normalized === "founders" || normalized === "founder") {
-    return "founders";
-  }
-
-  if (
-    normalized === "faculty-advisors" ||
-    normalized === "faculty-advisor" ||
-    normalized === "advisors"
-  ) {
-    return "faculty-advisors";
-  }
-
-  if (normalized === "previous-heads" || normalized === "previous-head") {
-    return "previous-heads";
-  }
-
-  if (
-    normalized === "previous-members" ||
-    normalized === "previous-member" ||
-    normalized === "alumni"
-  ) {
-    return "previous-members";
-  }
-
-  if (
-    normalized === "current-core-team" ||
-    normalized === "current-core" ||
-    normalized === "core-team" ||
-    normalized === "core"
-  ) {
-    return "current-core-team";
-  }
-
-  return null;
+function sectionFromTags(tags: string[]): MemberCard["section"] {
+  if (tags.includes("faculty")) return "faculty";
+  if (tags.includes("current")) return "current-team";
+  return "past-teams";
 }
 
 function normalizeImageUrl(value: string | null | undefined): string | null {
@@ -99,48 +62,7 @@ function normalizeImageUrl(value: string | null | undefined): string | null {
 }
 
 function fallbackMembers(): MemberCard[] {
-  return [
-    {
-      id: "fallback-1",
-      name: "A. Prakash",
-      designation: "Founder",
-      section: "founders",
-      photoUrl: avatarFromName("A Prakash"),
-      bio: "Helped shape the earliest culture and creative direction of Avyakta.",
-    },
-    {
-      id: "fallback-2",
-      name: "Dr. M. Rao",
-      designation: "Faculty Advisor",
-      section: "faculty-advisors",
-      photoUrl: avatarFromName("Dr M Rao"),
-      bio: "Guides team planning, institutional alignment, and annual execution rhythm.",
-    },
-    {
-      id: "fallback-3",
-      name: "N. Sagar",
-      designation: "Club Head (2024)",
-      section: "previous-heads",
-      photoUrl: avatarFromName("N Sagar"),
-      bio: "Led inter-domain event strategy and member-led production frameworks.",
-    },
-    {
-      id: "fallback-4",
-      name: "R. Karthik",
-      designation: "Former Member",
-      section: "previous-members",
-      photoUrl: avatarFromName("R Karthik"),
-      bio: "Contributed to flagship event logistics and backstage creative operations.",
-    },
-    {
-      id: "fallback-5",
-      name: "P. Sneha",
-      designation: "Creative Core Team",
-      section: "current-core-team",
-      photoUrl: avatarFromName("P Sneha"),
-      bio: "Currently working across production design, rehearsals, and member onboarding.",
-    },
-  ];
+  return [];
 }
 
 export async function getMembersFromDb(): Promise<MemberCard[]> {
@@ -169,12 +91,23 @@ export async function getMembersFromDb(): Promise<MemberCard[]> {
 
         const role = String(raw.role ?? "").trim();
         const designation =
-          String(raw.designation ?? "").trim() || role || "Member";
+          String(raw.designation ?? "").trim() ||
+          (role === "domain_head"
+            ? "Domain Head"
+            : role === "members"
+              ? "Member"
+              : role || "Member");
 
-        const explicitSection = normalizeSection(
-          String(raw.section ?? "").trim(),
+        const tags = tagsFromRow(
+          raw as Record<string, unknown>,
+          role || designation,
         );
-        const section = explicitSection ?? sectionFromRole(designation);
+        const section = sectionFromTags(tags);
+        const yearValue = Number(raw.year);
+        const year =
+          Number.isInteger(yearValue) && yearValue >= 2000 && yearValue <= 2100
+            ? yearValue
+            : null;
 
         const photoUrl =
           normalizeImageUrl(String(raw.photo_url ?? "").trim()) ??
@@ -195,10 +128,13 @@ export async function getMembersFromDb(): Promise<MemberCard[]> {
         return {
           id,
           name,
+          domain,
           designation,
           section,
           photoUrl,
           bio,
+          tags,
+          year,
         } satisfies MemberCard;
       })
       .filter((item): item is MemberCard => Boolean(item));

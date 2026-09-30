@@ -1,26 +1,22 @@
-export type MemberSectionKey =
-  | "founders"
-  | "faculty-advisors"
-  | "previous-heads"
-  | "previous-members"
-  | "current-core-team";
+export type MemberSectionKey = "current-team" | "past-teams" | "faculty";
 
 export type MemberCard = {
   id: string;
   name: string;
+  domain: string;
   designation: string;
   section: MemberSectionKey;
   photoUrl: string;
   bio: string;
+  tags: string[];
+  year: number | null;
 };
 
 export const memberSectionOrder: Array<{
   key: MemberSectionKey;
   title: string;
 }> = [
-  { key: "founders", title: "Founders" },
-  { key: "faculty-advisors", title: "Faculty Advisors" },
-  { key: "previous-heads", title: "Previous Heads" },
-  { key: "previous-members", title: "Previous Members" },
-  { key: "current-core-team", title: "Current Core Team" },
+  { key: "current-team", title: "Current Team" },
+  { key: "past-teams", title: "Past Teams" },
+  { key: "faculty", title: "Faculty" },
 ];

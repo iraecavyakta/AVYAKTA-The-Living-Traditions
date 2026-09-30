@@ -17,8 +17,8 @@ export const events = pgTable("events", {
   image_url: text("image_url"),
   date: date("date"),
   venue: text("venue"),
-  registration_enabled: boolean("registration_enabled").default(true),
   registration_status: boolean("registration_status").default(true),
+  registration_deadline: date("registration_deadline"),
   payment_image_required: boolean("payment_image_required").default(false),
 });
 

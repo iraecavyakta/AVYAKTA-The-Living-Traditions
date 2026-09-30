@@ -2,6 +2,7 @@ import { createClient } from "@supabase/supabase-js";
 import { NextRequest, NextResponse } from "next/server";
 import { retryWithBackoff } from "../../../../lib/api/retry";
 import { RECRUITMENT_DOMAINS } from "../../../../lib/validators/recruitment";
+import { canonicalDomainName } from "../../../../lib/utils/domains";
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -49,7 +50,7 @@ export async function GET() {
       const counter = { domain, not_sure: 0, approved: 0, rejected: 0 };
 
       for (const recruit of recruits ?? []) {
-        if (recruit.first_preference_domain === domain) {
+        if (canonicalDomainName(recruit.first_preference_domain) === domain) {
           const status = normalizeStatus(recruit.first_preference_status);
           if (status === "approved") counter.approved += 1;
           else if (status === "rejected") counter.rejected += 1;
@@ -57,7 +58,8 @@ export async function GET() {
         }
 
         if (
-          recruit.second_domain_preference === domain &&
+          recruit.second_domain_preference &&
+          canonicalDomainName(recruit.second_domain_preference) === domain &&
           recruit.first_preference_status === "rejected"
         ) {
           const status = normalizeStatus(secondPrefByRecruitId.get(recruit.id));

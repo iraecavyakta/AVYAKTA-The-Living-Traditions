@@ -1,4 +1,5 @@
 import { createClient } from "@supabase/supabase-js";
+import { revalidatePath } from "next/cache";
 import { NextRequest, NextResponse } from "next/server";
 import { retryWithBackoff } from "../../../lib/api/retry";
 import { verifyAdminAuth } from "../../../lib/auth/session";
@@ -12,11 +13,13 @@ const supabase = createClient(
 type EventWritePayload = {
   title: string;
   description: string | null;
+  highlights?: string | null;
   image_url: string | null;
   date: string | null;
   venue?: string | null;
   registration_enabled?: boolean;
   registration_status?: boolean;
+  registration_deadline?: string | null;
   payment_image_required?: boolean;
 };
 
@@ -80,11 +83,13 @@ export async function POST(request: NextRequest) {
     const {
       title,
       description,
+      highlights,
       image_url,
       date,
       venue,
       registration_enabled,
       registration_status,
+      registration_deadline,
       payment_image_required,
       more_description,
       slug_image_url,
@@ -102,11 +107,17 @@ export async function POST(request: NextRequest) {
     if (venue !== undefined) {
       insertPayload.venue = venue?.trim() || null;
     }
+    if (highlights !== undefined) {
+      insertPayload.highlights = highlights?.trim() || null;
+    }
     if (registration_enabled !== undefined) {
       insertPayload.registration_enabled = registration_enabled;
     }
     if (registration_status !== undefined) {
       insertPayload.registration_status = registration_status;
+    }
+    if (registration_deadline !== undefined) {
+      insertPayload.registration_deadline = registration_deadline || null;
     }
     if (payment_image_required !== undefined) {
       insertPayload.payment_image_required = payment_image_required;
@@ -231,6 +242,12 @@ export async function POST(request: NextRequest) {
         data[0] = refetchResult.data;
       }
     }
+
+    // Bust the ISR cache for all event-related public pages so the new event
+    // appears immediately rather than after the next 60-second revalidation.
+    revalidatePath("/events");
+    revalidatePath("/gallery");
+    revalidatePath("/");
 
     return NextResponse.json(
       { success: true, data: data?.[0] },

@@ -32,6 +32,25 @@ export function inferEventStatus(date: string | null | undefined): EventStatus {
   return eventDay.getTime() < Date.now() ? "past" : "upcoming";
 }
 
+export function isRegistrationDeadlinePassed(
+  deadline: string | null | undefined,
+): boolean {
+  if (!deadline) {
+    return false;
+  }
+
+  const deadlineDay = new Date(`${deadline}T23:59:59`);
+  return deadlineDay.getTime() < Date.now();
+}
+
+export function isRegistrationOpen(event: {
+  registration_status?: boolean | null;
+  registration_deadline?: string | null;
+}): boolean {
+  const status = event.registration_status ?? true;
+  return status && !isRegistrationDeadlinePassed(event.registration_deadline);
+}
+
 export function formatEventDate(date: string | null | undefined): string {
   if (!date) {
     return "Date TBA";

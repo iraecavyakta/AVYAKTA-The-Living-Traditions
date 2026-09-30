@@ -15,6 +15,9 @@ interface MembersTableProps {
   isDeleting?: string | null;
 }
 
+const roleLabel = (role: string) =>
+  role === "domain_head" ? "Domain Head" : "Member";
+
 export default function MembersTable({
   members,
   onEdit,
@@ -35,7 +38,7 @@ export default function MembersTable({
                 <th>Photo</th>
                 <th>Name</th>
                 <th>Role</th>
-                <th>Actions</th>
+                <th className="align-right">Actions</th>
               </tr>
             </thead>
             <tbody>
@@ -52,12 +55,20 @@ export default function MembersTable({
                         }}
                       />
                     ) : (
-                      <div className="photo-placeholder">📷</div>
+                      <div className="photo-placeholder">
+                        {member.name.charAt(0).toUpperCase()}
+                      </div>
                     )}
                   </td>
                   <td className="name-cell">{member.name}</td>
                   <td className="role-cell">
-                    <span className="role-badge">{member.role}</span>
+                    <span
+                      className={`role-badge ${
+                        member.role === "domain_head" ? "head" : "member"
+                      }`}
+                    >
+                      {roleLabel(member.role)}
+                    </span>
                   </td>
                   <td className="actions-cell">
                     <div className="actions">
@@ -67,7 +78,7 @@ export default function MembersTable({
                         disabled={isDeleting === member.id}
                         title="Edit member"
                       >
-                        ✏️ Edit
+                        Edit
                       </button>
                       <button
                         onClick={() => onDelete(member.id)}
@@ -75,9 +86,7 @@ export default function MembersTable({
                         className="btn-delete"
                         title="Delete member"
                       >
-                        {isDeleting === member.id
-                          ? "🗑️ Deleting..."
-                          : "🗑️ Delete"}
+                        {isDeleting === member.id ? "Deleting..." : "Delete"}
                       </button>
                     </div>
                   </td>
@@ -95,8 +104,10 @@ export default function MembersTable({
 
         .empty-state {
           text-align: center;
-          padding: 30px 20px;
-          color: #9ca3af;
+          padding: 32px 16px;
+          color: var(--av-olive);
+          font-family: var(--font-accent), serif;
+          font-style: italic;
           font-size: 14px;
         }
 
@@ -107,29 +118,45 @@ export default function MembersTable({
         .members-table {
           width: 100%;
           border-collapse: collapse;
+          font-family: var(--font-body), sans-serif;
           font-size: 14px;
         }
 
-        .members-table thead {
-          background-color: #f3f4f6;
-          border-bottom: 2px solid #e5e7eb;
+        .members-table thead tr {
+          border-bottom: 1px solid rgba(146, 121, 27, 0.35);
         }
 
         .members-table th {
-          padding: 12px;
+          padding: 12px 16px;
           text-align: left;
+          font-size: 10px;
           font-weight: 600;
-          color: #374151;
+          letter-spacing: 2px;
+          text-transform: uppercase;
+          color: var(--av-olive);
+        }
+
+        .align-right {
+          text-align: right;
         }
 
         .members-table td {
-          padding: 12px;
-          border-bottom: 1px solid #e5e7eb;
-          color: #1f2937;
+          padding: 16px;
+          border-bottom: 1px solid rgba(201, 168, 76, 0.22);
+          color: var(--av-charcoal);
+          vertical-align: middle;
+        }
+
+        .members-table tbody tr:last-child td {
+          border-bottom: none;
+        }
+
+        .members-table tbody tr {
+          transition: background-color 0.2s ease;
         }
 
         .members-table tbody tr:hover {
-          background-color: #f9fafb;
+          background-color: rgba(201, 168, 76, 0.08);
         }
 
         .name-cell {
@@ -137,117 +164,139 @@ export default function MembersTable({
         }
 
         .photo-cell {
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          padding: 8px 12px;
+          width: 72px;
         }
 
         .member-photo {
-          width: 40px;
-          height: 40px;
+          width: 44px;
+          height: 44px;
           border-radius: 50%;
           object-fit: cover;
-          border: 2px solid #dbeafe;
+          border: 2px solid rgba(201, 168, 76, 0.6);
         }
 
         .photo-placeholder {
-          width: 40px;
-          height: 40px;
+          width: 44px;
+          height: 44px;
           display: flex;
           align-items: center;
           justify-content: center;
-          background-color: #f3f4f6;
+          background: rgba(146, 121, 27, 0.12);
+          border: 2px solid rgba(201, 168, 76, 0.45);
           border-radius: 50%;
-          font-size: 20px;
-          border: 2px solid #e5e7eb;
-        }
-
-        .role-cell {
-          display: flex;
-          align-items: center;
+          font-family: var(--font-heading), serif;
+          font-size: 18px;
+          font-weight: 600;
+          color: var(--av-bronze);
         }
 
         .role-badge {
           display: inline-block;
-          padding: 4px 12px;
-          background-color: #dbeafe;
-          color: #1e40af;
-          border-radius: 20px;
-          font-size: 12px;
-          font-weight: 500;
+          padding: 5px 14px;
+          border-radius: 999px;
+          font-size: 11px;
+          font-weight: 600;
+          letter-spacing: 1px;
+          text-transform: uppercase;
+        }
+
+        .role-badge.head {
+          background: rgba(146, 121, 27, 0.14);
+          border: 1px solid rgba(146, 121, 27, 0.45);
+          color: var(--av-bronze);
+        }
+
+        .role-badge.member {
+          background: rgba(27, 94, 59, 0.1);
+          border: 1px solid rgba(27, 94, 59, 0.35);
+          color: var(--av-emerald);
         }
 
         .actions-cell {
-          display: flex;
-          justify-content: flex-end;
+          text-align: right;
         }
 
         .actions {
-          display: flex;
+          display: inline-flex;
           gap: 8px;
         }
 
         .btn-edit,
         .btn-delete {
-          padding: 8px 12px;
-          border: none;
-          border-radius: 6px;
-          font-size: 12px;
+          padding: 8px 18px;
+          border-radius: 999px;
+          font-family: var(--font-body), sans-serif;
+          font-size: 11px;
           font-weight: 600;
+          letter-spacing: 1.5px;
+          text-transform: uppercase;
           cursor: pointer;
-          transition: all 0.2s;
           white-space: nowrap;
+          background: transparent;
+          transition:
+            transform 0.2s ease,
+            background-color 0.2s ease,
+            color 0.2s ease,
+            box-shadow 0.2s ease;
         }
 
         .btn-edit {
-          background-color: #3b82f6;
-          color: white;
+          border: 1px solid rgba(146, 121, 27, 0.55);
+          color: var(--av-bronze);
         }
 
         .btn-edit:hover:not(:disabled) {
-          background-color: #2563eb;
-          transform: translateY(-2px);
-          box-shadow: 0 2px 8px rgba(37, 99, 235, 0.3);
-        }
-
-        .btn-edit:disabled {
-          opacity: 0.5;
-          cursor: not-allowed;
+          transform: scale(1.04);
+          background: var(--av-bronze);
+          color: var(--av-warm);
+          box-shadow: 0 6px 18px rgba(146, 121, 27, 0.35);
         }
 
         .btn-delete {
-          background-color: #ef4444;
-          color: white;
+          border: 1px solid rgba(139, 26, 26, 0.5);
+          color: var(--av-crimson);
         }
 
         .btn-delete:hover:not(:disabled) {
-          background-color: #dc2626;
-          transform: translateY(-2px);
-          box-shadow: 0 2px 8px rgba(220, 38, 38, 0.3);
+          transform: scale(1.04);
+          background: var(--av-crimson);
+          color: var(--av-warm);
+          box-shadow: 0 6px 18px rgba(139, 26, 26, 0.3);
         }
 
+        .btn-edit:disabled,
         .btn-delete:disabled {
-          opacity: 0.5;
+          opacity: 0.45;
           cursor: not-allowed;
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+          .btn-edit,
+          .btn-delete,
+          .members-table tbody tr {
+            transition: none;
+          }
+
+          .btn-edit:hover:not(:disabled),
+          .btn-delete:hover:not(:disabled) {
+            transform: none;
+          }
         }
 
         @media (max-width: 768px) {
           .members-table th,
           .members-table td {
-            padding: 10px 8px;
+            padding: 12px 10px;
             font-size: 12px;
-          }
-
-          .btn-edit,
-          .btn-delete {
-            padding: 6px 10px;
-            font-size: 11px;
           }
 
           .actions {
             flex-direction: column;
-            gap: 6px;
+          }
+
+          .btn-edit,
+          .btn-delete {
+            padding: 7px 14px;
           }
         }
       `}</style>

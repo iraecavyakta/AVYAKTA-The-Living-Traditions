@@ -53,7 +53,7 @@ function firstSentence(input: string, fallback: string) {
 
 function parseHighlights(value: string): string[] {
   return value
-    .split(/[,;|]/)
+    .split(/[\n,;|]/)
     .map((item) => item.trim())
     .filter(Boolean)
     .slice(0, 6);
@@ -119,7 +119,12 @@ function mapRowToEvent(row: {
   const subtitleFallback = `Explore ${row.title} with Avyakta.`;
 
   const posterUrl =
-    row.poster_image_url || row.slug_image_url || row.image_url || null;
+    [row.poster_image_url, row.slug_image_url, row.image_url]
+      .flatMap((value) => (value || "").split(/[\n|]/))
+      .map((value) => value.trim())
+      .find(
+        (value) => /^https?:\/\//i.test(value) || /^data:image\//i.test(value),
+      ) || null;
 
   return {
     id: row.id,

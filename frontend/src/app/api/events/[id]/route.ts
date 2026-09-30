@@ -1,4 +1,5 @@
 import { createClient } from "@supabase/supabase-js";
+import { revalidatePath } from "next/cache";
 import { NextRequest, NextResponse } from "next/server";
 import { retryWithBackoff } from "../../../../lib/api/retry";
 import { verifyAdminAuth } from "../../../../lib/auth/session";
@@ -12,11 +13,13 @@ const supabase = createClient(
 type EventUpdatePayload = {
   title?: string;
   description?: string;
+  highlights?: string | null;
   image_url?: string | null;
   date?: string | null;
   venue?: string | null;
   registration_enabled?: boolean;
   registration_status?: boolean;
+  registration_deadline?: string | null;
   payment_image_required?: boolean;
 };
 
@@ -97,11 +100,13 @@ export async function PUT(
     const {
       title,
       description,
+      highlights,
       image_url,
       date,
       venue,
       registration_enabled,
       registration_status,
+      registration_deadline,
       payment_image_required,
       more_description,
       slug_image_url,
@@ -114,6 +119,8 @@ export async function PUT(
     if (title !== undefined) updatePayload.title = title?.trim();
     if (description !== undefined)
       updatePayload.description = description?.trim();
+    if (highlights !== undefined)
+      updatePayload.highlights = highlights?.trim() || null;
     if (image_url !== undefined) updatePayload.image_url = image_url;
     if (date !== undefined) updatePayload.date = date;
     if (venue !== undefined) updatePayload.venue = venue?.trim() || null;
@@ -121,6 +128,8 @@ export async function PUT(
       updatePayload.registration_enabled = registration_enabled;
     if (registration_status !== undefined)
       updatePayload.registration_status = registration_status;
+    if (registration_deadline !== undefined)
+      updatePayload.registration_deadline = registration_deadline || null;
     if (payment_image_required !== undefined)
       updatePayload.payment_image_required = payment_image_required;
 
@@ -305,6 +314,10 @@ export async function PUT(
       }
     }
 
+    revalidatePath("/events");
+    revalidatePath("/gallery");
+    revalidatePath("/");
+
     return NextResponse.json({ success: true, data: data?.[0] });
   } catch (error) {
     console.error("Error updating event:", error);
@@ -341,6 +354,10 @@ export async function DELETE(
 
     const { error } = result;
     if (error) throw new Error(error.message);
+
+    revalidatePath("/events");
+    revalidatePath("/gallery");
+    revalidatePath("/");
 
     return NextResponse.json({ success: true });
   } catch (error) {

@@ -1,14 +1,24 @@
 "use client";
 
 import Link from "next/link";
-import { useRef } from "react";
+import { useRef, useState } from "react";
 import { motion, useScroll, useTransform } from "framer-motion";
 import CursorSplashOverlay from "@/components/shared/CursorSplashOverlay";
 import { useCursorSplash } from "@/hooks/useCursorSplash";
 import type { EventItem } from "@/lib/utils/events";
+import type { GalleryImage } from "@/lib/data/gallery";
+
+type EventManager = {
+  id: string;
+  name: string;
+  domain: string;
+  designation: string;
+};
 
 type EventDetailClientProps = {
   event: EventItem;
+  galleryImages: GalleryImage[];
+  eventManagers: EventManager[];
 };
 
 const reveal = {
@@ -28,8 +38,14 @@ const heroParticles = [
   { left: "86%", top: "26%", delay: 1.4, duration: 8.5 },
 ];
 
-export default function EventDetailClient({ event }: EventDetailClientProps) {
+export default function EventDetailClient({
+  event,
+  galleryImages,
+  eventManagers,
+}: EventDetailClientProps) {
   const heroRef = useRef<HTMLElement | null>(null);
+  const [descriptionExpanded, setDescriptionExpanded] = useState(false);
+  const longDescription = event.description.length > 480;
 
   // Whole-page progress, for the top progress bar.
   const { scrollYProgress: pageScrollProgress } = useScroll();
@@ -101,7 +117,7 @@ export default function EventDetailClient({ event }: EventDetailClientProps) {
               {event.title}
             </h1>
             <p className="mt-8 max-w-2xl text-base leading-8 text-[#F5F0E8]/90 md:text-lg">
-              {event.description}
+              {event.subtitle}
             </p>
             <div className="mt-8 flex flex-wrap items-center gap-4 text-xs font-bold uppercase tracking-[0.15em]">
               <span className="rounded-full bg-gradient-to-r from-[#8B1A1A] to-[#601010] shadow-[0_0_15px_rgba(139,26,26,0.6)] px-5 py-2.5 text-white">
@@ -125,14 +141,14 @@ export default function EventDetailClient({ event }: EventDetailClientProps) {
 
           <motion.div
             whileHover={{ y: -8, scale: 1.02 }}
-            className="group relative aspect-[4/5] w-full overflow-hidden rounded-3xl border-4 border-[#C9A84C]/30 shadow-[0_20px_50px_rgba(0,0,0,0.5)]"
+            className="group relative aspect-[4/5] w-full overflow-hidden rounded-3xl border-4 border-[#C9A84C]/30 bg-[#120B09] shadow-[0_20px_50px_rgba(0,0,0,0.5)]"
           >
             {event.posterUrl ? (
               // eslint-disable-next-line @next/next/no-img-element
               <img
                 src={event.posterUrl}
                 alt={event.title}
-                className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-110"
+                className="h-full w-full object-contain p-3 transition-opacity duration-500 group-hover:opacity-90 md:p-5"
               />
             ) : (
               <div
@@ -151,72 +167,180 @@ export default function EventDetailClient({ event }: EventDetailClientProps) {
         </motion.div>
       </section>
 
-      <section className="mx-auto grid w-full max-w-6xl gap-8 px-6 py-12 md:grid-cols-[1fr_0.9fr] md:px-16">
+      <section className="mx-auto w-full max-w-6xl space-y-8 px-6 py-12 md:px-16">
         <motion.article
           initial="hidden"
           whileInView="show"
           viewport={{ once: true, amount: 0.28 }}
           variants={reveal}
           whileHover={{ y: -6 }}
-          className="rounded-2xl border border-[#C9A84C]/40 bg-white p-6 shadow-[0_18px_40px_rgba(40,22,6,0.12)]"
+          className="rounded-2xl border border-[#C9A84C]/40 bg-white p-6 shadow-[0_18px_40px_rgba(40,22,6,0.12)] md:p-8"
         >
-          <h2 className="text-2xl font-semibold text-[#92791B]">Highlights</h2>
-          <ul className="mt-4 space-y-3 text-sm leading-7 text-[#1C1C1C]/86">
-            {event.highlights.length > 0 ? (
-              event.highlights.map((point) => (
-                <motion.li
-                  key={point}
-                  whileHover={{ x: 4 }}
-                  className="rounded-xl border border-[#C9A84C]/25 bg-[#F9F5EE] px-4 py-3"
-                >
-                  {point}
-                </motion.li>
-              ))
-            ) : (
-              <li className="rounded-xl border border-[#C9A84C]/25 bg-[#F9F5EE] px-4 py-3 text-[#1C1C1C]/72">
-                Highlights will be published soon.
-              </li>
-            )}
-          </ul>
+          <p className="text-xs font-bold uppercase tracking-[0.18em] text-[#8B1A1A]">
+            The story so far
+          </p>
+          <h2 className="mt-2 font-serif text-2xl font-semibold text-[#92791B]">
+            About this event
+          </h2>
+          <p
+            className={`mt-4 whitespace-pre-line text-sm leading-7 text-[#1C1C1C]/80 md:text-base ${longDescription && !descriptionExpanded ? "line-clamp-5" : ""}`}
+          >
+            {event.description}
+          </p>
+          {longDescription && (
+            <button
+              type="button"
+              onClick={() => setDescriptionExpanded((expanded) => !expanded)}
+              className="mt-4 rounded-full border border-[#92791B]/45 px-4 py-2 text-xs font-bold uppercase tracking-wider text-[#765F16] transition hover:bg-[#F5F0E8]"
+            >
+              {descriptionExpanded ? "Show less" : "Read full description"}
+            </button>
+          )}
         </motion.article>
 
+        <div className="grid gap-8 md:grid-cols-[0.9fr_1.1fr]">
+          <motion.article
+            initial="hidden"
+            whileInView="show"
+            viewport={{ once: true, amount: 0.28 }}
+            variants={reveal}
+            whileHover={{ y: -6 }}
+            className="rounded-2xl border border-[#C9A84C]/40 bg-white p-6 shadow-[0_18px_40px_rgba(40,22,6,0.12)]"
+          >
+            <h2 className="text-2xl font-semibold text-[#92791B]">
+              Event Venue & Contact
+            </h2>
+            <div className="mt-4 space-y-4">
+              <motion.div
+                whileHover={{ scale: 1.015 }}
+                className="flex flex-col gap-2 rounded-xl border border-[#C9A84C]/25 bg-[#F9F5EE] px-5 py-4"
+              >
+                <p className="text-xs font-bold uppercase tracking-[0.15em] text-[#8B1A1A]">
+                  Venue Location
+                </p>
+                <p className="text-base text-[#1C1C1C]/90 font-medium">
+                  {event.venue || "Venue will be announced shortly."}
+                </p>
+              </motion.div>
+
+              <motion.div
+                whileHover={{ scale: 1.015 }}
+                className="flex flex-col gap-2 rounded-xl border border-[#C9A84C]/25 bg-[#F9F5EE] px-5 py-4"
+              >
+                <p className="text-xs font-bold uppercase tracking-[0.15em] text-[#8B1A1A]">
+                  Current Event Management & Operations Heads
+                </p>
+                {eventManagers.length ? (
+                  <div className="mt-1 flex flex-wrap gap-2">
+                    {eventManagers.map((manager) => (
+                      <span
+                        key={manager.id}
+                        className="rounded-full border border-[#C9A84C]/35 bg-white px-3 py-2 text-sm text-[#1C1C1C]/85"
+                      >
+                        <span className="font-semibold">{manager.name}</span>
+                        <span className="ml-2 text-xs text-[#737955]">
+                          {manager.domain} Head
+                        </span>
+                      </span>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-sm text-[#1C1C1C]/70">
+                    Current team contacts will be listed here shortly.
+                  </p>
+                )}
+                <Link
+                  href="/contact"
+                  className="mt-2 w-fit text-xs font-bold uppercase tracking-wider text-[#8B1A1A] hover:underline"
+                >
+                  Contact Avyakta →
+                </Link>
+              </motion.div>
+            </div>
+          </motion.article>
+
+          <motion.article
+            initial="hidden"
+            whileInView="show"
+            viewport={{ once: true, amount: 0.28 }}
+            variants={reveal}
+            className="rounded-2xl border border-[#C9A84C]/40 bg-white p-6 shadow-[0_18px_40px_rgba(40,22,6,0.12)]"
+          >
+            <p className="text-xs font-bold uppercase tracking-[0.18em] text-[#8B1A1A]">
+              The highlights
+            </p>
+            <h2 className="mt-2 text-2xl font-semibold text-[#92791B]">
+              What made it special
+            </h2>
+            {event.highlights.length ? (
+              <ul className="mt-4 space-y-3 text-sm leading-7 text-[#1C1C1C]/86">
+                {event.highlights.map((point, index) => (
+                  <li
+                    key={`${index}-${point}`}
+                    className="flex gap-3 rounded-xl border border-[#C9A84C]/25 bg-[#F9F5EE] px-4 py-3"
+                  >
+                    <span className="text-[#8B1A1A]" aria-hidden="true">
+                      ✦
+                    </span>
+                    <span>{point}</span>
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p className="mt-4 rounded-xl border border-[#C9A84C]/25 bg-[#F9F5EE] px-4 py-3 text-sm leading-7 text-[#1C1C1C]/72">
+                Event highlights will be added soon.
+              </p>
+            )}
+          </motion.article>
+        </div>
+
         <motion.article
           initial="hidden"
           whileInView="show"
-          viewport={{ once: true, amount: 0.28 }}
+          viewport={{ once: true, amount: 0.16 }}
           variants={reveal}
-          whileHover={{ y: -6 }}
-          className="rounded-2xl border border-[#C9A84C]/40 bg-white p-6 shadow-[0_18px_40px_rgba(40,22,6,0.12)]"
+          className="rounded-2xl border border-[#C9A84C]/40 bg-white p-6 shadow-[0_18px_40px_rgba(40,22,6,0.12)] md:p-8"
         >
-          <h2 className="text-2xl font-semibold text-[#92791B]">
-            Event Venue & Contact
-          </h2>
-          <div className="mt-4 space-y-4">
-            <motion.div
-              whileHover={{ scale: 1.015 }}
-              className="flex flex-col gap-2 rounded-xl border border-[#C9A84C]/25 bg-[#F9F5EE] px-5 py-4"
-            >
-              <p className="text-xs font-bold uppercase tracking-[0.15em] text-[#8B1A1A]">
-                Venue Location
+          <div className="flex flex-wrap items-end justify-between gap-4">
+            <div>
+              <p className="text-xs font-bold uppercase tracking-[0.18em] text-[#8B1A1A]">
+                From the album
               </p>
-              <p className="text-base text-[#1C1C1C]/90 font-medium">
-                {event.venue || "Venue will be announced shortly."}
-              </p>
-            </motion.div>
-
-            <motion.div
-              whileHover={{ scale: 1.015 }}
-              className="flex flex-col gap-2 rounded-xl border border-[#C9A84C]/25 bg-[#F9F5EE] px-5 py-4"
-            >
-              <p className="text-xs font-bold uppercase tracking-[0.15em] text-[#8B1A1A]">
-                Event Manager
-              </p>
-              <p className="text-sm text-[#1C1C1C]/80">
-                Please refer to the registration form for any event specific
-                contacts or reach out via our main contact page.
-              </p>
-            </motion.div>
+              <h2 className="mt-2 font-serif text-2xl font-semibold text-[#92791B]">
+                Event Gallery
+              </h2>
+            </div>
+            {galleryImages.length > 0 && (
+              <Link
+                href={`/gallery#event-${event.id}`}
+                className="rounded-full border border-[#92791B]/50 px-4 py-2 text-xs font-bold uppercase tracking-wider text-[#765F16] transition hover:bg-[#F5F0E8]"
+              >
+                View full gallery →
+              </Link>
+            )}
           </div>
+          {galleryImages.length ? (
+            <div className="mt-5 grid grid-cols-2 gap-3 md:grid-cols-4">
+              {galleryImages.map((image) => (
+                <Link
+                  key={image.id}
+                  href={`/gallery#event-${event.id}`}
+                  className="group relative block aspect-[4/3] overflow-hidden rounded-xl border border-[#C9A84C]/35 bg-[#1C1C1C]"
+                >
+                  <img
+                    src={image.url}
+                    alt={image.name}
+                    className="h-full w-full object-contain p-2 transition duration-500 group-hover:opacity-90"
+                    loading="lazy"
+                  />
+                </Link>
+              ))}
+            </div>
+          ) : (
+            <p className="mt-5 rounded-xl border border-dashed border-[#C9A84C]/45 bg-[#F9F5EE] px-4 py-6 text-sm text-[#1C1C1C]/70">
+              Photos from this celebration will appear here as they are added.
+            </p>
+          )}
         </motion.article>
       </section>
 
