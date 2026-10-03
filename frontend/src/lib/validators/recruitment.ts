@@ -50,8 +50,8 @@ export const recruitmentSchema = z
       ),
     year: z
       .number()
-      .int("Year must be an integer")
-      .min(1, "Year must be greater than 0"),
+      .int("Current year must be an integer")
+      .min(1, "Current year must be greater than 0"),
     branch: z.enum(RECRUITMENT_BRANCHES, {
       message: "Please select a valid branch",
     }),

@@ -136,7 +136,7 @@ export default function GalleryPageClient({
     >
       {allImages.length > 0 && (
         <section
-          className="px-4 pb-8 pt-24 md:px-8 md:pt-28"
+          className="px-4 pb-8 pt-32 md:px-8 md:pt-28"
           aria-label="All event photographs"
         >
           <div className="mx-auto max-w-7xl">

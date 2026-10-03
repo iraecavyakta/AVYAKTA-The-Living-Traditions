@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getSupabaseAdmin } from "../../../lib/supabase/server";
 import { recruitmentSchema } from "../../../lib/validators/recruitment";
 import { retryWithBackoff } from "../../../lib/api/retry";
+import { getApplicantLinks } from "../../../lib/config/domainLinks";
 import { getClientIp, rateLimit } from "../../../lib/security/rateLimit";
 
 const SUBMIT_LIMIT = 5;
@@ -75,9 +76,15 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    const links = await getApplicantLinks(
+      data.first_preference_domain,
+      data.second_domain_preference,
+    );
+
     return NextResponse.json(
       {
         message: "Recruitment application submitted successfully",
+        links,
       },
       { status: 201 },
     );

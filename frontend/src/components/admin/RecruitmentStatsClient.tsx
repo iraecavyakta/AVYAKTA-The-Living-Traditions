@@ -35,11 +35,12 @@ export default function RecruitmentStatsClient() {
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
 
-  // WhatsApp link state
-  const [whatsappUrl, setWhatsappUrl] = useState("");
-  const [whatsappInput, setWhatsappInput] = useState("");
-  const [savingWhatsapp, setSavingWhatsapp] = useState(false);
-  const [whatsappMsg, setWhatsappMsg] = useState("");
+  // Per-domain WhatsApp links: domain -> [first pref, second pref]
+  const [linkInputs, setLinkInputs] = useState<
+    Record<string, [string, string]>
+  >({});
+  const [savingDomain, setSavingDomain] = useState("");
+  const [linksMsg, setLinksMsg] = useState("");
 
   const domainIndicatorActive = (domain: string) => {
     const canonical = domainIndicators.find((entry) => entry.domain === domain);
@@ -55,42 +56,56 @@ export default function RecruitmentStatsClient() {
   // is redefined every render and this effect must not re-run on refetch.
   useEffect(() => {
     fetchData();
-    fetchWhatsappLink();
+    fetchDomainLinks();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const fetchWhatsappLink = async () => {
+  const fetchDomainLinks = async () => {
     try {
-      const res = await fetch("/api/recruitment/whatsapp");
-      const data = await res.json();
-      const url = String(data.url ?? "");
-      setWhatsappUrl(url);
-      setWhatsappInput(url);
+      const res = await fetch("/api/recruitment/domain-links");
+      const { data } = await res.json();
+      const next: Record<string, [string, string]> = {};
+      for (const row of data ?? []) {
+        next[row.domain] = [
+          row.first_pref_url ?? "",
+          row.second_pref_url ?? "",
+        ];
+      }
+      setLinkInputs(next);
     } catch {
       // non-critical
     }
   };
 
-  const handleSaveWhatsapp = async () => {
-    setSavingWhatsapp(true);
-    setWhatsappMsg("");
+  const setLink = (domain: string, idx: 0 | 1, value: string) =>
+    setLinkInputs((prev) => {
+      const row: [string, string] = [...(prev[domain] ?? ["", ""])];
+      row[idx] = value;
+      return { ...prev, [domain]: row };
+    });
+
+  const handleSaveDomainLinks = async (domain: string) => {
+    const [first, second] = linkInputs[domain] ?? ["", ""];
+    setSavingDomain(domain);
+    setLinksMsg("");
     try {
-      const res = await fetch("/api/recruitment/whatsapp", {
-        method: "PATCH",
+      const res = await fetch("/api/recruitment/domain-links", {
+        method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ url: whatsappInput.trim() }),
+        body: JSON.stringify({
+          domain,
+          first_pref_url: first,
+          second_pref_url: second,
+        }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Failed to save");
-      setWhatsappUrl(String(data.url ?? ""));
-      setWhatsappMsg("✓ WhatsApp link saved successfully");
+      setLinksMsg(`✓ ${domain} links saved`);
     } catch (err) {
-      setWhatsappMsg(
-        `✕ ${err instanceof Error ? err.message : "Failed to save"}`,
-      );
+      setLinksMsg(`✕ ${err instanceof Error ? err.message : "Failed to save"}`);
     } finally {
-      setSavingWhatsapp(false);
-      setTimeout(() => setWhatsappMsg(""), 4000);
+      setSavingDomain("");
+      setTimeout(() => setLinksMsg(""), 4000);
     }
   };
 
@@ -321,65 +336,87 @@ export default function RecruitmentStatsClient() {
             </div>
           </header>
 
-          {/* WhatsApp Group Link Panel */}
-          <div className="stats-header">
+          {/* Per-domain WhatsApp Group Links Panel */}
+          <div
+            className="stats-header"
+            style={{ flexDirection: "column", alignItems: "stretch" }}
+          >
             <div className="header-left">
-              <h3>📱 WhatsApp Group Link</h3>
+              <h3>📱 WhatsApp Group Links</h3>
               <p className="panel-hint">
-                After submitting the recruitment form, applicants see this link
-                to join the provisional members group. Leave blank to hide it.
+                After applying, applicants see the 1st-preference link of their
+                first domain and the 2nd-preference link of their second domain.
+                Leave blank to hide. Clear a field and save to delete.
               </p>
             </div>
-            <div className="header-actions" style={{ flex: 1, maxWidth: 560 }}>
-              <input
-                type="url"
-                value={whatsappInput}
-                onChange={(e) => setWhatsappInput(e.target.value)}
-                placeholder="https://chat.whatsapp.com/..."
-                style={{
-                  flex: 1,
-                  padding: "10px 14px",
-                  border: "1px solid rgba(146,121,27,0.35)",
-                  borderRadius: 10,
-                  fontSize: 14,
-                  fontFamily: "var(--font-body), sans-serif",
-                  color: "var(--av-charcoal)",
-                  background: "#fff",
-                  minWidth: 0,
-                }}
-              />
-              <button
-                onClick={handleSaveWhatsapp}
-                className="btn-toggle-global active"
-                disabled={savingWhatsapp}
-              >
-                {savingWhatsapp ? "Saving…" : "Save"}
-              </button>
-              {whatsappUrl && (
-                <a
-                  href={whatsappUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="btn-refresh"
-                  style={{ textDecoration: "none" }}
+            {RECRUITMENT_DOMAINS.map((domain) => {
+              const [first, second] = linkInputs[domain] ?? ["", ""];
+              return (
+                <div
+                  key={domain}
+                  style={{
+                    display: "flex",
+                    gap: 8,
+                    alignItems: "center",
+                    flexWrap: "wrap",
+                  }}
                 >
-                  Preview
-                </a>
-              )}
-            </div>
-            {whatsappMsg && (
+                  <strong style={{ width: 160 }}>{domain}</strong>
+                  <input
+                    type="url"
+                    value={first}
+                    onChange={(e) => setLink(domain, 0, e.target.value)}
+                    placeholder="1st pref link"
+                    style={{
+                      flex: 1,
+                      padding: "8px 12px",
+                      border: "1px solid rgba(146,121,27,0.35)",
+                      borderRadius: 10,
+                      fontSize: 13,
+                      fontFamily: "var(--font-body), sans-serif",
+                      color: "var(--av-charcoal)",
+                      background: "#fff",
+                      minWidth: 0,
+                    }}
+                  />
+                  <input
+                    type="url"
+                    value={second}
+                    onChange={(e) => setLink(domain, 1, e.target.value)}
+                    placeholder="2nd pref link"
+                    style={{
+                      flex: 1,
+                      padding: "8px 12px",
+                      border: "1px solid rgba(146,121,27,0.35)",
+                      borderRadius: 10,
+                      fontSize: 13,
+                      fontFamily: "var(--font-body), sans-serif",
+                      color: "var(--av-charcoal)",
+                      background: "#fff",
+                      minWidth: 0,
+                    }}
+                  />
+                  <button
+                    onClick={() => handleSaveDomainLinks(domain)}
+                    className="btn-toggle-global active"
+                    disabled={savingDomain === domain}
+                  >
+                    {savingDomain === domain ? "Saving…" : "Save"}
+                  </button>
+                </div>
+              );
+            })}
+            {linksMsg && (
               <div
                 style={{
-                  width: "100%",
-                  marginTop: 8,
                   fontSize: 13,
                   fontFamily: "var(--font-body), sans-serif",
-                  color: whatsappMsg.startsWith("✓")
+                  color: linksMsg.startsWith("✓")
                     ? "var(--av-emerald)"
                     : "var(--av-crimson)",
                 }}
               >
-                {whatsappMsg}
+                {linksMsg}
               </div>
             )}
           </div>

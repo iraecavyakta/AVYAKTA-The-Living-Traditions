@@ -29,6 +29,22 @@
   scroll-behavior: smooth;
 }
 
+/* Dark full-bleed backdrop: show the whole image, no tiling. */
+.recruitment-page--dark {
+  background-repeat: no-repeat;
+  background-size: cover;
+  background-position: center;
+}
+
+.recruitment-page--dark .recruitment-title {
+  color: #f6ecd2;
+  text-shadow: 0 4px 12px rgba(0, 0, 0, 0.6);
+}
+
+.recruitment-page--dark .recruitment-subtitle {
+  color: #e6d5a3;
+}
+
 .recruitment-page::after {
   content: "";
   position: absolute;
@@ -988,9 +1004,13 @@
     gap: 1.5rem;
   }
 
-  .form-left,
-  .form-right {
+  /* Desktop pins each field to a grid row/column; drop the pins so the
+     fields stack in one full-width column instead of colliding. */
+  .form-left > .form-group:nth-child(n),
+  .form-right > .form-group:nth-child(n) {
+    grid-row: auto;
     grid-column: 1 / -1;
+    min-width: 0;
   }
 
   .form-textarea-section {
@@ -1017,6 +1037,7 @@
 
   .recruitment-inner {
     padding: 1rem;
+    padding-top: 4.5rem; /* clear the fixed back button */
   }
 
   .recruitment-form-container {
@@ -1025,15 +1046,6 @@
 
   .recruitment-form {
     gap: 1.5rem;
-  }
-
-  .form-left {
-    grid-template-columns: 1fr;
-  }
-
-  .form-left > .form-group:nth-child(n),
-  .form-right > .form-group:nth-child(n) {
-    grid-column: auto;
   }
 
   .recruitment-title {
@@ -1077,6 +1089,7 @@
 
   .recruitment-inner {
     padding: 0.8rem;
+    padding-top: 4.5rem;
   }
 
   .recruitment-form-container {
