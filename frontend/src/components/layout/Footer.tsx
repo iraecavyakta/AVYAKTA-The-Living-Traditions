@@ -32,25 +32,25 @@ export default function Footer({
       />
 
       {/* Main columns */}
-      <div className="max-w-[1200px] mx-auto px-6 grid grid-cols-2 gap-x-8 gap-y-10 py-14 relative z-10 items-start sm:grid-cols-2 md:grid-cols-4 md:gap-12">
+      <div className="max-w-[1200px] mx-auto px-4 sm:px-6 grid grid-cols-3 gap-x-4 gap-y-5 py-6 relative z-10 items-start sm:gap-x-8 sm:py-10 md:grid-cols-4 md:gap-12 md:py-14">
         {/* Logo */}
-        <div className="col-span-2 flex flex-col items-center sm:items-start md:col-span-1">
+        <div className="col-span-3 flex flex-col items-center sm:items-start md:col-span-1">
           <Image
             src="/logo-crest.png"
             alt="Avyakta Logo"
             width={160}
             height={160}
-            className="h-24 w-24 object-contain sm:h-32 sm:w-32 md:h-40 md:w-40"
+            className="h-14 w-14 object-contain sm:h-24 sm:w-24 md:h-40 md:w-40"
           />
         </div>
 
         {/* About Us */}
         <div>
-          <p className="font-heading text-gold text-xl tracking-[4px] uppercase mb-4">
+          <p className="font-heading text-gold text-sm tracking-[2px] uppercase mb-2 sm:text-lg sm:mb-4 md:text-xl md:tracking-[4px]">
             About Us
           </p>
-          <div className="h-px bg-gold/20 mb-5" />
-          <ul className="flex flex-col gap-3 list-none p-0 m-0">
+          <div className="h-px bg-gold/20 mb-3 sm:mb-5" />
+          <ul className="flex flex-col gap-2 list-none p-0 m-0 sm:gap-3">
             {[
               { label: "Mission", href: "/about#mission" },
               { label: "Vision", href: "/about#vision" },
@@ -59,7 +59,7 @@ export default function Footer({
               <li key={label}>
                 <Link
                   href={href}
-                  className="font-body text-base text-warm/60 hover:text-gold transition-colors duration-300 flex items-center gap-2 no-underline group"
+                  className="font-body text-sm text-warm/60 sm:text-base hover:text-gold transition-colors duration-300 flex items-center gap-2 no-underline group"
                 >
                   <span className="w-1 h-1 rounded-full bg-gold/30 group-hover:bg-gold transition-colors duration-300" />
                   {label}
@@ -71,11 +71,11 @@ export default function Footer({
 
         {/* Explore */}
         <div>
-          <p className="font-heading text-gold text-xl tracking-[4px] uppercase mb-4">
+          <p className="font-heading text-gold text-sm tracking-[2px] uppercase mb-2 sm:text-lg sm:mb-4 md:text-xl md:tracking-[4px]">
             Explore
           </p>
-          <div className="h-px bg-gold/20 mb-5" />
-          <ul className="flex flex-col gap-3 list-none p-0 m-0">
+          <div className="h-px bg-gold/20 mb-3 sm:mb-5" />
+          <ul className="flex flex-col gap-2 list-none p-0 m-0 sm:gap-3">
             {[
               { label: "Recruitment", href: "/recruitment" },
               { label: "Events", href: "/events" },
@@ -85,7 +85,7 @@ export default function Footer({
               <li key={label}>
                 <Link
                   href={href}
-                  className="font-body text-base text-warm/60 hover:text-gold transition-colors duration-300 flex items-center gap-2 no-underline group"
+                  className="font-body text-sm text-warm/60 sm:text-base hover:text-gold transition-colors duration-300 flex items-center gap-2 no-underline group"
                 >
                   <span className="w-1 h-1 rounded-full bg-gold/30 group-hover:bg-gold transition-colors duration-300" />
                   {label}
@@ -97,11 +97,11 @@ export default function Footer({
 
         {/* Contact */}
         <div>
-          <p className="font-heading text-gold text-xl tracking-[4px] uppercase mb-4">
+          <p className="font-heading text-gold text-sm tracking-[2px] uppercase mb-2 sm:text-lg sm:mb-4 md:text-xl md:tracking-[4px]">
             Contact
           </p>
-          <div className="h-px bg-gold/20 mb-5" />
-          <ul className="flex flex-col gap-3 list-none p-0 m-0">
+          <div className="h-px bg-gold/20 mb-3 sm:mb-5" />
+          <ul className="flex flex-col gap-2 list-none p-0 m-0 sm:gap-3">
             {[
               { label: "Instagram", href: "https://instagram.com/avyakta_ira" },
               { label: "Email Us", href: "mailto:avyakta@ecc.pes.edu" },
@@ -111,7 +111,7 @@ export default function Footer({
                   href={href}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="font-body text-base text-warm/60 hover:text-gold transition-colors duration-300 flex items-center gap-2 no-underline group"
+                  className="font-body text-sm text-warm/60 sm:text-base hover:text-gold transition-colors duration-300 flex items-center gap-2 no-underline group"
                 >
                   <span className="w-1 h-1 rounded-full bg-gold/30 group-hover:bg-gold transition-colors duration-300" />
                   {label}
@@ -123,11 +123,11 @@ export default function Footer({
       </div>
 
       {/* Bottom bar */}
-      <div className="max-w-[1200px] mx-auto px-6 flex flex-col items-center gap-2 py-6 text-center relative z-10 sm:flex-row sm:items-center sm:justify-between sm:gap-4 sm:text-left">
-        <p className="font-body text-sm text-warm/40 tracking-wide">
+      <div className="max-w-[1200px] mx-auto px-4 flex flex-col items-center gap-1 py-4 text-center sm:px-6 sm:gap-2 sm:py-6 relative z-10 sm:flex-row sm:items-center sm:justify-between sm:gap-4 sm:text-left">
+        <p className="font-body text-xs text-warm/40 tracking-wide sm:text-sm">
           {"© 2025 Avyakta · PESU EC · All rights reserved"}
         </p>
-        <p className="font-accent italic text-sm text-gold/40 tracking-wide">
+        <p className="font-accent italic text-xs text-gold/40 sm:text-sm tracking-wide">
           {"The Wholeness in Becoming"}
         </p>
       </div>

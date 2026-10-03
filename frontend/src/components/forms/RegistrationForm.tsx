@@ -351,7 +351,7 @@ export default function RegistrationForm({
 
               <div className="form-group">
                 <label htmlFor="reg-classYear" className="form-label">
-                  Year <span className="required">*</span>
+                  Current Year <span className="required">*</span>
                 </label>
                 <input
                   id="reg-classYear"

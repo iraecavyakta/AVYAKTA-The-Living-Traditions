@@ -41,8 +41,8 @@ export const registrationSchema = z
     branch: z.string().min(1, "Please select your branch"),
     classYear: z
       .number()
-      .min(1, "Year must be between 1 and 5")
-      .max(5, "Year must be between 1 and 5"),
+      .min(1, "Current year must be between 1 and 5")
+      .max(5, "Current year must be between 1 and 5"),
     section: z.string().min(1, "Section is required").max(10),
     srn: z
       .string()

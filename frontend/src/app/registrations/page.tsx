@@ -1,5 +1,5 @@
 import RegistrationForm from "@/components/forms/RegistrationForm";
-import bgImage from "@/components/forms/bg.jpeg";
+import bgImage from "@/components/forms/bg-registration.jpg";
 import bgFormsImage from "@/components/forms/bg-forms.jpeg";
 import "../recruitment/recruitment.css"; // Reuse recruitment styles
 import { getEventsFromDb } from "@/lib/data/events";
@@ -44,13 +44,13 @@ export default async function RegistrationsPage() {
 
   return (
     <main
-      className="recruitment-page"
+      className="recruitment-page recruitment-page--dark"
       style={{ backgroundImage: `url(${bgImage.src})` }}
     >
       <div className="recruitment-inner">
         <div className="recruitment-header">
           <h1 className="recruitment-title">Event Registration</h1>
-          <p className="recruitment-subtitle text-[var(--charcoal-black)]">
+          <p className="recruitment-subtitle ">
             Join us as a participant or shape the experience as a volunteer. The
             choice is yours.
           </p>

@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 import RecruitmentForm from "@/components/forms/RecruitmentForm";
-import bgImage from "@/components/forms/bg.jpeg";
+import bgImage from "@/components/forms/bg-recruitment.jpg";
 import bgFormsImage from "@/components/forms/bg-forms.jpeg";
 import { getRecruitmentStatus } from "@/lib/config/recruitmentStatus";
 import "./recruitment.css";
@@ -18,7 +18,7 @@ export default async function RecruitmentPage() {
 
   return (
     <main
-      className="recruitment-page"
+      className="recruitment-page recruitment-page--dark"
       style={{ backgroundImage: `url(${bgImage.src})` }}
     >
       <div className="recruitment-inner">

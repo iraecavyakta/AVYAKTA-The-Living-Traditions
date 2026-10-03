@@ -37,30 +37,3 @@ export async function setRecruitmentStatus(isOpen: boolean): Promise<void> {
     throw new Error(`Failed to update recruitment status: ${error.message}`);
   }
 }
-
-export async function getWhatsAppLink(): Promise<string> {
-  try {
-    const supabase = getSupabaseAdmin();
-    const { data, error } = await supabase
-      .from("recruitment_config")
-      .select("whatsapp_url")
-      .eq("id", true)
-      .maybeSingle();
-
-    if (error || !data) return "";
-    return String(data.whatsapp_url ?? "");
-  } catch {
-    return "";
-  }
-}
-
-export async function setWhatsAppLink(url: string): Promise<void> {
-  const supabase = getSupabaseAdmin();
-  const { error } = await supabase
-    .from("recruitment_config")
-    .upsert([{ id: true, whatsapp_url: url }], { onConflict: "id" });
-
-  if (error) {
-    throw new Error(`Failed to update WhatsApp link: ${error.message}`);
-  }
-}

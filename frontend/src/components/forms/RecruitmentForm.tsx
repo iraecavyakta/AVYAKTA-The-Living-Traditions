@@ -10,8 +10,7 @@ import {
   RecruitmentFormData,
 } from "../../lib/validators/recruitment";
 
-const PROVISIONAL_MEMBERS_WHATSAPP_URL =
-  "https://chat.whatsapp.com/LaH6oEsB0dC4j7iA4YcYLN";
+type GroupLink = { label: string; url: string };
 
 export default function RecruitmentForm({ bgImage }: { bgImage?: string }) {
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -20,6 +19,8 @@ export default function RecruitmentForm({ bgImage }: { bgImage?: string }) {
   const [linkInputs, setLinkInputs] = useState([""]); // Local state for dynamic links
   const [isAnimating, setIsAnimating] = useState(false);
   const [showThankYou, setShowThankYou] = useState(false);
+  // Held in memory only (never URL/localStorage) so links show once, right after submit.
+  const [groupLinks, setGroupLinks] = useState<GroupLink[]>([]);
 
   // Cleanup timeout on unmount to prevent memory leaks
   useEffect(() => {
@@ -93,6 +94,18 @@ export default function RecruitmentForm({ bgImage }: { bgImage?: string }) {
         return;
       }
 
+      setGroupLinks(
+        [
+          result.links?.first && {
+            label: `Join ${data.first_preference_domain} Group`,
+            url: result.links.first,
+          },
+          result.links?.second && {
+            label: `Join ${data.second_domain_preference} Group`,
+            url: result.links.second,
+          },
+        ].filter(Boolean) as GroupLink[],
+      );
       setSuccessMessage("Application submitted successfully!");
       setIsAnimating(true);
 
@@ -153,38 +166,43 @@ export default function RecruitmentForm({ bgImage }: { bgImage?: string }) {
                   We appreciate your interest in joining Avyakta. Our team will
                   review your application and get back to you soon.
                 </p>
-                <a
-                  href={PROVISIONAL_MEMBERS_WHATSAPP_URL}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  style={{
-                    display: "inline-flex",
-                    alignItems: "center",
-                    gap: "0.5rem",
-                    marginTop: "1.5rem",
-                    padding: "0.75rem 1.75rem",
-                    background: "linear-gradient(135deg, #25D366, #128C7E)",
-                    color: "#fff",
-                    borderRadius: "999px",
-                    fontWeight: 700,
-                    fontSize: "0.9rem",
-                    textDecoration: "none",
-                    boxShadow: "0 6px 20px rgba(37,211,102,0.3)",
-                    transition: "transform 0.2s ease, box-shadow 0.2s ease",
-                  }}
-                >
-                  <svg
-                    width="20"
-                    height="20"
-                    viewBox="0 0 24 24"
-                    fill="currentColor"
-                    aria-hidden
+                {groupLinks.map(({ label, url }) => (
+                  <button
+                    key={url}
+                    type="button"
+                    onClick={() =>
+                      window.open(url, "_blank", "noopener,noreferrer")
+                    }
+                    style={{
+                      border: "none",
+                      cursor: "pointer",
+                      display: "inline-flex",
+                      alignItems: "center",
+                      gap: "0.5rem",
+                      marginTop: "1.5rem",
+                      padding: "0.75rem 1.75rem",
+                      background: "linear-gradient(135deg, #25D366, #128C7E)",
+                      color: "#fff",
+                      borderRadius: "999px",
+                      fontWeight: 700,
+                      fontSize: "0.9rem",
+                      boxShadow: "0 6px 20px rgba(37,211,102,0.3)",
+                      transition: "transform 0.2s ease, box-shadow 0.2s ease",
+                    }}
                   >
-                    <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z" />
-                    <path d="M12 0C5.373 0 0 5.373 0 12c0 2.117.549 4.107 1.513 5.84L0 24l6.335-1.487A11.946 11.946 0 0012 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 21.818a9.818 9.818 0 01-5.007-1.37l-.36-.214-3.727.875.942-3.632-.234-.373A9.818 9.818 0 012.182 12C2.182 6.58 6.58 2.182 12 2.182S21.818 6.58 21.818 12 17.42 21.818 12 21.818z" />
-                  </svg>
-                  Join Provisional Members Group
-                </a>
+                    <svg
+                      width="20"
+                      height="20"
+                      viewBox="0 0 24 24"
+                      fill="currentColor"
+                      aria-hidden
+                    >
+                      <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z" />
+                      <path d="M12 0C5.373 0 0 5.373 0 12c0 2.117.549 4.107 1.513 5.84L0 24l6.335-1.487A11.946 11.946 0 0012 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 21.818a9.818 9.818 0 01-5.007-1.37l-.36-.214-3.727.875.942-3.632-.234-.373A9.818 9.818 0 012.182 12C2.182 6.58 6.58 2.182 12 2.182S21.818 6.58 21.818 12 17.42 21.818 12 21.818z" />
+                    </svg>
+                    {label}
+                  </button>
+                ))}
               </div>
             )}
           </div>
@@ -261,7 +279,7 @@ export default function RecruitmentForm({ bgImage }: { bgImage?: string }) {
               {/* Year Field */}
               <div className="form-group">
                 <label htmlFor="year" className="form-label">
-                  Year <span className="required">*</span>
+                  Current Year <span className="required">*</span>
                 </label>
                 <input
                   id="year"
