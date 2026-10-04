@@ -168,6 +168,10 @@ export function decisionEmail(p: {
   nextDomain?: string | null;
   /** Second-pref decision: the domain that earlier declined them. */
   firstDomain?: string | null;
+  /** The decision is because this domain closed recruitment, not an interview outcome. */
+  domainClosed?: boolean;
+  /** First-pref rejection: their second-choice domain had already closed, so there is no second round. */
+  secondClosedDomain?: string | null;
 }): Email {
   const name = escapeHtml(p.name);
   const domain = escapeHtml(p.domain);
@@ -199,7 +203,9 @@ export function decisionEmail(p: {
       badge: "Next: second preference",
       paragraphs: [
         `Hi ${name},`,
-        `Thank you for your interest in the <strong>${domain}</strong> domain and for the time you put into your application and interview. After careful consideration, we're sorry to let you know that we're unable to offer you a place in <strong>${domain}</strong> this time.`,
+        p.domainClosed
+          ? `Thank you for applying to the <strong>${domain}</strong> domain. <strong>${domain}</strong> has now filled its team for this round and closed recruitment, so we're sorry to let you know that we're unable to offer you a place there. This is about available places, not about you.`
+          : `Thank you for your interest in the <strong>${domain}</strong> domain and for the time you put into your application and interview. After careful consideration, we're sorry to let you know that we're unable to offer you a place in <strong>${domain}</strong> this time.`,
         `<strong>Please hold on — this isn't the end of the road.</strong> You also chose <strong>${next}</strong> as your second preference, and that round is coming up soon. The <strong>${next}</strong> team will reach out in the <strong>${next}</strong> WhatsApp group with the details of your second interview, so please keep an eye on it.`,
         `We'll email you again as soon as the ${next} team has made their decision.`,
       ],
@@ -211,6 +217,11 @@ export function decisionEmail(p: {
       ? ` We know this follows an earlier update from ${escapeHtml(p.firstDomain)}, and we truly appreciate you staying with the process.`
       : "";
 
+  const secondClosed =
+    p.preference === "first" && p.secondClosedDomain
+      ? ` Your second preference, <strong>${escapeHtml(p.secondClosedDomain)}</strong>, has also filled its team and closed recruitment, so there is no second round for you this time.`
+      : "";
+
   return build({
     subject: "Update on your Avyakta application",
     heading: "An update on your application",
@@ -218,9 +229,39 @@ export function decisionEmail(p: {
     badge: "Not selected this time",
     paragraphs: [
       `Hi ${name},`,
-      `Thank you for applying to the <strong>${domain}</strong> domain at Avyakta and for the effort you put into your application and interview.`,
-      `After careful consideration, we're unable to offer you a place this time.${earlier} This was a competitive round and the decision was not an easy one.`,
+      p.domainClosed
+        ? `Thank you for choosing the <strong>${domain}</strong> domain${p.preference === "second" ? " as your second preference" : ""} at Avyakta.`
+        : `Thank you for applying to the <strong>${domain}</strong> domain at Avyakta and for the effort you put into your application and interview.`,
+      p.domainClosed
+        ? `<strong>${domain}</strong> has now filled its team for this round and closed recruitment, so we're unable to offer you a place there.${earlier}${secondClosed} This is about available places, not about you.`
+        : `After careful consideration, we're unable to offer you a place this time.${earlier}${secondClosed} This was a competitive round and the decision was not an easy one.`,
       `We'd love to see you at our events and at future recruitment drives. Please don't be discouraged - keep creating, and keep in touch.`,
+    ],
+  });
+}
+
+/**
+ * Sent when a candidate's second-choice domain closes recruitment while their
+ * first preference is still under review. Their first preference is unaffected.
+ */
+export function secondPreferenceClosedEmail(p: {
+  name: string;
+  secondDomain: string;
+  firstDomain: string;
+}): Email {
+  const second = escapeHtml(p.secondDomain);
+  const first = escapeHtml(p.firstDomain);
+
+  return build({
+    subject: `Update on your second preference - ${p.secondDomain}`,
+    heading: "An update on your second preference",
+    accent: GOLD,
+    badge: "Second preference closed",
+    paragraphs: [
+      `Hi ${escapeHtml(p.name)},`,
+      `<strong>${second}</strong>, your second preference, has now filled its team for this round and closed recruitment, so we won't be able to consider you for it. This is about available places, not about you.`,
+      `<strong>Your first preference, ${first}, is unaffected.</strong> Your application there continues as planned, so please keep an eye on your WhatsApp group and your inbox.`,
+      `Thank you for your interest in ${second}. We'd love to see you at our events and at future recruitment drives.`,
     ],
   });
 }

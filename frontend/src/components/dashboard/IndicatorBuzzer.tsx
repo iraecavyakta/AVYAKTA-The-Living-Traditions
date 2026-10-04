@@ -22,6 +22,7 @@ export default function IndicatorBuzzer({
 }: IndicatorBuzzerProps) {
   const [isActive, setIsActive] = useState(initialStatus);
   const [isSaving, setIsSaving] = useState(false);
+  const [message, setMessage] = useState("");
 
   useEffect(() => {
     setIsActive(initialStatus);
@@ -35,7 +36,26 @@ export default function IndicatorBuzzer({
       return;
     }
 
+    // A head closing their domain also rejects, and emails, everyone still
+    // waiting on it as their second preference - so confirm first.
+    if (
+      mode === "domain" &&
+      !nextValue &&
+      !window.confirm(
+        `Close recruitment for ${domain}?
+
+Every candidate still waiting on ${domain} will be rejected for it and emailed:
+- applicants whose first preference is ${domain} and who aren't decided yet (they move on to their second preference, if any)
+- applicants who chose ${domain} as their second preference, including those whose first preference isn't decided yet
+
+This can't be undone, and only the admin can reopen recruitment.`,
+      )
+    ) {
+      return;
+    }
+
     setIsSaving(true);
+    setMessage("");
 
     try {
       const response =
@@ -51,14 +71,24 @@ export default function IndicatorBuzzer({
               body: JSON.stringify({ indicator: nextValue }),
             });
 
+      const result = await response.json().catch(() => ({}));
       if (!response.ok) {
-        throw new Error("Failed to update indicator");
+        throw new Error(result.error || "Failed to update indicator");
       }
 
       setIsActive(nextValue);
       onUpdated?.(nextValue);
+      if (result.rejectedTotal > 0) {
+        const { first, secondRound, incoming } = result.rejected;
+        setMessage(
+          `${result.rejectedTotal} candidate${result.rejectedTotal === 1 ? " was" : "s were"} rejected and emailed (${first} first preference, ${secondRound + incoming} second preference).`,
+        );
+      }
     } catch (error) {
       console.error("Error updating indicator:", error);
+      setMessage(
+        error instanceof Error ? error.message : "Failed to update indicator",
+      );
     } finally {
       setIsSaving(false);
     }
@@ -74,6 +104,7 @@ export default function IndicatorBuzzer({
           <span className="state-dot" aria-hidden />
           {isActive ? "Recruitment open" : "Recruitment closed"}
         </p>
+        {message && <p className="buzzer-note">{message}</p>}
       </div>
 
       <button
@@ -102,6 +133,13 @@ export default function IndicatorBuzzer({
 
         .buzzer-text {
           min-width: 0;
+        }
+
+        .buzzer-note {
+          margin: 8px 0 0;
+          font-family: var(--font-body), sans-serif;
+          font-size: 12px;
+          color: var(--av-olive);
         }
 
         .buzzer-domain {

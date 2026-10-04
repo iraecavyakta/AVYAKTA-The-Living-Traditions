@@ -26,6 +26,8 @@ function getTransporter(): Transporter | null {
 
   const port = Number(process.env.SMTP_PORT ?? 465);
   return (transporter = nodemailer.createTransport({
+    pool: true, // reuse a few connections - closing a domain can mail many people
+    maxConnections: 3,
     host,
     port,
     secure: port === 465, // 465 = implicit TLS; 587 upgrades via STARTTLS
@@ -81,4 +83,12 @@ export async function sendMail(message: MailMessage): Promise<void> {
  */
 export function sendMailAfterResponse(message: MailMessage): void {
   after(() => sendMail(message));
+}
+
+/** Many messages after one response, sent one after another. */
+export function sendMailsAfterResponse(messages: MailMessage[]): void {
+  if (messages.length === 0) return;
+  after(async () => {
+    for (const message of messages) await sendMail(message);
+  });
 }

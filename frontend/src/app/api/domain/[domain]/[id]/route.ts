@@ -152,6 +152,10 @@ export async function PUT(
     const body = await request.json();
     const supabaseAdmin = getSupabaseAdmin();
     const isSecondPreference = Boolean(body.isSecondPreference);
+    // Set when their second-choice domain already closed recruitment and
+    // auto-rejected them (see rejectSecondPreferenceCandidates), so there is
+    // no second round to move them into.
+    let secondClosedDomain: string | null = null;
     const interview =
       typeof body.interview === "boolean" ? body.interview : undefined;
     const status = normalizeStatus(
@@ -291,6 +295,10 @@ export async function PUT(
           .eq("recruitment_id", id)
           .maybeSingle();
 
+        if (existingSecondPreference?.second_preference_status === "rejected") {
+          secondClosedDomain = recruit.second_domain_preference;
+        }
+
         if (!existingSecondPreference) {
           const { error: insertSecondPreferenceError } = await supabaseAdmin
             .from("second_preference")
@@ -341,9 +349,11 @@ export async function PUT(
             ? (recruit.second_domain_preference ?? "")
             : recruit.first_preference_domain,
           accepted: status === "approved",
-          nextDomain: isSecondPreference
-            ? null
-            : recruit.second_domain_preference,
+          nextDomain:
+            isSecondPreference || secondClosedDomain
+              ? null
+              : recruit.second_domain_preference,
+          secondClosedDomain,
           firstDomain: recruit.first_preference_domain,
         }),
       });
