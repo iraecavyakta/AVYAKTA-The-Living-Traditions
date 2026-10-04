@@ -27,7 +27,7 @@ function layout(opts: {
 }): string {
   const body = opts.paragraphs
     .map((p) =>
-      p.startsWith("<ol")
+      p.startsWith("<ol") || p.startsWith("<div")
         ? p
         : `<p style="margin:0 0 16px;font-size:16px;line-height:1.65;color:#3a3a3a;">${p}</p>`,
     )
@@ -97,11 +97,19 @@ function build(opts: {
   };
 }
 
+const button = (url: string, label: string) =>
+  `<div style="margin:4px 0 20px;"><a href="${escapeHtml(url)}" style="display:inline-block;padding:13px 28px;background:${GOLD};color:#ffffff;border-radius:999px;font-family:Arial,Helvetica,sans-serif;font-size:13px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;text-decoration:none;">${label}</a></div>`;
+
+const linkFallback = (url: string) =>
+  `<span style="font-size:13px;color:#8a8470;">Button not working? Copy this private link into your browser: ${escapeHtml(url)}</span>`;
+
 /** 1/3 - sent right after the form is submitted. */
 export function applicationReceivedEmail(p: {
   name: string;
   firstDomain: string;
   secondDomain?: string | null;
+  /** Private link to edit / track the application. */
+  editUrl: string;
 }): Email {
   const name = escapeHtml(p.name);
   const first = escapeHtml(p.firstDomain);
@@ -125,7 +133,27 @@ export function applicationReceivedEmail(p: {
           ? `<li style="margin-bottom:10px;"><strong>Second-preference interview.</strong> If you're not selected for ${first}, your second preference, <strong>${second}</strong>, takes over: a second online interview will be held and its details will be shared in the <strong>${second}</strong> WhatsApp group. You'll get a final email once that decision is made.</li>`
           : "") +
         `</ol>`,
-      `Nothing more is needed from you right now — just keep an eye on your WhatsApp group and your inbox.`,
+      `<strong>Made a mistake, or want to add more (extra links to showcase, for example)?</strong> You can edit your application, and track where it stands, until your interview begins:`,
+      button(p.editUrl, "Edit or track my application"),
+      linkFallback(p.editUrl),
+      `This link is private to you — please don't forward it. Nothing else is needed right now; just keep an eye on your WhatsApp group and your inbox.`,
+    ],
+  });
+}
+
+/** Re-sent when the same SRN applies twice, instead of a second application. */
+export function editLinkEmail(p: { name: string; editUrl: string }): Email {
+  return build({
+    subject: "Your link to edit your Avyakta application",
+    heading: "Your application link",
+    accent: GOLD,
+    badge: "Application link",
+    paragraphs: [
+      `Hi ${escapeHtml(p.name)},`,
+      `Someone just submitted the Avyakta recruitment form again with your SRN. You've already applied, so we haven't created a second application — here is your private link to edit your application or track its status instead.`,
+      button(p.editUrl, "Edit or track my application"),
+      linkFallback(p.editUrl),
+      `This link replaces any earlier one we sent you. If this wasn't you, you can ignore this email — your application hasn't changed.`,
     ],
   });
 }
@@ -140,6 +168,10 @@ export function decisionEmail(p: {
   nextDomain?: string | null;
   /** Second-pref decision: the domain that earlier declined them. */
   firstDomain?: string | null;
+  /** The decision is because this domain closed recruitment, not an interview outcome. */
+  domainClosed?: boolean;
+  /** First-pref rejection: their second-choice domain had already closed, so there is no second round. */
+  secondClosedDomain?: string | null;
 }): Email {
   const name = escapeHtml(p.name);
   const domain = escapeHtml(p.domain);
@@ -171,7 +203,9 @@ export function decisionEmail(p: {
       badge: "Next: second preference",
       paragraphs: [
         `Hi ${name},`,
-        `Thank you for your interest in the <strong>${domain}</strong> domain and for the time you put into your application and interview. After careful consideration, we're sorry to let you know that we're unable to offer you a place in <strong>${domain}</strong> this time.`,
+        p.domainClosed
+          ? `Thank you for applying to the <strong>${domain}</strong> domain. <strong>${domain}</strong> has now filled its team for this round and closed recruitment, so we're sorry to let you know that we're unable to offer you a place there. This is about available places, not about you.`
+          : `Thank you for your interest in the <strong>${domain}</strong> domain and for the time you put into your application and interview. After careful consideration, we're sorry to let you know that we're unable to offer you a place in <strong>${domain}</strong> this time.`,
         `<strong>Please hold on — this isn't the end of the road.</strong> You also chose <strong>${next}</strong> as your second preference, and that round is coming up soon. The <strong>${next}</strong> team will reach out in the <strong>${next}</strong> WhatsApp group with the details of your second interview, so please keep an eye on it.`,
         `We'll email you again as soon as the ${next} team has made their decision.`,
       ],
@@ -183,6 +217,11 @@ export function decisionEmail(p: {
       ? ` We know this follows an earlier update from ${escapeHtml(p.firstDomain)}, and we truly appreciate you staying with the process.`
       : "";
 
+  const secondClosed =
+    p.preference === "first" && p.secondClosedDomain
+      ? ` Your second preference, <strong>${escapeHtml(p.secondClosedDomain)}</strong>, has also filled its team and closed recruitment, so there is no second round for you this time.`
+      : "";
+
   return build({
     subject: "Update on your Avyakta application",
     heading: "An update on your application",
@@ -190,9 +229,39 @@ export function decisionEmail(p: {
     badge: "Not selected this time",
     paragraphs: [
       `Hi ${name},`,
-      `Thank you for applying to the <strong>${domain}</strong> domain at Avyakta and for the effort you put into your application and interview.`,
-      `After careful consideration, we're unable to offer you a place this time.${earlier} This was a competitive round and the decision was not an easy one.`,
+      p.domainClosed
+        ? `Thank you for choosing the <strong>${domain}</strong> domain${p.preference === "second" ? " as your second preference" : ""} at Avyakta.`
+        : `Thank you for applying to the <strong>${domain}</strong> domain at Avyakta and for the effort you put into your application and interview.`,
+      p.domainClosed
+        ? `<strong>${domain}</strong> has now filled its team for this round and closed recruitment, so we're unable to offer you a place there.${earlier}${secondClosed} This is about available places, not about you.`
+        : `After careful consideration, we're unable to offer you a place this time.${earlier}${secondClosed} This was a competitive round and the decision was not an easy one.`,
       `We'd love to see you at our events and at future recruitment drives. Please don't be discouraged - keep creating, and keep in touch.`,
+    ],
+  });
+}
+
+/**
+ * Sent when a candidate's second-choice domain closes recruitment while their
+ * first preference is still under review. Their first preference is unaffected.
+ */
+export function secondPreferenceClosedEmail(p: {
+  name: string;
+  secondDomain: string;
+  firstDomain: string;
+}): Email {
+  const second = escapeHtml(p.secondDomain);
+  const first = escapeHtml(p.firstDomain);
+
+  return build({
+    subject: `Update on your second preference - ${p.secondDomain}`,
+    heading: "An update on your second preference",
+    accent: GOLD,
+    badge: "Second preference closed",
+    paragraphs: [
+      `Hi ${escapeHtml(p.name)},`,
+      `<strong>${second}</strong>, your second preference, has now filled its team for this round and closed recruitment, so we won't be able to consider you for it. This is about available places, not about you.`,
+      `<strong>Your first preference, ${first}, is unaffected.</strong> Your application there continues as planned, so please keep an eye on your WhatsApp group and your inbox.`,
+      `Thank you for your interest in ${second}. We'd love to see you at our events and at future recruitment drives.`,
     ],
   });
 }
