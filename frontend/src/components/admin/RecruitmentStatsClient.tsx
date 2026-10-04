@@ -222,7 +222,7 @@ export default function RecruitmentStatsClient() {
   const handleFlushAllCounters = async () => {
     if (
       !confirm(
-        "WARNING: This will migrate all approved applicants to the members table, clear ALL recruitment data, reset all domain counters, and CLOSE all recruitment domains. This action CANNOT be undone. Continue?",
+        "WARNING: This will migrate all approved applicants to the members table, clear ALL recruitment data, and CLOSE all recruitment domains. This action CANNOT be undone. Continue?",
       )
     ) {
       return;
@@ -253,23 +253,9 @@ export default function RecruitmentStatsClient() {
 
       const recruitmentResult = await recruitmentResponse.json();
 
-      // Step 2: Flush counters after recruitment data is cleared
+      // Step 2: Close all domain indicators
       if (process.env.NODE_ENV === "development") {
-        console.log("Step 2: Flushing all counters...");
-      }
-      const counterResponse = await fetch("/api/recruitment/counter", {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ flushAll: true }),
-      });
-
-      if (!counterResponse.ok) {
-        throw new Error("Failed to flush counters");
-      }
-
-      // Step 3: Close all domain indicators
-      if (process.env.NODE_ENV === "development") {
-        console.log("Step 3: Closing all domain indicators...");
+        console.log("Step 2: Closing all domain indicators...");
       }
       for (const domain of RECRUITMENT_DOMAINS) {
         const indicatorResponse = await fetch("/api/recruitment/indicator", {
@@ -285,7 +271,7 @@ export default function RecruitmentStatsClient() {
 
       // All operations successful
       setSuccess(
-        `Complete flush successful. Added ${recruitmentResult.stats.totalMembersAdded} new members (${recruitmentResult.stats.secondPreferenceMembers} second preference + ${recruitmentResult.stats.firstPreferenceMembers} first preference). All recruitment data and counters cleared, and recruitment domains closed.`,
+        `Complete flush successful. Added ${recruitmentResult.stats.totalMembersAdded} new members (${recruitmentResult.stats.secondPreferenceMembers} second preference + ${recruitmentResult.stats.firstPreferenceMembers} first preference). All recruitment data cleared, and recruitment domains closed.`,
       );
 
       // Refresh data to show updated stats
@@ -427,6 +413,13 @@ export default function RecruitmentStatsClient() {
               >
                 {isLoading ? "Loading..." : "Refresh"}
               </button>
+              <a
+                href="/api/recruitment/report"
+                download
+                className="btn-refresh"
+              >
+                Download Report
+              </a>
               <button
                 onClick={() => handleBulkToggleAllDomains(true)}
                 className="btn-toggle-global active"
@@ -747,6 +740,11 @@ export default function RecruitmentStatsClient() {
           .btn-refresh {
             border-color: rgba(115, 121, 85, 0.6);
             color: var(--av-olive);
+          }
+
+          a.btn-refresh {
+            display: inline-block;
+            text-decoration: none;
           }
 
           .btn-refresh:hover:not(:disabled) {

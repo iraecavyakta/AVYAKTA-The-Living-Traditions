@@ -82,6 +82,8 @@ export const recruitment = pgTable("recruitment", {
   interview: boolean("interview").default(false),
   first_preference_status: text("first_preference_status").default("pending"),
   second_domain_preference: text("second_domain_preference"),
+  // SHA-256 of the private edit/track link emailed to the candidate.
+  edit_token_hash: text("edit_token_hash").unique(),
 });
 
 export const registration = pgTable("registration", {
@@ -127,13 +129,6 @@ export const second_preference = pgTable("second_preference", {
     }),
   interview: boolean("interview").default(false),
   second_preference_status: text("second_preference_status").default("pending"),
-});
-
-export const counter = pgTable("counter", {
-  domain: text("domain").primaryKey(),
-  not_sure: integer("not_sure").default(0),
-  approved: integer("approved").default(0),
-  rejected: integer("rejected").default(0),
 });
 
 export const indicator = pgTable("indicator", {

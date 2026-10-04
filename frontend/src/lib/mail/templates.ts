@@ -27,7 +27,7 @@ function layout(opts: {
 }): string {
   const body = opts.paragraphs
     .map((p) =>
-      p.startsWith("<ol")
+      p.startsWith("<ol") || p.startsWith("<div")
         ? p
         : `<p style="margin:0 0 16px;font-size:16px;line-height:1.65;color:#3a3a3a;">${p}</p>`,
     )
@@ -97,11 +97,19 @@ function build(opts: {
   };
 }
 
+const button = (url: string, label: string) =>
+  `<div style="margin:4px 0 20px;"><a href="${escapeHtml(url)}" style="display:inline-block;padding:13px 28px;background:${GOLD};color:#ffffff;border-radius:999px;font-family:Arial,Helvetica,sans-serif;font-size:13px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;text-decoration:none;">${label}</a></div>`;
+
+const linkFallback = (url: string) =>
+  `<span style="font-size:13px;color:#8a8470;">Button not working? Copy this private link into your browser: ${escapeHtml(url)}</span>`;
+
 /** 1/3 - sent right after the form is submitted. */
 export function applicationReceivedEmail(p: {
   name: string;
   firstDomain: string;
   secondDomain?: string | null;
+  /** Private link to edit / track the application. */
+  editUrl: string;
 }): Email {
   const name = escapeHtml(p.name);
   const first = escapeHtml(p.firstDomain);
@@ -125,7 +133,27 @@ export function applicationReceivedEmail(p: {
           ? `<li style="margin-bottom:10px;"><strong>Second-preference interview.</strong> If you're not selected for ${first}, your second preference, <strong>${second}</strong>, takes over: a second online interview will be held and its details will be shared in the <strong>${second}</strong> WhatsApp group. You'll get a final email once that decision is made.</li>`
           : "") +
         `</ol>`,
-      `Nothing more is needed from you right now — just keep an eye on your WhatsApp group and your inbox.`,
+      `<strong>Made a mistake, or want to add more (extra links to showcase, for example)?</strong> You can edit your application, and track where it stands, until your interview begins:`,
+      button(p.editUrl, "Edit or track my application"),
+      linkFallback(p.editUrl),
+      `This link is private to you — please don't forward it. Nothing else is needed right now; just keep an eye on your WhatsApp group and your inbox.`,
+    ],
+  });
+}
+
+/** Re-sent when the same SRN applies twice, instead of a second application. */
+export function editLinkEmail(p: { name: string; editUrl: string }): Email {
+  return build({
+    subject: "Your link to edit your Avyakta application",
+    heading: "Your application link",
+    accent: GOLD,
+    badge: "Application link",
+    paragraphs: [
+      `Hi ${escapeHtml(p.name)},`,
+      `Someone just submitted the Avyakta recruitment form again with your SRN. You've already applied, so we haven't created a second application — here is your private link to edit your application or track its status instead.`,
+      button(p.editUrl, "Edit or track my application"),
+      linkFallback(p.editUrl),
+      `This link replaces any earlier one we sent you. If this wasn't you, you can ignore this email — your application hasn't changed.`,
     ],
   });
 }

@@ -1,134 +1,178 @@
-import { NextRequest, NextResponse } from "next/server";
-import { cookies } from "next/headers";
-import { getSupabaseAdmin } from "../../../../lib/supabase/server";
-import {
-  verifySessionId,
-  getSessionCookieName,
-} from "../../../../lib/auth/session";
-import { formatDomainFromUrl } from "@/lib/utils/domainFormatter";
-import { isValidDomain } from "@/lib/utils/domainValidator";
+import { NextResponse } from "next/server";
+import { getSupabaseAdmin } from "@/lib/supabase/server";
+import { verifyAdminAuth } from "@/lib/auth/session";
+import { RECRUITMENT_DOMAINS } from "@/lib/validators/recruitment";
 
-async function verifyAdminAuth(): Promise<boolean> {
-  try {
-    const cookieStore = await cookies();
-    const token = cookieStore.get(getSessionCookieName())?.value;
+// Admin-only CSV: per domain, how many candidates were accepted / rejected /
+// pending as a first preference and as a second preference. Counts only - no
+// candidate details leave the database through this route.
+//
+// A candidate only counts as a second-preference candidate of a domain once
+// they have been REJECTED in their first preference (that is the only way
+// they reach the second round), matching the domain dashboards.
 
-    if (!token) {
-      return false;
-    }
+type Counts = { approved: number; rejected: number; pending: number };
 
-    const session = await verifySessionId(token);
-    return session !== null;
-  } catch {
-    return false;
+const empty = (): Counts => ({ approved: 0, rejected: 0, pending: 0 });
+const total = (c: Counts) => c.approved + c.rejected + c.pending;
+
+const bucket = (status: string | null | undefined): keyof Counts =>
+  status === "approved"
+    ? "approved"
+    : status === "rejected"
+      ? "rejected"
+      : "pending";
+
+// Supabase returns at most 1000 rows per request, so page through the table.
+async function fetchAll<T>(
+  table: string,
+  columns: string,
+  orderBy: string,
+): Promise<T[]> {
+  const supabase = getSupabaseAdmin();
+  const rows: T[] = [];
+  for (let from = 0; ; from += 1000) {
+    const { data, error } = await supabase
+      .from(table)
+      .select(columns)
+      .order(orderBy)
+      .range(from, from + 999);
+    if (error) throw new Error(`${table}: ${error.message}`);
+    rows.push(...((data ?? []) as T[]));
+    if (!data || data.length < 1000) return rows;
   }
 }
 
-type RecruitmentReportRow = {
-  id: string;
-  name: string;
-  email: string;
-  phone_no: string;
-  srn: string;
-  branch: string;
-  section: string;
-  year: number;
-  first_preference_domain: string;
-  second_domain_preference: string | null;
-  experience: string | null;
-  why_you: string;
-  why_us: string;
-  first_preference_status: string | null;
-  interview: boolean | null;
-  created_at?: string;
-};
+const csvCell = (value: string | number) =>
+  /[",\n]/.test(String(value))
+    ? `"${String(value).replace(/"/g, '""')}"`
+    : String(value);
 
-export async function POST(request: NextRequest) {
+export async function GET() {
+  if (!(await verifyAdminAuth())) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
   try {
-    const isAuthenticated = await verifyAdminAuth();
-    if (!isAuthenticated) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
+    const [recruits, seconds] = await Promise.all([
+      fetchAll<{
+        id: string;
+        first_preference_domain: string;
+        first_preference_status: string | null;
+        second_domain_preference: string | null;
+      }>(
+        "recruitment",
+        "id, first_preference_domain, first_preference_status, second_domain_preference",
+        "id",
+      ),
+      fetchAll<{
+        recruitment_id: string;
+        second_preference_status: string | null;
+      }>(
+        "second_preference",
+        "recruitment_id, second_preference_status",
+        "recruitment_id",
+      ),
+    ]);
 
-    const body = await request.json();
-    const domainInput = typeof body.domain === "string" ? body.domain : "";
-
-    if (!domainInput) {
-      return NextResponse.json(
-        { error: "Domain is required" },
-        { status: 400 },
-      );
-    }
-
-    const domain = isValidDomain(domainInput)
-      ? formatDomainFromUrl(domainInput)
-      : domainInput;
-
-    const supabaseAdmin = getSupabaseAdmin();
-
-    const [{ data: recruits, error: recruitsError }, { data: counters }] =
-      await Promise.all([
-        supabaseAdmin
-          .from("recruitment")
-          .select(
-            "id, name, email, phone_no, srn, branch, section, year, first_preference_domain, second_domain_preference, experience, why_you, why_us, first_preference_status, interview, created_at",
-          )
-          .eq("first_preference_domain", domain)
-          .order("created_at", { ascending: false })
-          .returns<RecruitmentReportRow[]>(),
-        supabaseAdmin
-          .from("counter")
-          .select("domain, not_sure, approved, rejected")
-          .eq("domain", domain)
-          .maybeSingle(),
-      ]);
-
-    if (recruitsError) {
-      return NextResponse.json(
-        { error: "Failed to fetch recruitment data" },
-        { status: 500 },
-      );
-    }
-
-    const stats = (recruits ?? []).reduce(
-      (accumulator, recruit) => {
-        if (recruit.first_preference_status === "approved") {
-          accumulator.approved += 1;
-        } else if (recruit.first_preference_status === "rejected") {
-          accumulator.rejected += 1;
-        } else {
-          accumulator.not_sure += 1;
-        }
-
-        if (recruit.interview) {
-          accumulator.interview += 1;
-        }
-
-        return accumulator;
-      },
-      {
-        not_sure: 0,
-        approved: 0,
-        rejected: 0,
-        interview: 0,
-      },
+    const secondStatus = new Map(
+      seconds.map((row) => [row.recruitment_id, row.second_preference_status]),
     );
 
-    return NextResponse.json(
-      {
-        domain,
-        total_count: recruits?.length ?? 0,
-        recruits: recruits ?? [],
-        generated_at: new Date().toISOString(),
-        stats,
-        counter: counters ?? null,
-      },
-      { status: 200 },
+    const first = new Map<string, Counts>(
+      RECRUITMENT_DOMAINS.map((d) => [d, empty()]),
     );
+    const second = new Map<string, Counts>(
+      RECRUITMENT_DOMAINS.map((d) => [d, empty()]),
+    );
+
+    // Unknown (retired) domain names are simply not counted.
+    const tally = (
+      map: Map<string, Counts>,
+      domain: string,
+      status: string | null | undefined,
+    ) => {
+      const counts = map.get(domain);
+      if (counts) counts[bucket(status)]++;
+    };
+
+    for (const recruit of recruits) {
+      tally(
+        first,
+        recruit.first_preference_domain,
+        recruit.first_preference_status,
+      );
+
+      if (
+        recruit.second_domain_preference &&
+        recruit.first_preference_status === "rejected"
+      ) {
+        // No second_preference row yet just means the second round is pending.
+        tally(
+          second,
+          recruit.second_domain_preference,
+          secondStatus.get(recruit.id),
+        );
+      }
+    }
+
+    const header = [
+      "Domain",
+      "1st Pref - Accepted",
+      "1st Pref - Rejected",
+      "1st Pref - Pending",
+      "1st Pref - Total",
+      "2nd Pref - Accepted",
+      "2nd Pref - Rejected",
+      "2nd Pref - Pending",
+      "2nd Pref - Total",
+    ];
+
+    const line = (label: string, a: Counts, b: Counts) => [
+      label,
+      a.approved,
+      a.rejected,
+      a.pending,
+      total(a),
+      b.approved,
+      b.rejected,
+      b.pending,
+      total(b),
+    ];
+
+    const sum = (maps: Map<string, Counts>) =>
+      [...maps.values()].reduce(
+        (acc, c) => ({
+          approved: acc.approved + c.approved,
+          rejected: acc.rejected + c.rejected,
+          pending: acc.pending + c.pending,
+        }),
+        empty(),
+      );
+
+    const rows = [
+      header,
+      ...RECRUITMENT_DOMAINS.map((d) => line(d, first.get(d)!, second.get(d)!)),
+      line("All domains", sum(first), sum(second)),
+    ];
+
+    const csv =
+      "﻿" + // BOM so Excel reads it as UTF-8
+      rows.map((r) => r.map(csvCell).join(",")).join("\r\n") +
+      "\r\n";
+
+    const date = new Date().toISOString().slice(0, 10);
+    return new NextResponse(csv, {
+      headers: {
+        "Content-Type": "text/csv; charset=utf-8",
+        "Content-Disposition": `attachment; filename="avyakta-recruitment-report-${date}.csv"`,
+        "Cache-Control": "no-store",
+      },
+    });
   } catch (error) {
-    console.error("Report generation error:", error);
+    console.error("Error building recruitment report:", error);
     return NextResponse.json(
-      { error: "Failed to generate report" },
+      { error: "Failed to build report" },
       { status: 500 },
     );
   }

@@ -12,15 +12,34 @@ import {
 
 type GroupLink = { label: string; url: string };
 
-export default function RecruitmentForm({ bgImage }: { bgImage?: string }) {
+// Set when a candidate edits an existing application via their private link.
+export type EditingContext = {
+  token: string;
+  initial: RecruitmentFormData;
+  links: string[];
+};
+
+const READONLY_HINT = "Fixed after you apply - it identifies your application";
+const READONLY_STYLE = { opacity: 0.7, cursor: "not-allowed" } as const;
+
+export default function RecruitmentForm({
+  bgImage,
+  editing,
+}: {
+  bgImage?: string;
+  editing?: EditingContext;
+}) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [successMessage, setSuccessMessage] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
-  const [linkInputs, setLinkInputs] = useState([""]); // Local state for dynamic links
+  const [linkInputs, setLinkInputs] = useState(
+    editing?.links.length ? editing.links : [""],
+  ); // Local state for dynamic links
   const [isAnimating, setIsAnimating] = useState(false);
   const [showThankYou, setShowThankYou] = useState(false);
   // Held in memory only (never URL/localStorage) so links show once, right after submit.
   const [groupLinks, setGroupLinks] = useState<GroupLink[]>([]);
+  const [devEditUrl, setDevEditUrl] = useState(""); // local testing only
 
   // Cleanup timeout on unmount to prevent memory leaks
   useEffect(() => {
@@ -41,6 +60,7 @@ export default function RecruitmentForm({ bgImage }: { bgImage?: string }) {
     clearErrors,
   } = useForm<RecruitmentFormData>({
     resolver: zodResolver(recruitmentSchema),
+    defaultValues: editing?.initial,
   });
 
   const selectedFirstPreference = useWatch({
@@ -79,13 +99,18 @@ export default function RecruitmentForm({ bgImage }: { bgImage?: string }) {
         links: linksJson,
       };
 
-      const response = await fetch("/api/recruitment", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
+      const response = await fetch(
+        editing ? "/api/recruitment/application" : "/api/recruitment",
+        {
+          method: editing ? "PUT" : "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(
+            editing ? { ...payload, token: editing.token } : payload,
+          ),
         },
-        body: JSON.stringify(payload),
-      });
+      );
 
       const result = await response.json();
 
@@ -106,7 +131,12 @@ export default function RecruitmentForm({ bgImage }: { bgImage?: string }) {
           },
         ].filter(Boolean) as GroupLink[],
       );
-      setSuccessMessage("Application submitted successfully!");
+      setDevEditUrl(result.devEditUrl ?? "");
+      setSuccessMessage(
+        editing
+          ? "Your changes have been saved!"
+          : "Application submitted successfully!",
+      );
       setIsAnimating(true);
 
       // Wait for envelope animation to complete
@@ -126,15 +156,17 @@ export default function RecruitmentForm({ bgImage }: { bgImage?: string }) {
   return (
     <div>
       {/* Ethics Statement */}
-      <div className="ethics-statement">
-        <div className="ethics-title">Our Commitment to You</div>
-        <div className="ethics-content">
-          By joining Avyakta, you&apos;re becoming part of a diverse community
-          dedicated to celebrating cultural traditions while fostering
-          innovation, creativity, and personal growth. We believe in fostering
-          an inclusive space where your unique perspectives are valued.
+      {!editing && (
+        <div className="ethics-statement">
+          <div className="ethics-title">Our Commitment to You</div>
+          <div className="ethics-content">
+            By joining Avyakta, you&apos;re becoming part of a diverse community
+            dedicated to celebrating cultural traditions while fostering
+            innovation, creativity, and personal growth. We believe in fostering
+            an inclusive space where your unique perspectives are valued.
+          </div>
         </div>
-      </div>
+      )}
 
       {/* Messages */}
       {successMessage && (
@@ -158,14 +190,27 @@ export default function RecruitmentForm({ bgImage }: { bgImage?: string }) {
             </div>
             {showThankYou && (
               <div className="thank-you-message">
-                <h2 className="thank-you-title">Thank You</h2>
+                <h2 className="thank-you-title">
+                  {editing ? "Changes Saved" : "Thank You"}
+                </h2>
                 <p className="thank-you-text">
-                  Your application has been submitted successfully!
+                  {editing
+                    ? "Your application has been updated."
+                    : "Your application has been submitted successfully!"}
                 </p>
                 <p className="thank-you-subtext">
-                  We appreciate your interest in joining Avyakta. Our team will
-                  review your application and get back to you soon.
+                  {editing
+                    ? "You can keep editing with the same link until your interview begins."
+                    : "We appreciate your interest in joining Avyakta. We've emailed you a private link to edit your application (or add more links) and track its progress. Our team will review your application and get back to you soon."}
                 </p>
+                {devEditUrl && (
+                  <p
+                    className="thank-you-subtext"
+                    style={{ wordBreak: "break-all" }}
+                  >
+                    Dev only - edit link: <a href={devEditUrl}>{devEditUrl}</a>
+                  </p>
+                )}
                 {groupLinks.map(({ label, url }) => (
                   <button
                     key={url}
@@ -243,6 +288,9 @@ export default function RecruitmentForm({ bgImage }: { bgImage?: string }) {
                   type="email"
                   placeholder="your@email.com"
                   className="form-input"
+                  readOnly={Boolean(editing)}
+                  title={editing ? READONLY_HINT : undefined}
+                  style={editing ? READONLY_STYLE : undefined}
                 />
                 {errors.email && (
                   <p id="email-error" className="form-error">
@@ -429,6 +477,9 @@ export default function RecruitmentForm({ bgImage }: { bgImage?: string }) {
                   placeholder="PES2......"
                   maxLength={13}
                   className="form-input uppercase"
+                  readOnly={Boolean(editing)}
+                  title={editing ? READONLY_HINT : undefined}
+                  style={editing ? READONLY_STYLE : undefined}
                 />
                 {errors.srn && (
                   <p id="srn-error" className="form-error">
@@ -575,7 +626,11 @@ export default function RecruitmentForm({ bgImage }: { bgImage?: string }) {
               disabled={isSubmitting}
               className={`submit-button ${isSubmitting ? "button-loading" : ""}`}
             >
-              {isSubmitting ? "" : "Submit Application"}
+              {isSubmitting
+                ? ""
+                : editing
+                  ? "Save Changes"
+                  : "Submit Application"}
             </button>
           </form>
         )}

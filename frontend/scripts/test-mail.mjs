@@ -36,6 +36,7 @@ const samples = {
       name: "Test Candidate",
       firstDomain: "Technical",
       secondDomain: "Design",
+      editUrl: "https://example.com/recruitment/edit?token=TEST",
     }),
   accepted: () =>
     decisionEmail({

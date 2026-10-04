@@ -40,23 +40,6 @@ const isFinalStatus = (status: string | null | undefined) => {
   return normalizedStatus === "approved" || normalizedStatus === "rejected";
 };
 
-const getCounterStatus = (
-  firstPreferenceStatus: string | null | undefined,
-  secondPreferenceStatus: string | null | undefined,
-) => {
-  const normalizedSecondStatus = normalizeStatus(secondPreferenceStatus);
-  if (isFinalStatus(normalizedSecondStatus)) {
-    return normalizedSecondStatus;
-  }
-
-  const normalizedFirstStatus = normalizeStatus(firstPreferenceStatus);
-  if (isFinalStatus(normalizedFirstStatus)) {
-    return normalizedFirstStatus;
-  }
-
-  return "pending";
-};
-
 const INTERVIEW_REQUIRED_ERROR =
   "Mark the interview as completed before accepting or rejecting";
 
@@ -73,81 +56,6 @@ const flushFeedback = async (
     .eq("recruitment_id", recruitmentId)
     .eq("domain", formatDomainFromUrl(domainSlug));
   if (error) console.error("Failed to flush feedback:", error.message);
-};
-
-const applyCounterTransition = async (
-  supabaseAdmin: ReturnType<typeof getSupabaseAdmin>,
-  domain: string,
-  previousStatus: string,
-  nextStatus: string,
-) => {
-  if (previousStatus === nextStatus) {
-    return;
-  }
-
-  const { data: currentCounter, error: counterFetchError } = await supabaseAdmin
-    .from("counter")
-    .select("domain, not_sure, approved, rejected")
-    .eq("domain", domain)
-    .maybeSingle();
-
-  if (counterFetchError) {
-    throw new Error(
-      `Failed to load counter for ${domain}: ${counterFetchError.message}`,
-    );
-  }
-
-  if (!currentCounter) {
-    const { error: insertError } = await supabaseAdmin
-      .from("counter")
-      .insert([{ domain, not_sure: 0, approved: 0, rejected: 0 }]);
-
-    if (insertError) {
-      throw new Error(
-        `Failed to initialize counter for ${domain}: ${insertError.message}`,
-      );
-    }
-
-    return applyCounterTransition(
-      supabaseAdmin,
-      domain,
-      previousStatus,
-      nextStatus,
-    );
-  }
-
-  const nextCounter = {
-    not_sure: currentCounter.not_sure ?? 0,
-    approved: currentCounter.approved ?? 0,
-    rejected: currentCounter.rejected ?? 0,
-  };
-
-  if (previousStatus === "pending") {
-    nextCounter.not_sure = Math.max(nextCounter.not_sure - 1, 0);
-  } else if (previousStatus === "approved") {
-    nextCounter.approved = Math.max(nextCounter.approved - 1, 0);
-  } else if (previousStatus === "rejected") {
-    nextCounter.rejected = Math.max(nextCounter.rejected - 1, 0);
-  }
-
-  if (nextStatus === "pending") {
-    nextCounter.not_sure += 1;
-  } else if (nextStatus === "approved") {
-    nextCounter.approved += 1;
-  } else if (nextStatus === "rejected") {
-    nextCounter.rejected += 1;
-  }
-
-  const { error: counterUpdateError } = await supabaseAdmin
-    .from("counter")
-    .update(nextCounter)
-    .eq("domain", domain);
-
-  if (counterUpdateError) {
-    throw new Error(
-      `Failed to update counter for ${domain}: ${counterUpdateError.message}`,
-    );
-  }
 };
 
 export async function GET(
@@ -311,15 +219,6 @@ export async function PUT(
       }
 
       if (existingSecondPreference) {
-        const previousCounterStatus = getCounterStatus(
-          recruit.first_preference_status,
-          existingSecondPreference.second_preference_status,
-        );
-        const nextCounterStatus = getCounterStatus(
-          recruit.first_preference_status,
-          status,
-        );
-
         const { error: updateError } = await supabaseAdmin
           .from("second_preference")
           .update({
@@ -334,25 +233,7 @@ export async function PUT(
             { status: 500 },
           );
         }
-
-        if (previousCounterStatus !== nextCounterStatus) {
-          await applyCounterTransition(
-            supabaseAdmin,
-            formatDomainFromUrl(domain),
-            previousCounterStatus,
-            nextCounterStatus,
-          );
-        }
       } else {
-        const previousCounterStatus = getCounterStatus(
-          recruit.first_preference_status,
-          null,
-        );
-        const nextCounterStatus = getCounterStatus(
-          recruit.first_preference_status,
-          status,
-        );
-
         const { error: insertError } = await supabaseAdmin
           .from("second_preference")
           .insert([
@@ -367,15 +248,6 @@ export async function PUT(
           return NextResponse.json(
             { error: "Failed to update second preference" },
             { status: 500 },
-          );
-        }
-
-        if (previousCounterStatus !== nextCounterStatus) {
-          await applyCounterTransition(
-            supabaseAdmin,
-            formatDomainFromUrl(domain),
-            previousCounterStatus,
-            nextCounterStatus,
           );
         }
       }
@@ -397,8 +269,6 @@ export async function PUT(
         );
       }
 
-      const nextCounterStatus = getCounterStatus(status, null);
-
       const { error: updateError } = await supabaseAdmin
         .from("recruitment")
         .update({
@@ -413,13 +283,6 @@ export async function PUT(
           { status: 500 },
         );
       }
-
-      await applyCounterTransition(
-        supabaseAdmin,
-        formatDomainFromUrl(domain),
-        getCounterStatus(currentFirstStatus, null),
-        nextCounterStatus,
-      );
 
       if (status === "rejected" && recruit.second_domain_preference) {
         const { data: existingSecondPreference } = await supabaseAdmin
