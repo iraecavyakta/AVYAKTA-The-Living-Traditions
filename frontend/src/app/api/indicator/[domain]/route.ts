@@ -1,4 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
+import { requireDomainAccess } from "@/lib/auth/domainAccess";
+import { getSession } from "@/lib/auth/session";
 import { getSupabaseAdmin } from "@/lib/supabase/server";
 import { formatDomainFromUrl } from "@/lib/utils/domainFormatter";
 import { isValidDomain } from "@/lib/utils/domainValidator";
@@ -13,6 +15,9 @@ export async function GET(
     if (!isValidDomain(domain)) {
       return NextResponse.json({ error: "Invalid domain" }, { status: 404 });
     }
+
+    const denied = await requireDomainAccess(domain);
+    if (denied) return denied;
 
     const displayDomain = formatDomainFromUrl(domain);
     const supabaseAdmin = getSupabaseAdmin();
@@ -68,8 +73,19 @@ export async function PATCH(
       return NextResponse.json({ error: "Invalid domain" }, { status: 404 });
     }
 
+    const denied = await requireDomainAccess(domain);
+    if (denied) return denied;
+
     const body = await request.json();
     const indicatorValue = Boolean(body.indicator);
+
+    // Only the full admin can open recruitment; a domain head can only close it.
+    if (indicatorValue && (await getSession())?.domain) {
+      return NextResponse.json(
+        { error: "Only the admin can open recruitment" },
+        { status: 403 },
+      );
+    }
     const displayDomain = formatDomainFromUrl(domain);
     const supabaseAdmin = getSupabaseAdmin();
 

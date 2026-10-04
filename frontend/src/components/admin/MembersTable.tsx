@@ -6,6 +6,7 @@ interface Member {
   domain: string;
   role: string;
   photo_url?: string;
+  tags?: string[];
 }
 
 interface MembersTableProps {
@@ -16,7 +17,13 @@ interface MembersTableProps {
 }
 
 const roleLabel = (role: string) =>
-  role === "domain_head" ? "Domain Head" : "Member";
+  role === "club_head"
+    ? "Club Head"
+    : role === "domain_head"
+      ? "Domain Head"
+      : "Member";
+
+const LEADERSHIP_TAGS = [{ key: "poc", label: "POC" }];
 
 export default function MembersTable({
   members,
@@ -64,11 +71,21 @@ export default function MembersTable({
                   <td className="role-cell">
                     <span
                       className={`role-badge ${
-                        member.role === "domain_head" ? "head" : "member"
+                        member.role === "domain_head" ||
+                        member.role === "club_head"
+                          ? "head"
+                          : "member"
                       }`}
                     >
                       {roleLabel(member.role)}
                     </span>
+                    {LEADERSHIP_TAGS.filter(({ key }) =>
+                      member.tags?.includes(key),
+                    ).map(({ key, label }) => (
+                      <span key={key} className="role-badge leader">
+                        {label}
+                      </span>
+                    ))}
                   </td>
                   <td className="actions-cell">
                     <div className="actions">
@@ -204,6 +221,13 @@ export default function MembersTable({
           background: rgba(146, 121, 27, 0.14);
           border: 1px solid rgba(146, 121, 27, 0.45);
           color: var(--av-bronze);
+        }
+
+        .role-badge.leader {
+          margin-left: 6px;
+          background: rgba(139, 26, 26, 0.08);
+          border: 1px solid rgba(139, 26, 26, 0.35);
+          color: var(--av-crimson);
         }
 
         .role-badge.member {

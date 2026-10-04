@@ -522,9 +522,6 @@ export default function EventsPageClient({
           variants={reveal}
           transition={{ duration: 0.9, ease: [0.22, 1, 0.36, 1] }}
         >
-          <p className="text-xs uppercase tracking-[0.22em] text-[#C9A84C]/70">
-            Filter Section
-          </p>
           <h2 className="mt-3 text-2xl font-semibold text-[#C9A84C] md:text-3xl">
             Browse by Status
           </h2>
@@ -632,7 +629,7 @@ export default function EventsPageClient({
         {activeFilter === "all" && visibleEvents.length > 0 && (
           <div className="mt-8 rounded-3xl border border-dashed border-[#C9A84C]/55 bg-[#1C1C1C]/50 px-6 py-10 text-center text-[#F5F0E8]">
             <p className="text-3xl" aria-hidden="true">
-              🪔 ✦ 🌼
+              ✦
             </p>
             <p className="mt-4 text-xs font-bold uppercase tracking-[.24em] text-[#F4C766]">
               The next celebration is taking shape

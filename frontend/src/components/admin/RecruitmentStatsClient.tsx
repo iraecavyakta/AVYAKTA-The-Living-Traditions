@@ -2,7 +2,6 @@
 
 import React, { useState, useEffect } from "react";
 import { RECRUITMENT_DOMAINS } from "../../lib/validators/recruitment";
-import { domainReadAliases } from "../../lib/utils/domains";
 import RecruitmentCtaToggle from "../dashboard/RecruitmentCtaToggle";
 import DashboardPageBackground from "../layout/DashboardPageBackground";
 import recruitmentBackground from "../../../Admin_Dash_Img/4.png";
@@ -42,15 +41,9 @@ export default function RecruitmentStatsClient() {
   const [savingDomain, setSavingDomain] = useState("");
   const [linksMsg, setLinksMsg] = useState("");
 
-  const domainIndicatorActive = (domain: string) => {
-    const canonical = domainIndicators.find((entry) => entry.domain === domain);
-    if (canonical) return canonical.indicator;
-    return domainReadAliases(domain).some((alias) =>
-      domainIndicators.some(
-        (entry) => entry.domain === alias && entry.indicator,
-      ),
-    );
-  };
+  const domainIndicatorActive = (domain: string) =>
+    domainIndicators.find((entry) => entry.domain === domain)?.indicator ??
+    false;
 
   // Fetch data on mount only; fetchData is intentionally excluded since it
   // is redefined every render and this effect must not re-run on refetch.
@@ -342,7 +335,7 @@ export default function RecruitmentStatsClient() {
             style={{ flexDirection: "column", alignItems: "stretch" }}
           >
             <div className="header-left">
-              <h3>📱 WhatsApp Group Links</h3>
+              <h3>WhatsApp Group Links</h3>
               <p className="panel-hint">
                 After applying, applicants see the 1st-preference link of their
                 first domain and the 2nd-preference link of their second domain.

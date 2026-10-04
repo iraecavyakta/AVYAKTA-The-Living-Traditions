@@ -1,7 +1,6 @@
 import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import { getSupabaseAdmin } from "../../../../lib/supabase/server";
-import { canonicalDomainName } from "../../../../lib/utils/domains";
 import {
   verifySessionId,
   getSessionCookieName,
@@ -102,7 +101,7 @@ export async function POST() {
         .filter((record) => record.name && record.second_domain_preference)
         .map((record) => ({
           name: record.name.trim(),
-          domain: canonicalDomainName(record.second_domain_preference.trim()),
+          domain: record.second_domain_preference.trim(),
           role: "members",
         }));
 
@@ -140,7 +139,7 @@ export async function POST() {
       .filter((record) => record.name && record.first_preference_domain)
       .map((record) => ({
         name: record.name.trim(),
-        domain: canonicalDomainName(record.first_preference_domain.trim()),
+        domain: record.first_preference_domain.trim(),
         role: "members",
       }));
 
@@ -212,7 +211,7 @@ export async function POST() {
       }
     }
 
-    devLog("✅ Flush operation completed successfully");
+    devLog("Flush operation completed successfully");
 
     return NextResponse.json(
       {
@@ -227,7 +226,7 @@ export async function POST() {
       { status: 200 },
     );
   } catch (error) {
-    console.error("❌ Flush operation failed:", error);
+    console.error("Flush operation failed:", error);
     const errorMessage =
       error instanceof Error ? error.message : "Unknown error occurred";
 

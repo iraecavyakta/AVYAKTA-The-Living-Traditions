@@ -188,7 +188,7 @@ export default function EventForm({
 
       {/* Basic Event Info */}
       <div className="form-section">
-        <h3>📌 Basic Event Information</h3>
+        <h3>Basic Event Information</h3>
 
         <div className="form-group">
           <label htmlFor="title">Title *</label>
@@ -244,7 +244,7 @@ export default function EventForm({
             />
             {imageError && (
               <p className="help-text" style={{ color: "#dc2626" }}>
-                ⚠️ {imageError}
+                {imageError}
               </p>
             )}
             {imagePreview && (
@@ -272,7 +272,7 @@ export default function EventForm({
 
       {/* Event Details */}
       <div className="form-section">
-        <h3>📝 Event Details & Information</h3>
+        <h3>Event Details & Information</h3>
 
         <div className="form-group">
           <label htmlFor="more_description">Detailed Description</label>
@@ -327,7 +327,7 @@ export default function EventForm({
 
       {/* Registration Settings */}
       <div className="form-section">
-        <h3>⚙️ Registration Settings</h3>
+        <h3>Registration Settings</h3>
 
         <div className="form-group checkbox-group">
           <label htmlFor="registration_enabled">
@@ -344,7 +344,7 @@ export default function EventForm({
               disabled={isLoading}
               className="checkbox-input"
             />
-            <span>✅ Enable Registration for this Event</span>
+            <span>Enable Registration for this Event</span>
           </label>
         </div>
 
@@ -363,7 +363,7 @@ export default function EventForm({
               disabled={isLoading || !formData.registration_enabled}
               className="checkbox-input"
             />
-            <span>💳 Require Payment Proof</span>
+            <span>Require Payment Proof</span>
           </label>
         </div>
       </div>

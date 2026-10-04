@@ -92,11 +92,13 @@ export async function getMembersFromDb(): Promise<MemberCard[]> {
         const role = String(raw.role ?? "").trim();
         const designation =
           String(raw.designation ?? "").trim() ||
-          (role === "domain_head"
-            ? "Domain Head"
-            : role === "members"
-              ? "Member"
-              : role || "Member");
+          (role === "club_head"
+            ? "Club Head"
+            : role === "domain_head"
+              ? "Domain Head"
+              : role === "members"
+                ? "Member"
+                : role || "Member");
 
         const tags = tagsFromRow(
           raw as Record<string, unknown>,

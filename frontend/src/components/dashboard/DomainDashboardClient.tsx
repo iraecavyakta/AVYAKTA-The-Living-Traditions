@@ -25,6 +25,7 @@ type RecruitRow = {
   why_us: string;
   first_preference_status: string | null;
   second_preference_status?: string | null;
+  second_preference_interview?: boolean | null;
   first_preference_domain: string;
   second_domain_preference: string | null;
   interview: boolean | null;
@@ -49,18 +50,30 @@ const normalizeStatus = (status: string | null | undefined) =>
 const isPendingStatus = (status: string | null | undefined) =>
   normalizeStatus(status) === "pending";
 
-function StatusPill({ status }: { status: string | null | undefined }) {
-  const value = normalizeStatus(status);
+function StatusPill({
+  status,
+  interviewed = false,
+}: {
+  status: string | null | undefined;
+  interviewed?: boolean;
+}) {
+  // Interview done but no accept/reject yet reads as its own state.
+  const value =
+    isPendingStatus(status) && interviewed
+      ? "interviewed"
+      : normalizeStatus(status);
   const label = value.charAt(0).toUpperCase() + value.slice(1);
   return <span className={`status-pill ${value}`}>{label}</span>;
 }
 
 function RecruitAction({
   status,
+  interviewed = false,
   isRecruitmentOpen,
   href,
 }: {
   status: string | null | undefined;
+  interviewed?: boolean;
   isRecruitmentOpen: boolean;
   href: string;
 }) {
@@ -74,7 +87,7 @@ function RecruitAction({
 
   return (
     <Link href={href} className="btn-review">
-      Review
+      {interviewed ? "Decide" : "Review"}
     </Link>
   );
 }
@@ -310,11 +323,13 @@ export default function DomainDashboardClient({
                             <td>
                               <StatusPill
                                 status={recruit.first_preference_status}
+                                interviewed={Boolean(recruit.interview)}
                               />
                             </td>
                             <td>
                               <RecruitAction
                                 status={recruit.first_preference_status}
+                                interviewed={Boolean(recruit.interview)}
                                 isRecruitmentOpen={Boolean(
                                   indicator?.indicator,
                                 )}
@@ -360,11 +375,17 @@ export default function DomainDashboardClient({
                             <td>
                               <StatusPill
                                 status={recruit.second_preference_status}
+                                interviewed={Boolean(
+                                  recruit.second_preference_interview,
+                                )}
                               />
                             </td>
                             <td>
                               <RecruitAction
                                 status={recruit.second_preference_status}
+                                interviewed={Boolean(
+                                  recruit.second_preference_interview,
+                                )}
                                 isRecruitmentOpen={Boolean(
                                   indicator?.indicator,
                                 )}
@@ -865,6 +886,12 @@ export default function DomainDashboardClient({
         .status-pill.pending {
           background: rgba(201, 168, 76, 0.14);
           border: 1px solid rgba(201, 168, 76, 0.5);
+          color: var(--av-bronze);
+        }
+
+        .status-pill.interviewed {
+          background: rgba(146, 121, 27, 0.18);
+          border: 1px solid rgba(146, 121, 27, 0.65);
           color: var(--av-bronze);
         }
 

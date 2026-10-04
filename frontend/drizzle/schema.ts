@@ -5,6 +5,8 @@ import {
   date,
   boolean,
   integer,
+  timestamp,
+  primaryKey,
 } from "drizzle-orm/pg-core";
 
 export const events = pgTable("events", {
@@ -38,8 +40,17 @@ export const event_slug = pgTable("event_slug", {
 export const members = pgTable("members", {
   id: uuid("id").primaryKey().defaultRandom(),
   name: text("name").notNull(),
+  // One of the club's domains. Empty string for the Club Head, who belongs to
+  // the club rather than a domain (the column is NOT NULL).
   domain: text("domain").notNull(),
+  // "domain_head" | "members" | "club_head"
   role: text("role").notNull(),
+  photo_url: text("photo_url"),
+  // Team tags: "current" | "previous" | "founder" | "faculty" | "poc" | "club_head".
+  // faculty -> Faculty tab, current -> Current Team, anything else -> past teams.
+  tags: text("tags").array().notNull().default([]),
+  // Team year, used for "previous" members.
+  year: integer("year"),
 });
 
 export const posters = pgTable("posters", {
@@ -102,7 +113,9 @@ export const login_credentials = pgTable("login_credentials", {
   id: uuid("id").primaryKey().defaultRandom(),
   email: text("email").unique().notNull(),
   password_hash: text("password_hash").notNull(),
-  domain: text("domain"), // null = full admin; otherwise the domain this login manages
+  // null = full admin; otherwise exactly one of the club's domain names
+  // (enforced by the login_credentials_domain_valid CHECK constraint).
+  domain: text("domain"),
 });
 
 export const second_preference = pgTable("second_preference", {
@@ -132,4 +145,37 @@ export const indicator = pgTable("indicator", {
 export const recruitment_config = pgTable("recruitment_config", {
   id: boolean("id").primaryKey().default(true),
   is_open: boolean("is_open").notNull().default(true),
+  // Legacy single group link; superseded by recruitment_domain_links and no
+  // longer read by the app. Safe to drop.
+  whatsapp_url: text("whatsapp_url"),
 });
+
+// WhatsApp group links shown to a candidate on the thank-you page, one row per
+// domain: the first-preference link and the second-preference link. Admin-only
+// (RLS on, no policies); read and written with the service-role key.
+export const recruitment_domain_links = pgTable("recruitment_domain_links", {
+  domain: text("domain").primaryKey(),
+  first_pref_url: text("first_pref_url"),
+  second_pref_url: text("second_pref_url"),
+  updated_at: timestamp("updated_at", { withTimezone: true })
+    .notNull()
+    .defaultNow(),
+});
+
+// Private reviewer notes, one per candidate per domain, so a second-preference
+// head never sees the first-preference head's note. Deleted when that domain
+// accepts or rejects the candidate. Admin/domain-head only (RLS on, no policies).
+export const recruitment_feedback = pgTable(
+  "recruitment_feedback",
+  {
+    recruitment_id: uuid("recruitment_id")
+      .notNull()
+      .references(() => recruitment.id, { onDelete: "cascade" }),
+    domain: text("domain").notNull(),
+    feedback: text("feedback").notNull().default(""),
+    updated_at: timestamp("updated_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (table) => [primaryKey({ columns: [table.recruitment_id, table.domain] })],
+);

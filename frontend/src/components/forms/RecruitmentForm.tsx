@@ -158,7 +158,7 @@ export default function RecruitmentForm({ bgImage }: { bgImage?: string }) {
             </div>
             {showThankYou && (
               <div className="thank-you-message">
-                <h2 className="thank-you-title">🙏 Thank You!</h2>
+                <h2 className="thank-you-title">Thank You</h2>
                 <p className="thank-you-text">
                   Your application has been submitted successfully!
                 </p>
@@ -486,9 +486,7 @@ export default function RecruitmentForm({ bgImage }: { bgImage?: string }) {
 
               {/* Links Section */}
               <div className="links-container">
-                <div className="links-title">
-                  📚 Showcase Your Work (Optional)
-                </div>
+                <div className="links-title">Showcase Your Work (Optional)</div>
                 <div>
                   {linkInputs.map((link, index) => (
                     <div key={index} className="link-input-wrapper">

@@ -2,8 +2,13 @@ import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { events, event_slug, posters } from "@drizzle/schema";
 import { adminEventSchema } from "@/lib/validators/adminEvent";
+import { verifyAdminAuth } from "@/lib/auth/session";
 
 export async function POST(request: NextRequest) {
+  if (!(await verifyAdminAuth())) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
   try {
     const body = await request.json();
     const parsed = adminEventSchema.safeParse(body);

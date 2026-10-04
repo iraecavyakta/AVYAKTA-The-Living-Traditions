@@ -24,7 +24,7 @@ const milestones = [
     season: "Expansion",
     title: "The Domains Take Shape",
     description:
-      "Seven distinct domains crystallised — Event Management, Logistics, Media, Marketing, Finance, Tech & Systems, and Design. Each found its rhythm and its people. Cross-domain collaborations produced work that none could have done alone.",
+      "Eight distinct domains crystallised — Design, Event Management, Finance and Ethics, Logistics, Marketing, Media and Visibility, Operations, and Technical. Each found its rhythm and its people. Cross-domain collaborations produced work that none could have done alone.",
     symbol: "❋",
     accent: "#1B5E3B",
   },
@@ -59,22 +59,18 @@ const milestones = [
 
 const values = [
   {
-    icon: "🪔",
     title: "Rooted in Tradition",
     body: "Every event draws from India's rich tapestry of classical arts, folk traditions, and living rituals — not as a museum, but as a living practice.",
   },
   {
-    icon: "🎨",
     title: "Crafted with Care",
     body: "From kolam-inspired posters to handcrafted stage sets, everything Avyakta produces carries the fingerprint of the person who made it.",
   },
   {
-    icon: "🌿",
     title: "Community First",
     body: "The club exists for its people. Every domain, every event, every role is an opportunity for a student to discover what they are capable of.",
   },
   {
-    icon: "⚡",
     title: "Always Evolving",
     body: "Tradition is not a cage. Avyakta blends classical sensibility with contemporary tools — digital archives, motion design, and live-streamed events.",
   },
@@ -295,7 +291,7 @@ export default function HistoryPage() {
                   "linear-gradient(135deg, rgba(40,32,20,0.9) 0%, rgba(28,28,28,0.95) 100%)",
               }}
             >
-              <div className="mb-4 text-3xl">{v.icon}</div>
+              <div className="mb-4 h-px w-10 bg-[#C9A84C]/70" />
               <h3 className="mb-3 font-serif text-lg font-semibold text-[#C9A84C]">
                 {v.title}
               </h3>

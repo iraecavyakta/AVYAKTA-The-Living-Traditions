@@ -8,6 +8,7 @@
     "start": "next start",
     "lint": "eslint",
     "test": "echo \"No tests yet\"",
+    "test-mail": "node --env-file=.env.local scripts/test-mail.mjs",
     "manage-logins": "node scripts/manage-logins.mjs"
   },
   "dependencies": {
@@ -22,6 +23,7 @@
     "jspdf": "^4.2.1",
     "jspdf-autotable": "^5.0.8",
     "next": "16.2.3",
+    "nodemailer": "^10.0.14",
     "postgres": "^3.4.9",
     "react": "19.2.4",
     "react-dom": "19.2.4",
@@ -31,6 +33,7 @@
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
     "@types/node": "^20",
+    "@types/nodemailer": "^8.0.2",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "dotenv": "^17.4.1",

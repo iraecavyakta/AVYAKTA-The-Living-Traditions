@@ -7,7 +7,7 @@ import {
 } from "../../../../lib/auth/session";
 import { loginSchema } from "../../../../lib/validators/auth";
 import { formatDomainToUrl } from "@/lib/utils/domainFormatter";
-import { isValidDomainName } from "@/lib/utils/domainValidator";
+import { VALID_DOMAIN_NAMES } from "@/lib/validators/domainMap";
 import { getClientIp, rateLimit } from "@/lib/security/rateLimit";
 
 const LOGIN_ATTEMPT_LIMIT = 8;
@@ -76,10 +76,24 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const domain =
-      typeof users.domain === "string" && isValidDomainName(users.domain)
-        ? users.domain
-        : null;
+    // domain NULL = full admin. Any other value must be one of the listed
+    // domains: a typo or retired name must fail closed, not become admin.
+    let domain: string | null = null;
+    if (users.domain !== null) {
+      const match = VALID_DOMAIN_NAMES.find(
+        (name) => name.toLowerCase() === String(users.domain).toLowerCase(),
+      );
+      if (!match) {
+        console.error(
+          `Login blocked: ${users.email} has unknown domain "${users.domain}"`,
+        );
+        return NextResponse.json(
+          { error: "This account is not linked to a valid domain" },
+          { status: 403 },
+        );
+      }
+      domain = match;
+    }
 
     // Create session token
     const token = await createSessionToken({

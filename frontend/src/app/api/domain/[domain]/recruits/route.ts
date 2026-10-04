@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
+import { requireDomainAccess } from "@/lib/auth/domainAccess";
 import { getSupabaseAdmin } from "@/lib/supabase/server";
 import { formatDomainFromUrl } from "@/lib/utils/domainFormatter";
 import { isValidDomain } from "@/lib/utils/domainValidator";
-import { domainReadAliases } from "@/lib/utils/domains";
 
 type RecruitmentRow = {
   id: string;
@@ -60,13 +60,16 @@ export async function GET(
       return NextResponse.json({ error: "Invalid domain" }, { status: 404 });
     }
 
+    const denied = await requireDomainAccess(domain);
+    if (denied) return denied;
+
     const displayDomain = formatDomainFromUrl(domain);
     const supabaseAdmin = getSupabaseAdmin();
 
     const { data: firstPreferenceData, error: firstError } = await supabaseAdmin
       .from("recruitment")
       .select(RECRUIT_COLUMNS)
-      .in("first_preference_domain", domainReadAliases(displayDomain))
+      .eq("first_preference_domain", displayDomain)
       .order("name", { ascending: true });
 
     if (firstError) {
@@ -80,7 +83,7 @@ export async function GET(
       await supabaseAdmin
         .from("recruitment")
         .select("id")
-        .in("second_domain_preference", domainReadAliases(displayDomain));
+        .eq("second_domain_preference", displayDomain);
 
     if (secondPrefLinkError) {
       return NextResponse.json(

@@ -1,6 +1,7 @@
 import { createClient } from "@supabase/supabase-js";
 import { NextRequest, NextResponse } from "next/server";
 import { retryWithBackoff } from "../../../../lib/api/retry";
+import { verifyAdminAuth } from "../../../../lib/auth/session";
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -9,6 +10,13 @@ const supabase = createClient(
 
 // GET - Fetch indicator status for all domains
 export async function GET() {
+  if (!(await verifyAdminAuth())) {
+    return NextResponse.json(
+      { success: false, error: "Unauthorized" },
+      { status: 401 },
+    );
+  }
+
   try {
     const result = await retryWithBackoff(async () =>
       supabase.from("indicator").select("*"),
@@ -29,6 +37,13 @@ export async function GET() {
 
 // PUT - Update global or domain-specific indicator status
 export async function PUT(request: NextRequest) {
+  if (!(await verifyAdminAuth())) {
+    return NextResponse.json(
+      { success: false, error: "Unauthorized" },
+      { status: 401 },
+    );
+  }
+
   try {
     const body = await request.json();
     const { indicator, domain } = body;
