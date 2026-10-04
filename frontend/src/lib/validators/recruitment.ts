@@ -1,14 +1,14 @@
 import { z } from "zod";
 
 export const RECRUITMENT_DOMAINS = [
-  "Technical",
   "Design",
   "Event Management",
   "Finance and Ethics",
   "Logistics",
-  "Operations",
-  "Media and Visibility",
   "Marketing",
+  "Media and Visibility",
+  "Operations",
+  "Technical",
 ] as const;
 
 export const RECRUITMENT_BRANCHES = [

@@ -28,14 +28,14 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 config({ path: path.join(__dirname, "..", ".env.local") });
 
 const RECRUITMENT_DOMAINS = [
-  "Technical",
   "Design",
   "Event Management",
-  "Ethics and Discipline",
-  "Media and Visibility",
-  "Logistics and Operations",
+  "Finance and Ethics",
+  "Logistics",
   "Marketing",
-  "Finance",
+  "Media and Visibility",
+  "Operations",
+  "Technical",
 ];
 
 function parseArgs(argv) {

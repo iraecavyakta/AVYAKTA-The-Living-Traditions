@@ -195,7 +195,7 @@ export default function RegistrationForm({
             </div>
             {showThankYou && (
               <div className="thank-you-message">
-                <h2 className="thank-you-title">🙏 Thank You!</h2>
+                <h2 className="thank-you-title">Thank You</h2>
                 <p className="thank-you-text">
                   Your registration has been submitted successfully!
                 </p>
@@ -542,9 +542,7 @@ export default function RegistrationForm({
 
               {/* Links Section */}
               <div className="links-container mt-4">
-                <div className="links-title">
-                  🔗 Supporting Links (Optional)
-                </div>
+                <div className="links-title">Supporting Links (Optional)</div>
                 <div>
                   {linkInputs.map((link, index) => (
                     <div key={index} className="link-input-wrapper">

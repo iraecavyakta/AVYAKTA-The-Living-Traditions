@@ -1,7 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
+import { requireDomainAccess } from "@/lib/auth/domainAccess";
+import { sendMailAfterResponse } from "@/lib/mail/send";
+import { decisionEmail } from "@/lib/mail/templates";
 import { getSupabaseAdmin } from "@/lib/supabase/server";
 import { formatDomainFromUrl } from "@/lib/utils/domainFormatter";
-import { domainReadAliases } from "@/lib/utils/domains";
 import { isValidDomain } from "@/lib/utils/domainValidator";
 
 type RecruitRow = {
@@ -53,6 +55,24 @@ const getCounterStatus = (
   }
 
   return "pending";
+};
+
+const INTERVIEW_REQUIRED_ERROR =
+  "Mark the interview as completed before accepting or rejecting";
+
+// Reviewer notes are scratch space for deciding; once this domain has made its
+// final call on the candidate they are deleted. Other domains' notes stay.
+const flushFeedback = async (
+  supabaseAdmin: ReturnType<typeof getSupabaseAdmin>,
+  recruitmentId: string,
+  domainSlug: string,
+) => {
+  const { error } = await supabaseAdmin
+    .from("recruitment_feedback")
+    .delete()
+    .eq("recruitment_id", recruitmentId)
+    .eq("domain", formatDomainFromUrl(domainSlug));
+  if (error) console.error("Failed to flush feedback:", error.message);
 };
 
 const applyCounterTransition = async (
@@ -148,6 +168,9 @@ export async function GET(
       );
     }
 
+    const denied = await requireDomainAccess(domain);
+    if (denied) return denied;
+
     const displayDomain = formatDomainFromUrl(domain);
     const supabaseAdmin = getSupabaseAdmin();
 
@@ -161,12 +184,9 @@ export async function GET(
       return NextResponse.json({ error: "Recruit not found" }, { status: 404 });
     }
 
-    const aliases = domainReadAliases(displayDomain);
-    const isFirstPreference = aliases.includes(recruit.first_preference_domain);
-    const isSecondPreference = Boolean(
-      recruit.second_domain_preference &&
-      aliases.includes(recruit.second_domain_preference),
-    );
+    const isFirstPreference = recruit.first_preference_domain === displayDomain;
+    const isSecondPreference =
+      recruit.second_domain_preference === displayDomain;
 
     if (!isFirstPreference && !isSecondPreference) {
       return NextResponse.json(
@@ -218,6 +238,9 @@ export async function PUT(
       );
     }
 
+    const denied = await requireDomainAccess(domain);
+    if (denied) return denied;
+
     const body = await request.json();
     const supabaseAdmin = getSupabaseAdmin();
     const isSecondPreference = Boolean(body.isSecondPreference);
@@ -229,7 +252,9 @@ export async function PUT(
 
     const { data: recruit, error: recruitError } = await supabaseAdmin
       .from("recruitment")
-      .select("id, first_preference_status, second_domain_preference")
+      .select(
+        "id, name, email, first_preference_domain, first_preference_status, second_domain_preference, interview",
+      )
       .eq("id", id)
       .maybeSingle();
 
@@ -251,7 +276,7 @@ export async function PUT(
       const { data: existingSecondPreference, error: fetchError } =
         await supabaseAdmin
           .from("second_preference")
-          .select("id, second_preference_status")
+          .select("id, second_preference_status, interview")
           .eq("recruitment_id", id)
           .maybeSingle();
 
@@ -272,6 +297,16 @@ export async function PUT(
         return NextResponse.json(
           { error: "Second preference is already finalized" },
           { status: 409 },
+        );
+      }
+
+      if (
+        isFinalStatus(status) &&
+        !(interview ?? existingSecondPreference?.interview)
+      ) {
+        return NextResponse.json(
+          { error: INTERVIEW_REQUIRED_ERROR },
+          { status: 400 },
         );
       }
 
@@ -355,6 +390,13 @@ export async function PUT(
         );
       }
 
+      if (isFinalStatus(status) && !(interview ?? recruit.interview)) {
+        return NextResponse.json(
+          { error: INTERVIEW_REQUIRED_ERROR },
+          { status: 400 },
+        );
+      }
+
       const nextCounterStatus = getCounterStatus(status, null);
 
       const { error: updateError } = await supabaseAdmin
@@ -421,6 +463,27 @@ export async function PUT(
           }
         }
       }
+    }
+
+    if (isFinalStatus(status)) {
+      await flushFeedback(supabaseAdmin, id, domain);
+
+      // Emails 2/3 (first preference) and 3/3 (second preference).
+      sendMailAfterResponse({
+        to: recruit.email,
+        ...decisionEmail({
+          name: recruit.name,
+          preference: isSecondPreference ? "second" : "first",
+          domain: isSecondPreference
+            ? (recruit.second_domain_preference ?? "")
+            : recruit.first_preference_domain,
+          accepted: status === "approved",
+          nextDomain: isSecondPreference
+            ? null
+            : recruit.second_domain_preference,
+          firstDomain: recruit.first_preference_domain,
+        }),
+      });
     }
 
     return NextResponse.json(

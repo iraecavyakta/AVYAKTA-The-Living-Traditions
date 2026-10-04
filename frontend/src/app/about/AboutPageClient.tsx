@@ -5,19 +5,16 @@ import Link from "next/link";
 
 const activities = [
   {
-    icon: "🎨",
     title: "Make something",
     text: "Try rangoli patterns, poster art, or a tiny stage set.",
     color: "#8B1A1A",
   },
   {
-    icon: "🥁",
     title: "Find your rhythm",
     text: "Clap a tala, learn a folk step, or bring a song you love.",
     color: "#1B5E3B",
   },
   {
-    icon: "🎭",
     title: "Tell a story",
     text: "Turn a family tale, festival memory, or big idea into a performance.",
     color: "#92791B",
@@ -42,7 +39,7 @@ export default function AboutPageClient() {
           transition={{ duration: 0.7 }}
         >
           <p className="mb-4 text-sm font-bold uppercase tracking-[0.28em] text-[#F4C766]">
-            🪔 Come curious. Leave inspired. 🪔
+            Come curious. Leave inspired.
           </p>
           <h1 className="font-serif text-5xl font-bold leading-tight md:text-7xl">
             Culture is a <span className="text-[#F4C766]">playground.</span>
@@ -113,9 +110,6 @@ export default function AboutPageClient() {
                 sound or fullscreen
               </p>
             </div>
-            <span aria-hidden="true" className="text-2xl">
-              🌧️
-            </span>
           </div>
           <div className="aspect-video bg-[#24150E]">
             <iframe
@@ -145,9 +139,10 @@ export default function AboutPageClient() {
                 key={activity.title}
                 className="rounded-3xl border border-[#C9A84C]/35 bg-white p-7 shadow-[0_8px_28px_rgba(36,21,14,0.07)] transition hover:-translate-y-1 hover:shadow-[0_14px_38px_rgba(36,21,14,0.12)]"
               >
-                <span className="text-4xl" aria-hidden="true">
-                  {activity.icon}
-                </span>
+                <div
+                  className="h-0.5 w-10 rounded-full"
+                  style={{ backgroundColor: activity.color }}
+                />
                 <h3
                   className="mt-4 font-serif text-2xl font-bold"
                   style={{ color: activity.color }}
@@ -165,7 +160,7 @@ export default function AboutPageClient() {
 
       <section className="px-6 py-16 text-center md:py-20">
         <p className="text-3xl" aria-hidden="true">
-          🪔 ✨ 🎭 ✨ 🌿
+          ✦
         </p>
         <h2 className="mt-4 font-serif text-4xl font-bold">
           Come make the next memory.

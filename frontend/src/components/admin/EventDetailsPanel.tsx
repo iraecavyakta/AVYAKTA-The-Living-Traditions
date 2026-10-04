@@ -377,7 +377,7 @@ export default function EventDetailsPanel({
     <div className="event-details-panel">
       <div className="details-header">
         <div className="header-top">
-          <h3>📋 Event Details</h3>
+          <h3>Event Details</h3>
           <div className="header-actions">
             <button
               onClick={handleToggleRegistrationLocal}
@@ -392,8 +392,8 @@ export default function EventDetailsPanel({
               {registrationToggling
                 ? "..."
                 : event.registration_enabled
-                  ? "📝 OPEN"
-                  : "🔒 CLOSED"}
+                  ? "OPEN"
+                  : "CLOSED"}
             </button>
           </div>
         </div>
@@ -416,9 +416,7 @@ export default function EventDetailsPanel({
       {/* Slugs Section */}
       {activeTab === "slugs" && (
         <div className="details-section">
-          {imageError && (
-            <div className="alert alert-error">⚠️ {imageError}</div>
-          )}
+          {imageError && <div className="alert alert-error">{imageError}</div>}
           <form onSubmit={handleAddSlug} className="detail-form">
             <h4>
               {editingSlugId
@@ -535,14 +533,14 @@ export default function EventDetailsPanel({
                         className="btn-small btn-edit"
                         disabled={isLoading}
                       >
-                        ✏️
+                        Edit
                       </button>
                       <button
                         onClick={() => onDeleteSlug(slug.id)}
                         className="btn-small btn-delete"
                         disabled={isLoading}
                       >
-                        🗑️
+                        Delete
                       </button>
                     </div>
                     {slug.more_description && (
@@ -654,14 +652,14 @@ export default function EventDetailsPanel({
                         className="btn-small btn-edit"
                         disabled={isLoading}
                       >
-                        ✏️
+                        Edit
                       </button>
                       <button
                         onClick={() => onDeletePoster(poster.id)}
                         className="btn-small btn-delete"
                         disabled={isLoading}
                       >
-                        🗑️
+                        Delete
                       </button>
                     </div>
                   </div>

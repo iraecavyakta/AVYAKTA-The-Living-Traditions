@@ -37,6 +37,8 @@ type SecondPreferenceRow = {
 const normalizeStatus = (status: string | null | undefined) =>
   status === "not_sure" || !status ? "pending" : status;
 
+const INTERVIEW_HINT = "Tick Interview completed to enable this";
+
 const parseLinks = (links: string | null): string[] => {
   if (!links) {
     return [];
@@ -140,6 +142,47 @@ export default function RecruitDetailPage() {
   const [secondPersistedStatus, setSecondPersistedStatus] = useState("pending");
   const [secondInterview, setSecondInterview] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [feedback, setFeedback] = useState("");
+  const [savedFeedback, setSavedFeedback] = useState("");
+  const [savingFeedback, setSavingFeedback] = useState(false);
+  const [feedbackMsg, setFeedbackMsg] = useState("");
+
+  // Private reviewer note for this domain only; failing to load it must not
+  // block the review page, so it has its own non-fatal fetch.
+  useEffect(() => {
+    if (!isValidDomain(domain) || !recruitId) return;
+    fetch(`/api/domain/${domain}/${recruitId}/feedback`)
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => {
+        setFeedback(data?.feedback ?? "");
+        setSavedFeedback(data?.feedback ?? "");
+      })
+      .catch(() => {});
+  }, [domain, recruitId]);
+
+  const handleSaveFeedback = async () => {
+    setSavingFeedback(true);
+    setFeedbackMsg("");
+    try {
+      const res = await fetch(`/api/domain/${domain}/${recruitId}/feedback`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ feedback }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Failed to save");
+      setFeedback(data.feedback);
+      setSavedFeedback(data.feedback);
+      setFeedbackMsg("✓ Notes saved");
+    } catch (err) {
+      setFeedbackMsg(
+        `✕ ${err instanceof Error ? err.message : "Failed to save"}`,
+      );
+    } finally {
+      setSavingFeedback(false);
+      setTimeout(() => setFeedbackMsg(""), 4000);
+    }
+  };
 
   useEffect(() => {
     const loadRecruit = async () => {
@@ -380,7 +423,12 @@ export default function RecruitDetailPage() {
 
             {/* ---------- Decision ---------- */}
             <section className="panel decision-panel">
-              <h2>First Preference</h2>
+              <h2>
+                First Preference
+                <span className="pref-domain">
+                  {recruit.first_preference_domain}
+                </span>
+              </h2>
 
               <div className={`decision-block ${firstLocked ? "locked" : ""}`}>
                 {firstLocked ? (
@@ -396,9 +444,10 @@ export default function RecruitDetailPage() {
                       <input
                         type="checkbox"
                         checked={firstInterview}
-                        onChange={(event) =>
-                          setFirstInterview(event.target.checked)
-                        }
+                        onChange={(event) => {
+                          setFirstInterview(event.target.checked);
+                          if (!event.target.checked) setFirstStatus("pending");
+                        }}
                       />
                       <span>Interview completed</span>
                     </label>
@@ -407,7 +456,8 @@ export default function RecruitDetailPage() {
                       <button
                         type="button"
                         onClick={() => selectStatus("approved", false)}
-                        disabled={saving}
+                        disabled={saving || !firstInterview}
+                        title={firstInterview ? undefined : INTERVIEW_HINT}
                         className={`btn-decide accept ${firstStatus === "approved" ? "chosen" : ""}`}
                       >
                         Accept
@@ -415,7 +465,8 @@ export default function RecruitDetailPage() {
                       <button
                         type="button"
                         onClick={() => selectStatus("rejected", false)}
-                        disabled={saving}
+                        disabled={saving || !firstInterview}
+                        title={firstInterview ? undefined : INTERVIEW_HINT}
                         className={`btn-decide reject ${firstStatus === "rejected" ? "chosen" : ""}`}
                       >
                         Reject
@@ -428,7 +479,14 @@ export default function RecruitDetailPage() {
               {showSecondPreference && (
                 <>
                   <div className="panel-rule" aria-hidden />
-                  <h3>Second Preference</h3>
+                  <h3>
+                    Second Preference
+                    {recruit.second_domain_preference && (
+                      <span className="pref-domain">
+                        {recruit.second_domain_preference}
+                      </span>
+                    )}
+                  </h3>
 
                   <div
                     className={`decision-block ${secondLocked ? "locked" : ""}`}
@@ -448,9 +506,11 @@ export default function RecruitDetailPage() {
                           <input
                             type="checkbox"
                             checked={secondInterview}
-                            onChange={(event) =>
-                              setSecondInterview(event.target.checked)
-                            }
+                            onChange={(event) => {
+                              setSecondInterview(event.target.checked);
+                              if (!event.target.checked)
+                                setSecondStatus("pending");
+                            }}
                           />
                           <span>Interview completed</span>
                         </label>
@@ -459,7 +519,8 @@ export default function RecruitDetailPage() {
                           <button
                             type="button"
                             onClick={() => selectStatus("approved", true)}
-                            disabled={saving}
+                            disabled={saving || !secondInterview}
+                            title={secondInterview ? undefined : INTERVIEW_HINT}
                             className={`btn-decide accept ${secondStatus === "approved" ? "chosen" : ""}`}
                           >
                             Accept
@@ -467,7 +528,8 @@ export default function RecruitDetailPage() {
                           <button
                             type="button"
                             onClick={() => selectStatus("rejected", true)}
-                            disabled={saving}
+                            disabled={saving || !secondInterview}
+                            title={secondInterview ? undefined : INTERVIEW_HINT}
                             className={`btn-decide reject ${secondStatus === "rejected" ? "chosen" : ""}`}
                           >
                             Reject
@@ -491,6 +553,41 @@ export default function RecruitDetailPage() {
               </button>
             </section>
           </div>
+
+          {/* ---------- Private notes ---------- */}
+          <section className="panel notes-panel">
+            <h2>Your Notes</h2>
+            <p className="notes-hint">
+              Private to {domainName} reviewers. Other domains and the candidate
+              never see this.
+            </p>
+            <textarea
+              className="notes-input"
+              value={feedback}
+              onChange={(event) => setFeedback(event.target.value)}
+              maxLength={2000}
+              rows={5}
+              placeholder="Strengths, concerns, how the interview went..."
+            />
+            <div className="notes-footer">
+              <span className="notes-count">{feedback.length}/2000</span>
+              {feedbackMsg && (
+                <span
+                  className={`notes-msg ${feedbackMsg.startsWith("✓") ? "ok" : "bad"}`}
+                >
+                  {feedbackMsg}
+                </span>
+              )}
+              <button
+                type="button"
+                onClick={handleSaveFeedback}
+                disabled={savingFeedback || feedback === savedFeedback}
+                className="btn-save notes-save"
+              >
+                {savingFeedback ? "Saving..." : "Save Notes"}
+              </button>
+            </div>
+          </section>
 
           {/* ---------- Application ---------- */}
           <section className="panel application-panel">
@@ -685,6 +782,22 @@ export default function RecruitDetailPage() {
           color: var(--av-bronze);
         }
 
+        .pref-domain {
+          display: inline-block;
+          margin-left: 12px;
+          padding: 3px 12px;
+          vertical-align: middle;
+          border-radius: 999px;
+          border: 1px solid rgba(146, 121, 27, 0.45);
+          background: rgba(201, 168, 76, 0.14);
+          font-family: var(--font-body), sans-serif;
+          font-size: 11px;
+          font-weight: 600;
+          letter-spacing: 1.5px;
+          text-transform: uppercase;
+          color: var(--av-bronze);
+        }
+
         .panel-rule {
           height: 1px;
           margin: 24px 0;
@@ -875,6 +988,70 @@ export default function RecruitDetailPage() {
         /* A chosen-but-locked button keeps its fill so the record stays legible */
         .btn-decide.chosen:disabled {
           opacity: 0.85;
+        }
+
+        .notes-panel {
+          margin-bottom: 32px;
+        }
+
+        .notes-hint {
+          margin: -8px 0 16px;
+          font-family: var(--font-accent), serif;
+          font-style: italic;
+          font-size: 14px;
+          color: var(--av-olive);
+        }
+
+        .notes-input {
+          width: 100%;
+          min-height: 120px;
+          padding: 14px 16px;
+          border: 1px solid rgba(146, 121, 27, 0.35);
+          border-radius: 12px;
+          background: #fff;
+          font-family: var(--font-body), sans-serif;
+          font-size: 14px;
+          line-height: 1.6;
+          color: var(--av-charcoal);
+          resize: vertical;
+        }
+
+        .notes-input:focus {
+          outline: none;
+          border-color: var(--av-bronze);
+        }
+
+        .notes-footer {
+          display: flex;
+          align-items: center;
+          flex-wrap: wrap;
+          gap: 12px;
+          margin-top: 14px;
+        }
+
+        .notes-count {
+          font-family: var(--font-body), sans-serif;
+          font-size: 12px;
+          color: var(--av-olive);
+        }
+
+        .notes-msg {
+          font-family: var(--font-body), sans-serif;
+          font-size: 13px;
+        }
+
+        .notes-msg.ok {
+          color: var(--av-emerald);
+        }
+
+        .notes-msg.bad {
+          color: var(--av-crimson);
+        }
+
+        .btn-save.notes-save {
+          width: auto;
+          margin-left: auto;
+          padding: 12px 32px;
         }
 
         .btn-save {

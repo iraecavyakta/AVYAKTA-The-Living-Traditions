@@ -20,6 +20,15 @@ interface MemberFormProps {
   isLoading?: boolean;
 }
 
+const TEAM_TAGS = [
+  { key: "current", label: "Current" },
+  { key: "previous", label: "Previous" },
+  { key: "founder", label: "Founder" },
+  { key: "faculty", label: "Faculty" },
+  { key: "poc", label: "POC" },
+  { key: "club_head", label: "Club Head" },
+];
+
 export default function MemberForm({
   member,
   onSubmit,
@@ -50,6 +59,10 @@ export default function MemberForm({
   const [photoPreview, setPhotoPreview] = useState<string | null>(
     member?.photo_url || null,
   );
+
+  // Club Head is club-level (no domain/role); a POC's role defaults to Member.
+  const isClubHead = formData.tags.includes("club_head");
+  const isPoc = formData.tags.includes("poc");
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -120,16 +133,22 @@ export default function MemberForm({
 
     if (
       !formData.name.trim() ||
-      !formData.domain.trim() ||
-      !formData.role.trim() ||
-      formData.tags.length === 0
+      formData.tags.length === 0 ||
+      (!isClubHead && !formData.domain.trim()) ||
+      (!isClubHead && !isPoc && !formData.role.trim())
     ) {
-      setError("Name, domain, role, and at least one team tag are required");
+      setError(
+        "Name, at least one team tag, and a domain and role are required (a role is optional for POCs; Club Head needs no domain or role)",
+      );
       return;
     }
 
     try {
-      await onSubmit(formData);
+      await onSubmit(
+        isClubHead
+          ? { ...formData, domain: "", role: "club_head" }
+          : { ...formData, role: formData.role || "members" },
+      );
       if (!member) {
         setFormData({
           name: "",
@@ -168,61 +187,79 @@ export default function MemberForm({
             />
           </div>
 
-          <div className="form-group">
-            <label htmlFor="domain">
-              Domain <span className="required">*</span>
-            </label>
-            <select
-              id="domain"
-              name="domain"
-              value={formData.domain}
-              onChange={handleSelectChange}
-              required
-            >
-              <option value="">Select a domain</option>
-              {RECRUITMENT_DOMAINS.map((domain) => (
-                <option key={domain} value={domain}>
-                  {domain}
-                </option>
-              ))}
-            </select>
-          </div>
+          {!isClubHead && (
+            <div className="form-group">
+              <label htmlFor="domain">
+                Domain <span className="required">*</span>
+              </label>
+              <select
+                id="domain"
+                name="domain"
+                value={formData.domain}
+                onChange={handleSelectChange}
+                required
+              >
+                <option value="">Select a domain</option>
+                {RECRUITMENT_DOMAINS.map((domain) => (
+                  <option key={domain} value={domain}>
+                    {domain}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
 
-          <div className="form-group">
-            <label htmlFor="role">
-              Role <span className="required">*</span>
-            </label>
-            <select
-              id="role"
-              name="role"
-              value={formData.role}
-              onChange={handleSelectChange}
-              required
-            >
-              <option value="">Select a role</option>
-              <option value="domain_head">Domain Head</option>
-              <option value="members">Members</option>
-            </select>
-          </div>
+          {!isClubHead && (
+            <div className="form-group">
+              <label htmlFor="role">
+                Role{" "}
+                {isPoc ? (
+                  <span className="optional">(defaults to Member)</span>
+                ) : (
+                  <span className="required">*</span>
+                )}
+              </label>
+              <select
+                id="role"
+                name="role"
+                value={formData.role}
+                onChange={handleSelectChange}
+                required={!isPoc}
+              >
+                <option value="">
+                  {isPoc ? "Member (default)" : "Select a role"}
+                </option>
+                <option value="domain_head">Domain Head</option>
+                <option value="members">Members</option>
+              </select>
+            </div>
+          )}
 
           <fieldset className="form-group">
             <legend>Team tags</legend>
             <div className="flex flex-wrap gap-3">
-              {["current", "previous", "founder", "faculty"].map((tag) => (
-                <label key={tag} className="flex items-center gap-2 text-sm">
+              {TEAM_TAGS.map(({ key, label }) => (
+                <label key={key} className="flex items-center gap-2 text-sm">
                   <input
                     type="checkbox"
-                    checked={formData.tags.includes(tag)}
+                    checked={formData.tags.includes(key)}
                     onChange={(event) =>
                       setFormData((prev) => ({
                         ...prev,
                         tags: event.target.checked
-                          ? [...prev.tags, tag]
-                          : prev.tags.filter((item) => item !== tag),
+                          ? [...prev.tags, key]
+                          : prev.tags.filter((item) => item !== key),
+                        // leaving Club Head: drop its placeholder role
+                        role:
+                          key === "club_head" &&
+                          !event.target.checked &&
+                          prev.role === "club_head"
+                            ? ""
+                            : prev.role,
                       }))
                     }
                   />
-                  {tag[0].toUpperCase() + tag.slice(1)}
+                  {label}
                 </label>
               ))}
             </div>

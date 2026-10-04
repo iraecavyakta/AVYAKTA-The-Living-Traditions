@@ -3,6 +3,8 @@ import { getSupabaseAdmin } from "../../../lib/supabase/server";
 import { recruitmentSchema } from "../../../lib/validators/recruitment";
 import { retryWithBackoff } from "../../../lib/api/retry";
 import { getApplicantLinks } from "../../../lib/config/domainLinks";
+import { sendMailAfterResponse } from "../../../lib/mail/send";
+import { applicationReceivedEmail } from "../../../lib/mail/templates";
 import { getClientIp, rateLimit } from "../../../lib/security/rateLimit";
 
 const SUBMIT_LIMIT = 5;
@@ -75,6 +77,15 @@ export async function POST(request: NextRequest) {
         { status: 500 },
       );
     }
+
+    sendMailAfterResponse({
+      to: data.email,
+      ...applicationReceivedEmail({
+        name: data.name,
+        firstDomain: data.first_preference_domain,
+        secondDomain: data.second_domain_preference,
+      }),
+    });
 
     const links = await getApplicantLinks(
       data.first_preference_domain,

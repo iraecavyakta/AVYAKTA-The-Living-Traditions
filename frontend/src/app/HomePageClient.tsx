@@ -30,44 +30,36 @@ type HomePageClientProps = {
 
 const domains = [
   {
+    name: "Design",
+    detail: "Posters, visual identity, and branding",
+  },
+  {
     name: "Event Management",
     detail: "Thematic ideation, structure, and execution",
-    icon: "🎪",
   },
   {
     name: "Finance and Ethics",
     detail: "Budgets, sponsorships, fair practice, and club wellbeing",
-    icon: "💰",
   },
   {
     name: "Logistics",
     detail: "Venues, materials, setup, and event-day coordination",
-    icon: "📦",
-  },
-  {
-    name: "Operations",
-    detail: "Planning, schedules, team flow, and smooth execution",
-    icon: "⚙️",
-  },
-  {
-    name: "Media & Visibility",
-    detail: "Photography, reels, and digital narrative",
-    icon: "📸",
   },
   {
     name: "Marketing",
     detail: "Engagement, promotion, and outreach",
-    icon: "📣",
   },
   {
-    name: "Tech & Systems",
+    name: "Media and Visibility",
+    detail: "Photography, reels, and digital narrative",
+  },
+  {
+    name: "Operations",
+    detail: "Planning, schedules, team flow, and smooth execution",
+  },
+  {
+    name: "Technical",
     detail: "Digital workflows, forms, and archives",
-    icon: "💻",
-  },
-  {
-    name: "Design",
-    detail: "Posters, visual identity, and branding",
-    icon: "🎨",
   },
 ];
 
@@ -200,7 +192,7 @@ function EventStoriesSection({
           <RangoliDivider />
           <div className="mt-5 text-center">
             <p className="text-xs font-bold uppercase tracking-[0.28em] text-[#F4C766]">
-              ✦ Campus celebrations ✦
+              Campus celebrations
             </p>
             <h2 className="mt-3 font-serif text-4xl font-bold md:text-5xl">
               One club. Many ways to celebrate.
@@ -289,8 +281,8 @@ function EventStoriesSection({
               data-event-slide
               className="flex h-[690px] w-[min(78vw,380px)] flex-none snap-center flex-col items-center justify-center rounded-[28px] border border-dashed border-[#F4C766]/60 bg-[#2B1610]/80 px-8 text-center md:h-[470px]"
             >
-              <span className="text-5xl" aria-hidden="true">
-                🪔
+              <span className="text-4xl text-[#F4C766]" aria-hidden="true">
+                ✦
               </span>
               <p className="mt-5 text-xs font-bold uppercase tracking-[0.24em] text-[#F4C766]">
                 The next story is in the making
@@ -345,7 +337,7 @@ function EventStoriesSection({
           <div className="mt-5 flex flex-wrap items-end justify-between gap-4">
             <div>
               <p className="text-xs font-bold uppercase tracking-[0.25em] text-[#1B5E3B]">
-                ✦ The Avyakta album ✦
+                The Avyakta album
               </p>
               <h2 className="mt-3 font-serif text-4xl font-bold text-[#24150E] md:text-5xl">
                 Moments worth keeping.
@@ -395,8 +387,8 @@ function EventStoriesSection({
               </Link>
             ))}
             <div className="flex h-[360px] w-[min(74vw,340px)] flex-none snap-start flex-col items-center justify-center rounded-[28px] border border-dashed border-[#92791B]/60 bg-[#FFF9ED] px-8 text-center">
-              <span className="text-4xl" aria-hidden="true">
-                🌼
+              <span className="text-3xl text-[#92791B]" aria-hidden="true">
+                ✦
               </span>
               <p className="mt-4 text-xs font-bold uppercase tracking-[.22em] text-[#8B1A1A]">
                 More memories soon
@@ -639,7 +631,7 @@ export default function HomePageClient({
           ))}
 
           <p className="mb-4 text-xs uppercase tracking-[0.4em] text-[#C9A84C]">
-            ✦ The Living Traditions ✦
+            The Living Traditions
           </p>
           <h1 className="font-serif text-5xl leading-none text-[#C9A84C] md:text-8xl drop-shadow-[0_0_30px_rgba(201,168,76,0.5)]">
             Avyakta
@@ -681,7 +673,7 @@ export default function HomePageClient({
         >
           {Array.from({ length: 6 }).map((_, i) => (
             <div key={i} className="flex items-center gap-10">
-              <span className="text-[#C9A84C]">🪔</span>
+              <span className="text-[#C9A84C]">◈</span>
               <span>Tradition</span>
               <span className="text-[#C9A84C]">◈</span>
               <span>Performance</span>
@@ -691,7 +683,7 @@ export default function HomePageClient({
               <span>Craft</span>
               <span className="text-[#C9A84C]">✦</span>
               <span>Expression</span>
-              <span className="text-[#C9A84C]">🎭</span>
+              <span className="text-[#C9A84C]">◈</span>
             </div>
           ))}
         </motion.div>
@@ -705,7 +697,7 @@ export default function HomePageClient({
           className="fixed bottom-4 right-4 z-50 w-[92%] rounded-2xl border-2 border-[#C9A84C]/60 bg-[#1B5E3B] p-4 text-white shadow-2xl sm:w-[380px]"
         >
           <p className="text-xs uppercase tracking-[0.18em] text-[#C9A84C]">
-            🪔 Announcement
+            Announcement
           </p>
           <h3 className="mt-1 text-lg font-semibold">Recruitments Open</h3>
           <p className="mt-1 text-sm text-white/85">
@@ -749,9 +741,6 @@ export default function HomePageClient({
           <div className="pointer-events-none absolute -left-2 -top-2 h-12 w-12 rounded-tl-[2rem] border-l-4 border-t-4 border-[#C9A84C]/60" />
           <div className="pointer-events-none absolute -right-2 -top-2 h-12 w-12 rounded-tr-[2rem] border-r-4 border-t-4 border-[#C9A84C]/60" />
 
-          <p className="text-xs uppercase tracking-[0.28em] text-[#737955]">
-            ✦ About Section ✦
-          </p>
           <h2 className="mb-4 mt-3 font-serif text-3xl text-[#92791B] md:text-4xl">
             About Avyakta
           </h2>
@@ -770,17 +759,17 @@ export default function HomePageClient({
           >
             {[
               {
-                title: "🎭 Perform",
+                title: "Perform",
                 body: "Dance, music, theatre, and stage expression across classical and folk traditions.",
                 color: "#8B1A1A",
               },
               {
-                title: "🎨 Create",
+                title: "Create",
                 body: "Design, visuals, and storytelling inspired by India's visual heritage.",
                 color: "#1B5E3B",
               },
               {
-                title: "⚡ Lead",
+                title: "Lead",
                 body: "Plan, manage, and deliver cultural experiences that leave a mark.",
                 color: "#92791B",
               },
@@ -825,14 +814,11 @@ export default function HomePageClient({
           transition={sectionTransition}
           className="mx-auto mt-8 max-w-6xl"
         >
-          <p className="text-xs uppercase tracking-[0.28em] text-[#C9A84C]/70">
-            ✦ Domains Section ✦
-          </p>
           <h2 className="mb-10 mt-3 font-serif text-3xl text-[#F5F0E8] md:text-4xl">
             Explore Our Domains
           </h2>
           <motion.div
-            className="grid grid-cols-2 gap-4 md:grid-cols-4"
+            className="flex flex-wrap justify-center gap-4"
             variants={staggerContainer}
             initial="hidden"
             whileInView="show"
@@ -843,6 +829,7 @@ export default function HomePageClient({
                 key={domain.name}
                 variants={revealItem}
                 whileHover={{ y: -8, scale: 1.03 }}
+                className="w-[calc(50%-0.5rem)] md:w-[calc(25%-0.75rem)]"
               >
                 <Link
                   href={recruitmentHref}
@@ -852,7 +839,7 @@ export default function HomePageClient({
                       "linear-gradient(135deg, rgba(40,28,12,0.9) 0%, rgba(28,28,28,0.95) 100%)",
                   }}
                 >
-                  <div className="mb-2 text-2xl">{domain.icon}</div>
+                  <div className="mx-auto mb-3 h-px w-8 bg-[#C9A84C]/60" />
                   <h3 className="text-sm font-semibold text-[#F5F0E8]">
                     {domain.name}
                   </h3>
@@ -911,9 +898,6 @@ export default function HomePageClient({
           </div>
           <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-[#8B1A1A] via-[#C9A84C] to-[#1B5E3B]" />
 
-          <p className="relative text-xs uppercase tracking-[0.28em] text-[#737955]">
-            🪔 Recruitment Section 🪔
-          </p>
           <h2 className="relative mb-4 mt-3 font-serif text-3xl text-[#92791B] md:text-4xl">
             Become a Part of Avyakta
           </h2>
@@ -926,7 +910,7 @@ export default function HomePageClient({
             href={recruitmentHref}
             className="relative mt-8 inline-block rounded-full bg-gradient-to-r from-[#8B1A1A] to-[#92791B] px-8 py-3 font-semibold text-white shadow-[0_8px_24px_rgba(139,26,26,0.3)] transition hover:shadow-[0_12px_32px_rgba(201,168,76,0.4)] hover:scale-[1.03]"
           >
-            {isRecruitmentOpen ? "🪔 Join Now" : "Recruitment Closed"}
+            {isRecruitmentOpen ? "Join Now" : "Recruitment Closed"}
           </Link>
         </motion.div>
       </section>

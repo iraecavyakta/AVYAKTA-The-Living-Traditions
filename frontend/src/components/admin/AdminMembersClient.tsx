@@ -5,7 +5,6 @@ import MemberForm from "./MemberForm";
 import MembersTable from "./MembersTable";
 import DashboardPageBackground from "../layout/DashboardPageBackground";
 import membersBackground from "../../../Admin_Dash_Img/1.png";
-import { canonicalDomainName } from "../../lib/utils/domains";
 
 interface Member {
   id: string;
@@ -154,7 +153,7 @@ export default function AdminMembersClient() {
 
   // Handle edit member
   const handleEditMember = (member: Member) => {
-    setEditingMember({ ...member, domain: canonicalDomainName(member.domain) });
+    setEditingMember({ ...member });
     setActiveTab("add");
   };
 
@@ -164,18 +163,26 @@ export default function AdminMembersClient() {
     setError("");
   };
 
+  // The club head belongs to the club, not a domain, so they are listed
+  // separately from the per-domain groups.
+  const isClubHeadMember = (m: Member) =>
+    m.role === "club_head" || Boolean(m.tags?.includes("club_head"));
+  const allClubHeads = members.filter(isClubHeadMember);
+
   // Group members by domain
-  const membersByDomain = members.reduce(
-    (acc, member) => {
-      const domain = canonicalDomainName(member.domain);
-      if (!acc[domain]) {
-        acc[domain] = [];
-      }
-      acc[domain].push({ ...member, domain });
-      return acc;
-    },
-    {} as Record<string, Member[]>,
-  );
+  const membersByDomain = members
+    .filter((m) => !isClubHeadMember(m))
+    .reduce(
+      (acc, member) => {
+        const domain = member.domain;
+        if (!acc[domain]) {
+          acc[domain] = [];
+        }
+        acc[domain].push({ ...member, domain });
+        return acc;
+      },
+      {} as Record<string, Member[]>,
+    );
 
   // Get sorted domains
   const sortedDomains = Object.keys(membersByDomain).sort();
@@ -195,6 +202,15 @@ export default function AdminMembersClient() {
       memberCount,
     };
   });
+
+  // Club-level roles, kept in members.tags. A member whose only team is
+  // "previous" is an alumnus, so they are left off the current cards.
+  const isCurrent = (m: Member) =>
+    !(m.tags?.includes("previous") && !m.tags?.includes("current"));
+  const clubHeads = members.filter(
+    (m) => m.tags?.includes("club_head") && isCurrent(m),
+  );
+  const pocs = members.filter((m) => m.tags?.includes("poc") && isCurrent(m));
 
   useEffect(() => {
     fetchMembers();
@@ -265,6 +281,53 @@ export default function AdminMembersClient() {
               <div className="section view-section">
                 {/* Domain Statistics Cards */}
                 <div className="domain-stats-container">
+                  <article className="domain-card">
+                    <div className="card-header">
+                      <h3>Club Head</h3>
+                    </div>
+                    <div className="card-stats">
+                      <div className="heads-section">
+                        <span className="section-label">
+                          {clubHeads.length > 1 ? "Heads" : "Head"}
+                        </span>
+                        <div className="heads-list">
+                          {clubHeads.length > 0 ? (
+                            clubHeads.map((m) => (
+                              <div key={m.id} className="head-name">
+                                {m.name}
+                              </div>
+                            ))
+                          ) : (
+                            <div className="head-name empty">Not assigned</div>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  </article>
+
+                  <article className="domain-card">
+                    <div className="card-header">
+                      <h3>Points of Contact</h3>
+                    </div>
+                    <div className="card-stats">
+                      <div className="heads-section">
+                        <span className="section-label">POCs</span>
+                        <div className="heads-list">
+                          {pocs.length > 0 ? (
+                            pocs.map((m) => (
+                              <div key={m.id} className="head-name">
+                                {m.name}
+                                <span className="head-domain">{m.domain}</span>
+                              </div>
+                            ))
+                          ) : (
+                            <div className="head-name empty">Not assigned</div>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  </article>
+
                   {domainStats.map((stat) => (
                     <article key={stat.domain} className="domain-card">
                       <div className="card-header">
@@ -300,6 +363,22 @@ export default function AdminMembersClient() {
 
                 {/* Members Display by Domain */}
                 <div className="members-by-category">
+                  {allClubHeads.length > 0 && (
+                    <section className="category-section">
+                      <h3 className="category-title">
+                        Club Head
+                        <span className="category-count">
+                          {allClubHeads.length}
+                        </span>
+                      </h3>
+                      <MembersTable
+                        members={allClubHeads}
+                        onEdit={handleEditMember}
+                        onDelete={handleDeleteMember}
+                        isDeleting={isDeletingId}
+                      />
+                    </section>
+                  )}
                   {sortedDomains.map((domain) => (
                     <section key={domain} className="category-section">
                       <h3 className="category-title">
@@ -616,6 +695,15 @@ export default function AdminMembersClient() {
           font-weight: 500;
           color: var(--av-charcoal);
           word-break: break-word;
+        }
+
+        .head-domain {
+          display: block;
+          margin-top: 2px;
+          font-size: 11px;
+          letter-spacing: 1px;
+          text-transform: uppercase;
+          color: var(--av-olive);
         }
 
         .head-name.empty {

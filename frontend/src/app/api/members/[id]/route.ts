@@ -1,6 +1,7 @@
 import { createClient } from "@supabase/supabase-js";
 import { revalidatePath } from "next/cache";
 import { NextRequest, NextResponse } from "next/server";
+import { resolvePlacement } from "@/lib/utils/memberPlacement";
 import { verifyAdminAuth } from "../../../../lib/auth/session";
 
 const supabase = createClient(
@@ -60,9 +61,10 @@ export async function PUT(
 
     const { id } = await params;
     const body = await request.json();
-    const { name, domain, role, photo_url, tags, year } = body;
+    const { name, photo_url, tags, year } = body;
+    const { domain, role } = resolvePlacement(body);
 
-    if (!name || !domain || !role) {
+    if (!name || (role !== "club_head" && (!domain || !role))) {
       return NextResponse.json(
         { success: false, error: "Missing required fields" },
         { status: 400 },

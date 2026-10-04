@@ -83,3 +83,13 @@ export async function verifyAdminAuth(): Promise<boolean> {
     return false;
   }
 }
+
+/** The current request's verified session (admin or domain head), or null. */
+export async function getSession(): Promise<SessionPayload | null> {
+  try {
+    const token = (await cookies()).get(getSessionCookieName())?.value;
+    return token ? await verifySessionId(token) : null;
+  } catch {
+    return null;
+  }
+}
