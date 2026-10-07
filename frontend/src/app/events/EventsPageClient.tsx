@@ -111,23 +111,64 @@ const PERSPECTIVE = 1000;
 const EXIT_Z = 600;
 const TRAVEL = 3400;
 
-function stableEventOrder(events: EventItem[]) {
-  const hash = (value: string) => {
-    let result = 2166136261;
-    for (let index = 0; index < value.length; index += 1) {
-      result = Math.imul(result ^ value.charCodeAt(index), 16777619);
+function shuffle<T>(items: T[], random: () => number): T[] {
+  for (let index = items.length - 1; index > 0; index -= 1) {
+    const swapIndex = Math.floor(random() * (index + 1));
+    [items[index], items[swapIndex]] = [items[swapIndex], items[index]];
+  }
+  return items;
+}
+
+type ImagePick = { url: string; event: EventItem };
+
+// A random picture for every floating slot, drawn from every image of every
+// event (posters, detail photos, cover). Each pass visits the events in a
+// fresh random order and takes one not-yet-shown image from each, so a
+// single image-heavy event can't take over the scene. Nothing is tied to a
+// slot: a different seed gives a different scene.
+function pickRandomImages(
+  events: EventItem[],
+  count: number,
+  random: () => number,
+): ImagePick[] {
+  const sources = events
+    .map((event) => ({
+      event,
+      urls: Array.from(
+        new Set([event.posterUrl, ...event.images].filter(Boolean) as string[]),
+      ),
+    }))
+    .filter((source) => source.urls.length > 0);
+  if (sources.length === 0) return [];
+
+  const queues: string[][] = sources.map(() => []);
+  const picks: ImagePick[] = [];
+  while (picks.length < count) {
+    for (const index of shuffle(
+      sources.map((_, i) => i),
+      random,
+    )) {
+      if (picks.length >= count) break;
+      if (queues[index].length === 0) {
+        queues[index] = shuffle([...sources[index].urls], random);
+      }
+      picks.push({
+        url: queues[index].pop() as string,
+        event: sources[index].event,
+      });
     }
-    return result >>> 0;
-  };
-  return [...events].sort((a, b) => hash(a.id) - hash(b.id));
+  }
+  return picks;
 }
 
 function FloatingEventCard({
   event,
+  imageUrl,
   slot,
   progress,
 }: {
   event: EventItem;
+  imageUrl: string;
   slot: (typeof FLOAT_SLOTS)[number];
   progress: MotionValue<number>;
 }) {
@@ -162,15 +203,11 @@ function FloatingEventCard({
       >
         <div
           className="absolute inset-0"
-          style={
-            event.posterUrl
-              ? {
-                  backgroundImage: `url(${event.posterUrl})`,
-                  backgroundSize: "cover",
-                  backgroundPosition: "center",
-                }
-              : { background: event.posterFallback }
-          }
+          style={{
+            backgroundImage: `url(${imageUrl})`,
+            backgroundSize: "cover",
+            backgroundPosition: "center",
+          }}
         />
         <div className="absolute inset-0 bg-gradient-to-t from-[#12100E] via-[#12100E]/25 to-transparent" />
         <div className="absolute inset-x-0 bottom-0 flex flex-col gap-1 p-4 text-left text-[#F5F0E8]">
@@ -182,6 +219,51 @@ function FloatingEventCard({
           <h3 className="font-serif text-lg leading-tight">{event.title}</h3>
         </div>
       </Link>
+    </motion.div>
+  );
+}
+
+function FloatingImageCard({
+  url,
+  slot,
+  progress,
+}: {
+  url: string;
+  slot: (typeof FLOAT_SLOTS)[number];
+  progress: MotionValue<number>;
+}) {
+  const z = useTransform(progress, [0, 1], [slot.z, slot.z + TRAVEL]);
+  const exitAt = (EXIT_Z - slot.z) / TRAVEL;
+  const opacity = useTransform(
+    progress,
+    [0, Math.max(0.02, exitAt - 0.12), exitAt],
+    [1, 1, 0],
+  );
+
+  return (
+    <motion.div
+      className="absolute"
+      style={{
+        left: `${slot.x}%`,
+        top: `${slot.y}%`,
+        width: slot.w,
+        x: "-50%",
+        y: "-50%",
+        z,
+        opacity,
+        willChange: "transform, opacity",
+      }}
+    >
+      <div
+        className="relative aspect-[4/5] overflow-hidden rounded-2xl border border-white/20 shadow-[0_18px_50px_rgba(0,0,0,0.4)]"
+        style={{
+          backgroundImage: `url(${url})`,
+          backgroundSize: "cover",
+          backgroundPosition: "center",
+        }}
+      >
+        <div className="absolute inset-0 bg-gradient-to-t from-[#12100E]/45 via-transparent to-transparent" />
+      </div>
     </motion.div>
   );
 }
@@ -330,21 +412,18 @@ export default function EventsPageClient({
   // Whole-page progress, for the top progress bar.
   const { scrollYProgress: pageScrollProgress } = useScroll();
 
-  // Repeat published events through the fly-through for eighteen event
-  // cards, balanced with eighteen text-free decorative fillers.
-  const orderedEvents = useMemo(
-    () => stableEventOrder(initialEvents),
-    [initialEvents],
-  );
-  const floatingEvents = useMemo(
+  // A new random scene on every visit. The seed is only ever used inside the
+  // immersive branch, which renders on the client only, so it can't cause a
+  // server/client mismatch.
+  const [seed] = useState(() => Math.floor(Math.random() * 0xffffffff));
+  const slotPicks = useMemo(
     () =>
-      orderedEvents.length
-        ? Array.from(
-            { length: Math.ceil(FLOAT_SLOTS.length / 2) },
-            (_, index) => orderedEvents[index % orderedEvents.length],
-          )
-        : [],
-    [orderedEvents],
+      pickRandomImages(
+        initialEvents,
+        FLOAT_SLOTS.length,
+        createSeededRandom(seed),
+      ),
+    [initialEvents, seed],
   );
 
   const [immersive, setImmersive] = useState(false);
@@ -380,7 +459,7 @@ export default function EventsPageClient({
     measure();
     window.addEventListener("resize", measure);
     return () => window.removeEventListener("resize", measure);
-  }, [immersive, floatingEvents.length]);
+  }, [immersive, slotPicks.length]);
 
   const flyProgress = useTransform(
     scrollY,
@@ -454,24 +533,32 @@ export default function EventsPageClient({
               style={{ perspective: `${PERSPECTIVE}px` }}
             >
               {FLOAT_SLOTS.map((slot, index) => {
-                const hasEvent =
-                  floatingEvents.length > 0 && EVENT_SLOT_INDICES.has(index);
-                const event = hasEvent
-                  ? floatingEvents[EVENT_SLOT_ORDER.indexOf(index)]
-                  : null;
-                return event ? (
+                const pick = slotPicks[index];
+                if (!pick) {
+                  // No event has an image yet: keep the decorative frames.
+                  return (
+                    <FloatingFestivalCard
+                      key={`festival-${index}`}
+                      slot={slot}
+                      progress={flyProgress}
+                      index={index}
+                    />
+                  );
+                }
+                return EVENT_SLOT_INDICES.has(index) ? (
                   <FloatingEventCard
-                    key={`event-${event.id}-${index}`}
-                    event={event}
+                    key={`event-${index}`}
+                    event={pick.event}
+                    imageUrl={pick.url}
                     slot={slot}
                     progress={flyProgress}
                   />
                 ) : (
-                  <FloatingFestivalCard
-                    key={`festival-${index}`}
+                  <FloatingImageCard
+                    key={`image-${index}`}
+                    url={pick.url}
                     slot={slot}
                     progress={flyProgress}
-                    index={index}
                   />
                 );
               })}

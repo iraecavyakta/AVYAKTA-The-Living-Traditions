@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { compressImage, validateImage } from "../../lib/utils/imageOptimizer";
 
 interface Event {
@@ -28,7 +28,7 @@ interface Event {
 
 interface EventFormProps {
   event?: Event;
-  onSubmit: (formData: EventFormData) => Promise<void>;
+  onSubmit: (formData: EventFormData) => Promise<boolean | void>;
   onCancel: () => void;
   isLoading: boolean;
 }
@@ -47,6 +47,51 @@ export interface EventFormData {
   more_description?: string;
   slug_image_url?: string;
   poster_image_urls?: string; // pipe-separated for multiple
+}
+
+type ImageKind = "cover" | "detail" | "poster";
+
+// Photos are compressed in the browser, then stored in Supabase Storage; the
+// event only keeps each photo's short URL. (They used to travel inside the
+// save request as giant base64 strings, which failed silently for big batches.)
+async function uploadImage(kind: ImageKind, dataUrl: string): Promise<string> {
+  const blob = await (await fetch(dataUrl)).blob();
+  const body = new FormData();
+  body.append("file", new File([blob], "image.jpg", { type: blob.type }));
+  body.append("kind", kind);
+
+  const res = await fetch("/api/events/upload", { method: "POST", body });
+  const json = await res.json().catch(() => ({}));
+  if (!res.ok || !json.url) throw new Error(json.error || "Upload failed");
+  return json.url as string;
+}
+
+const COMPRESSION = {
+  maxWidth: 1920,
+  maxHeight: 1920,
+  quality: 0.7,
+  maxSizeKB: 300,
+};
+
+/** One bad file never blocks the rest: returns what uploaded and what didn't. */
+async function processImages(kind: ImageKind, files: File[]) {
+  const urls: string[] = [];
+  const failed: string[] = [];
+  for (const file of files) {
+    try {
+      const validation = validateImage(file, 25);
+      if (!validation.valid)
+        throw new Error(validation.error || "Invalid image");
+      urls.push(
+        await uploadImage(kind, await compressImage(file, COMPRESSION)),
+      );
+    } catch (error) {
+      failed.push(
+        `${file.name}: ${error instanceof Error ? error.message : "failed"}`,
+      );
+    }
+  }
+  return { urls, failed };
 }
 
 export default function EventForm({
@@ -83,39 +128,9 @@ export default function EventForm({
     event?.posters?.map((p) => p.poster_image_url) || [],
   );
   const [imageError, setImageError] = useState<string>("");
+  const [slugError, setSlugError] = useState<string>("");
+  const [posterError, setPosterError] = useState<string>("");
   const [isCompressing, setIsCompressing] = useState(false);
-
-  // Update form data when event prop changes (for editing)
-  useEffect(() => {
-    if (event) {
-      const eventSlug = event?.event_slug?.[0];
-      setFormData({
-        title: event?.title || "",
-        description: event?.description || "",
-        highlights: event?.highlights || "",
-        image_url: event?.image_url || "",
-        date: event?.date || "",
-        venue: event?.venue || "",
-        registration_enabled: event?.registration_enabled ?? true,
-        registration_status: event?.registration_status ?? true,
-        registration_deadline: event?.registration_deadline || "",
-        payment_image_required: event?.payment_image_required ?? false,
-        more_description: eventSlug?.more_description || "",
-        slug_image_url: eventSlug?.image_url || "",
-        poster_image_urls:
-          event?.posters?.map((p) => p.poster_image_url).join("|") || "",
-      });
-      setImagePreview(event?.image_url || "");
-      setSlugImagePreviews(
-        eventSlug?.image_url
-          ? eventSlug.image_url.split("|").filter(Boolean)
-          : [],
-      );
-      setPosterImagePreviews(
-        event?.posters?.map((p) => p.poster_image_url) || [],
-      );
-    }
-  }, [event]);
 
   const handleInputChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
@@ -128,83 +143,45 @@ export default function EventForm({
   };
 
   const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      setImageError("");
-      setIsCompressing(true);
+    const input = e.target;
+    const file = input.files?.[0];
+    if (!file) return;
 
-      try {
-        const validation = validateImage(file, 10);
-        if (!validation.valid) {
-          setImageError(validation.error || "Invalid image");
-          setIsCompressing(false);
-          return;
-        }
-
-        const compressed = await compressImage(file, {
-          maxWidth: 1920,
-          maxHeight: 1920,
-          quality: 0.7,
-          maxSizeKB: 300,
-        });
-
-        setImagePreview(compressed);
-        setFormData((prev) => ({
-          ...prev,
-          image_url: compressed,
-        }));
-      } catch (error) {
-        setImageError(
-          error instanceof Error ? error.message : "Failed to process image",
-        );
-      } finally {
-        setIsCompressing(false);
-      }
+    setImageError("");
+    setIsCompressing(true);
+    const { urls, failed } = await processImages("cover", [file]);
+    if (urls[0]) {
+      setImagePreview(urls[0]);
+      setFormData((prev) => ({ ...prev, image_url: urls[0] }));
     }
+    setImageError(failed.join(" | "));
+    setIsCompressing(false);
+    input.value = ""; // lets the same file be chosen again
   };
 
   const handleSlugImageChange = async (
     e: React.ChangeEvent<HTMLInputElement>,
   ) => {
-    const files = e.target.files ? Array.from(e.target.files) : [];
+    const input = e.target;
+    const files = input.files ? Array.from(input.files) : [];
     if (files.length === 0) return;
 
-    setImageError("");
+    setSlugError("");
     setIsCompressing(true);
-
-    try {
-      const compressedImages: string[] = [];
-
-      for (const file of files) {
-        const validation = validateImage(file, 10);
-        if (!validation.valid) {
-          throw new Error(validation.error || "Invalid image");
-        }
-
-        const compressed = await compressImage(file, {
-          maxWidth: 1920,
-          maxHeight: 1920,
-          quality: 0.7,
-          maxSizeKB: 300,
-        });
-        compressedImages.push(compressed);
-      }
-
-      setSlugImagePreviews((prev) => [...prev, ...compressedImages]);
+    const { urls, failed } = await processImages("detail", files);
+    if (urls.length > 0) {
+      setSlugImagePreviews((prev) => [...prev, ...urls]);
       setFormData((prev) => ({
         ...prev,
         slug_image_url: [
           ...(prev.slug_image_url?.split("|").filter(Boolean) || []),
-          ...compressedImages,
+          ...urls,
         ].join("|"),
       }));
-    } catch (error) {
-      setImageError(
-        error instanceof Error ? error.message : "Failed to process image",
-      );
-    } finally {
-      setIsCompressing(false);
     }
+    setSlugError(failed.join(" | "));
+    setIsCompressing(false);
+    input.value = "";
   };
 
   const removeSlugImage = (index: number) => {
@@ -220,45 +197,26 @@ export default function EventForm({
   const handlePosterImageChange = async (
     e: React.ChangeEvent<HTMLInputElement>,
   ) => {
-    const files = e.target.files ? Array.from(e.target.files) : [];
+    const input = e.target;
+    const files = input.files ? Array.from(input.files) : [];
     if (files.length === 0) return;
 
-    setImageError("");
+    setPosterError("");
     setIsCompressing(true);
-
-    try {
-      const compressedImages: string[] = [];
-
-      for (const file of files) {
-        const validation = validateImage(file, 10);
-        if (!validation.valid) {
-          throw new Error(validation.error || "Invalid image");
-        }
-
-        const compressed = await compressImage(file, {
-          maxWidth: 1920,
-          maxHeight: 1920,
-          quality: 0.7,
-          maxSizeKB: 300,
-        });
-        compressedImages.push(compressed);
-      }
-
-      setPosterImagePreviews((prev) => [...prev, ...compressedImages]);
+    const { urls, failed } = await processImages("poster", files);
+    if (urls.length > 0) {
+      setPosterImagePreviews((prev) => [...prev, ...urls]);
       setFormData((prev) => ({
         ...prev,
         poster_image_urls: [
           ...(prev.poster_image_urls?.split("|").filter(Boolean) || []),
-          ...compressedImages,
+          ...urls,
         ].join("|"),
       }));
-    } catch (error) {
-      setImageError(
-        error instanceof Error ? error.message : "Failed to process image",
-      );
-    } finally {
-      setIsCompressing(false);
     }
+    setPosterError(failed.join(" | "));
+    setIsCompressing(false);
+    input.value = "";
   };
 
   const removePosterImage = (index: number) => {
@@ -273,8 +231,10 @@ export default function EventForm({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    await onSubmit(formData);
-    if (!event) {
+    // Only clear the form after a successful create - a failed save must not
+    // throw away what was typed or uploaded.
+    const saved = await onSubmit(formData);
+    if (!event && saved !== false) {
       setFormData({
         title: "",
         description: "",
@@ -428,8 +388,11 @@ export default function EventForm({
               className="file-input"
             />
             <p className="help-text">
-              Upload multiple images for event details
+              {isCompressing
+                ? "Uploading images..."
+                : "Upload multiple images for event details"}
             </p>
+            {slugError && <p className="help-text error">{slugError}</p>}
 
             {slugImagePreviews.length > 0 && (
               <div className="slug-images-grid">
@@ -542,8 +505,11 @@ export default function EventForm({
               className="file-input"
             />
             <p className="help-text">
-              Upload promotional posters for this event
+              {isCompressing
+                ? "Uploading images..."
+                : "Upload promotional posters for this event"}
             </p>
+            {posterError && <p className="help-text error">{posterError}</p>}
 
             {posterImagePreviews.length > 0 && (
               <div className="poster-images-grid">

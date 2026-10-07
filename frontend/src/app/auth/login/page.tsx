@@ -4,6 +4,7 @@ import { useRef, ViewTransition, type MouseEvent } from "react";
 import Image from "next/image";
 import { motion, useMotionValue, useSpring, useTransform } from "framer-motion";
 import LoginForm from "../../../components/forms/LoginForm";
+import BackToHomeButton from "../../../components/layout/BackToHomeButton";
 
 const diyaPositions = [
   { top: "12%", left: "8%", size: 10, delay: 0 },
@@ -184,6 +185,8 @@ export default function LoginPage() {
         {/* Top/bottom gold accent lines */}
         <div className="pointer-events-none absolute left-0 right-0 top-0 h-8 border-b border-[#C9A84C]/40 bg-[linear-gradient(90deg,rgba(201,168,76,0.12)_0,rgba(28,28,28,0)_50%,rgba(201,168,76,0.12)_100%)]" />
         <div className="pointer-events-none absolute bottom-0 left-0 right-0 h-8 border-t border-[#C9A84C]/40 bg-[linear-gradient(90deg,rgba(201,168,76,0.12)_0,rgba(28,28,28,0)_50%,rgba(201,168,76,0.12)_100%)]" />
+
+        <BackToHomeButton className="fixed left-6 top-6 z-20" />
 
         {/* 3D interactive login window */}
         <div

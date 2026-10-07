@@ -23,6 +23,12 @@ type EventWritePayload = {
   payment_image_required?: boolean;
 };
 
+// A half-saved new event (row created, images not) would be duplicated when
+// the admin retries, so remove it before reporting the failure.
+async function rollbackEvent(eventId: string) {
+  await supabase.from("events").delete().eq("id", eventId);
+}
+
 // GET - Fetch all events with related data
 export async function GET() {
   try {
@@ -96,9 +102,17 @@ export async function POST(request: NextRequest) {
       poster_image_urls,
     } = validation.data;
 
+    // events.date is NOT NULL in the database; say so instead of failing deep in SQL.
+    if (!date) {
+      return NextResponse.json(
+        { success: false, error: "Please choose the event date." },
+        { status: 400 },
+      );
+    }
+
     const insertPayload: EventWritePayload = {
       title: title.trim(),
-      description: description?.trim() || null,
+      description: description?.trim() || "", // NOT NULL in the database
       image_url: image_url || null,
       date: date || null,
     };
@@ -147,7 +161,7 @@ export async function POST(request: NextRequest) {
     ) {
       const fallbackPayload = {
         title: title.trim(),
-        description: description?.trim() || null,
+        description: description?.trim() || "", // NOT NULL in the database
         image_url: image_url || null,
         date: date || null,
       };
@@ -174,13 +188,13 @@ export async function POST(request: NextRequest) {
     // Create slug if provided
     if (data && data.length > 0 && (more_description || slug_image_url)) {
       const eventId = data[0].id;
+      // more_description is NOT NULL in the database, so it can't be left out
+      // when only images are being added.
       const slugPayload: Record<string, unknown> = {
         event_id: eventId,
+        more_description: more_description || "",
       };
 
-      if (more_description) {
-        slugPayload.more_description = more_description;
-      }
       if (slug_image_url) {
         slugPayload.image_url = slug_image_url;
       }
@@ -190,8 +204,10 @@ export async function POST(request: NextRequest) {
       );
 
       if (slugResult.error) {
-        console.warn("Warning: Failed to create event slug:", slugResult.error);
-        // Don't throw, just warn - event was created successfully
+        await rollbackEvent(eventId);
+        throw new Error(
+          `Couldn't save the detail images/description: ${slugResult.error.message}`,
+        );
       }
     }
 
@@ -213,11 +229,10 @@ export async function POST(request: NextRequest) {
         );
 
         if (posterResult.error) {
-          console.warn(
-            "Warning: Failed to create event posters:",
-            posterResult.error,
+          await rollbackEvent(eventId);
+          throw new Error(
+            `Couldn't save the posters: ${posterResult.error.message}`,
           );
-          // Don't throw, just warn - event was created successfully
         }
       }
     }
@@ -256,7 +271,11 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     console.error("Error creating event:", error);
     return NextResponse.json(
-      { success: false, error: "Failed to create event" },
+      {
+        success: false,
+        error:
+          error instanceof Error ? error.message : "Failed to create event",
+      },
       { status: 500 },
     );
   }

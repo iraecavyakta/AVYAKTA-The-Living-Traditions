@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import BackToHomeButton from "../layout/BackToHomeButton";
 
 type DomainTopBarProps = {
   /** Display name of the domain, e.g. "Event Management". */
@@ -46,9 +47,12 @@ export default function DomainTopBar({
           )}
         </div>
 
-        <button type="button" onClick={handleLogout} className="btn-logout">
-          Sign Out
-        </button>
+        <div className="topbar-actions">
+          <BackToHomeButton />
+          <button type="button" onClick={handleLogout} className="btn-logout">
+            Sign Out
+          </button>
+        </div>
       </div>
 
       <div className="topbar-rule" aria-hidden />
@@ -137,6 +141,12 @@ export default function DomainTopBar({
           color: var(--av-charcoal);
         }
 
+        .topbar-actions {
+          display: flex;
+          align-items: center;
+          gap: 12px;
+        }
+
         .btn-logout {
           padding: 9px 20px;
           border-radius: 999px;
@@ -186,6 +196,11 @@ export default function DomainTopBar({
 
           .brand-divider {
             display: none;
+          }
+
+          .topbar-actions {
+            flex-direction: column;
+            align-items: stretch;
           }
 
           .btn-logout {
