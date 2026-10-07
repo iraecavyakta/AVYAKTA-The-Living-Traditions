@@ -168,22 +168,32 @@ export default function ContactPageClient() {
 
             <div className="space-y-3">
               {[
-                { role: "Club Head", label: "Club Head" },
-                { role: "Head of Ops", label: "Head of Ops" },
-                { role: "Head of Tech", label: "Head of Tech" },
-              ].map(({ role, label }) => (
+                {
+                  role: "Club Head",
+                  label: "Club Head",
+                  email: "nslc15112005@gmail.com",
+                },
+                {
+                  role: "Head of Ops",
+                  label: "Head of Ops",
+                  email: "nandanamathew@gmail.com",
+                },
+                {
+                  role: "Head of Tech",
+                  label: "Head of Tech",
+                  email: "gpraneeth555@gmail.com",
+                },
+              ].map(({ role, label, email }) => (
                 <div
                   key={role}
                   className="flex justify-between items-center bg-black/30 p-3 rounded-xl border border-white/5"
                 >
                   <div>
                     <p className="text-[#F5F0E8] font-medium">{label}</p>
-                    <p className="text-xs text-[#C9A84C]/60 italic">
-                      Contact via email
-                    </p>
+                    <p className="text-xs text-[#C9A84C]/60 italic">{email}</p>
                   </div>
                   <a
-                    href="mailto:iraec.avyakta@pes.edu"
+                    href={`mailto:${email}`}
                     className="w-8 h-8 rounded-full bg-[#C9A84C]/20 flex items-center justify-center text-[#C9A84C] hover:bg-[#C9A84C] hover:text-[#1C1C1C] transition-colors"
                     aria-label={`Email ${label}`}
                   >

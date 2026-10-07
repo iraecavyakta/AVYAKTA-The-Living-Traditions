@@ -8,6 +8,15 @@ export type MemberCard = {
   role: string;
   section: MemberSectionKey;
   photoUrl: string;
+  /** False when photoUrl is the generated initials avatar, not a real photo. */
+  hasPhoto: boolean;
+  /**
+   * A background-removed PNG of the person, when one has been uploaded. The
+   * card stands them on its panel and lets them break past its top edge.
+   * Without one it falls back to photoUrl framed inside the panel, because a
+   * rectangular photo pushed past the edge just shows its own corners.
+   */
+  cutoutUrl: string | null;
   bio: string;
   tags: string[];
   year: number | null;

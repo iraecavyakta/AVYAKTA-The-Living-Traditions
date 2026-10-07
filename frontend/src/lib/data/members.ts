@@ -8,6 +8,23 @@ function avatarFromName(name: string) {
   return `https://ui-avatars.com/api/?name=${safe}&background=1C1C1C&color=C9A84C&size=400&bold=true`;
 }
 
+/** "tech" or "tech_team" becomes "Tech Head"; "Design Head" stays as it is. */
+function domainHeadTitle(domain: string) {
+  const minor = new Set(["and", "of", "the", "for", "in"]);
+  const words = domain
+    .split(/[\s_-]+/)
+    .filter(Boolean)
+    .map((word, index) => {
+      // Already an acronym such as PR or IT: leave it alone.
+      if (word.length <= 3 && word === word.toUpperCase()) return word;
+      const lower = word.toLowerCase();
+      if (index > 0 && minor.has(lower)) return lower;
+      return lower[0].toUpperCase() + lower.slice(1);
+    })
+    .join(" ");
+  return /head$/i.test(words) ? words : `${words} Head`;
+}
+
 function tagsFromRow(raw: Record<string, unknown>, role: string): string[] {
   const explicit = Array.isArray(raw.tags)
     ? raw.tags.map((tag) => String(tag).trim().toLowerCase()).filter(Boolean)
@@ -90,15 +107,25 @@ export async function getMembersFromDb(): Promise<MemberCard[]> {
         }
 
         const role = String(raw.role ?? "").trim();
+        const domain = String(raw.domain ?? "").trim();
+        const storedDesignation = String(raw.designation ?? "").trim();
+
+        // A domain head is named by their domain: "Tech Head", not the
+        // generic "Domain Head". A stored designation wins, except when it
+        // is itself the generic label we are trying to replace.
         const designation =
-          String(raw.designation ?? "").trim() ||
-          (role === "club_head"
-            ? "Club Head"
-            : role === "domain_head"
-              ? "Domain Head"
-              : role === "members"
-                ? "Member"
-                : role || "Member");
+          role === "domain_head" &&
+          domain &&
+          (!storedDesignation || /^domain[\s_-]*head$/i.test(storedDesignation))
+            ? domainHeadTitle(domain)
+            : storedDesignation ||
+              (role === "club_head"
+                ? "Club Head"
+                : role === "domain_head"
+                  ? "Domain Head"
+                  : role === "members"
+                    ? "Member"
+                    : role || "Member");
 
         const tags = tagsFromRow(
           raw as Record<string, unknown>,
@@ -111,10 +138,18 @@ export async function getMembersFromDb(): Promise<MemberCard[]> {
             ? yearValue
             : null;
 
-        const photoUrl =
+        const realPhoto =
           normalizeImageUrl(String(raw.photo_url ?? "").trim()) ??
-          normalizeImageUrl(String(raw.photoUrl ?? "").trim()) ??
-          avatarFromName(name);
+          normalizeImageUrl(String(raw.photoUrl ?? "").trim());
+        const photoUrl = realPhoto ?? avatarFromName(name);
+
+        // Optional: a background-removed PNG for the cutout card. Any of
+        // these column names works, and none existing is fine - the card
+        // falls back to the ordinary photo.
+        const cutoutUrl =
+          normalizeImageUrl(String(raw.cutout_url ?? "").trim()) ??
+          normalizeImageUrl(String(raw.cutoutUrl ?? "").trim()) ??
+          normalizeImageUrl(String(raw.photo_cutout_url ?? "").trim());
 
         const explicitBio =
           String(raw.bio ?? "").trim() ||
@@ -122,7 +157,6 @@ export async function getMembersFromDb(): Promise<MemberCard[]> {
           String(raw.about ?? "").trim() ||
           String(raw.quote ?? "").trim();
 
-        const domain = String(raw.domain ?? "").trim();
         const bio =
           explicitBio ||
           `${name} contributes to ${domain || "Avyakta"} as ${designation}.`;
@@ -135,6 +169,8 @@ export async function getMembersFromDb(): Promise<MemberCard[]> {
           role,
           section,
           photoUrl,
+          hasPhoto: Boolean(realPhoto),
+          cutoutUrl,
           bio,
           tags,
           year,
