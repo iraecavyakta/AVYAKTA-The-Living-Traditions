@@ -131,6 +131,22 @@ export default function MemberForm({
     }
   };
 
+  /**
+   * Clears the photo. The API already maps an empty photo_url to null, so
+   * saving after this detaches the image from the member. The stored file is
+   * left in the bucket rather than deleted, since other records may point at
+   * it and an orphaned object is cheaper than a broken reference.
+   */
+  const handleRemovePhoto = () => {
+    setPhotoPreview(null);
+    setFormData((prev) => ({ ...prev, photo_url: "" }));
+    setError("");
+    const input = document.getElementById("photo") as HTMLInputElement | null;
+    // Without this the same file cannot be re-picked: the input still holds
+    // it, so choosing it again fires no change event.
+    if (input) input.value = "";
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
@@ -322,6 +338,18 @@ export default function MemberForm({
           <div className="photo-preview">
             <small>Preview</small>
             <img src={photoPreview} alt="Member preview" />
+            <button
+              type="button"
+              onClick={handleRemovePhoto}
+              disabled={isUploading}
+              className="btn-remove-photo"
+            >
+              Remove photo
+            </button>
+            <small className="file-hint">
+              The member falls back to their initials until a new photo is
+              uploaded. Save the form to apply.
+            </small>
           </div>
         )}
 
@@ -471,6 +499,30 @@ export default function MemberForm({
           border: 1px dashed rgba(146, 121, 27, 0.4);
           border-radius: 12px;
           background: rgba(146, 121, 27, 0.05);
+        }
+
+        .btn-remove-photo {
+          margin-top: 12px;
+          padding: 8px 16px;
+          border: 1px solid rgba(139, 26, 26, 0.5);
+          border-radius: 999px;
+          background: transparent;
+          color: var(--av-crimson);
+          font-family: var(--font-body), sans-serif;
+          font-size: 12px;
+          font-weight: 600;
+          cursor: pointer;
+          transition: all 0.2s ease;
+        }
+
+        .btn-remove-photo:hover:not(:disabled) {
+          background: var(--av-crimson);
+          color: var(--av-warm);
+        }
+
+        .btn-remove-photo:disabled {
+          opacity: 0.5;
+          cursor: not-allowed;
         }
 
         .photo-preview small {

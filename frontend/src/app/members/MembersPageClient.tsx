@@ -71,6 +71,9 @@ function Kolam({ className }: { className?: string }) {
 /** Soft enough that the card settles rather than snapping back. */
 const TILT = { stiffness: 170, damping: 20, mass: 0.6 } as const;
 
+/** Dimmed warm paper, graded so the sheet is not one flat bright plane. */
+const PAPER = "linear-gradient(168deg, #D7CBB1 0%, #CEC1A4 46%, #C2B496 100%)";
+
 const ARCH = "[border-radius:999px_999px_14px_14px]";
 const ARCH_RING = "[border-radius:999px_999px_19px_19px]";
 
@@ -106,7 +109,7 @@ function initialsOf(name: string) {
 function Monogram({ name }: { name: string }) {
   return (
     <div className="absolute inset-0 flex items-center justify-center pb-[8%]">
-      <span className="font-heading text-[3.25rem] font-semibold tracking-[0.08em] text-[#92791B]/65 transition-all duration-700 group-hover:scale-105 group-hover:text-[#8B1A1A] md:text-6xl">
+      <span className="font-heading text-[3.25rem] font-semibold tracking-[0.08em] text-[#4A3A09]/65 transition-all duration-700 group-hover:scale-105 group-hover:text-[#7A1616] md:text-6xl">
         {initialsOf(name)}
       </span>
     </div>
@@ -221,22 +224,25 @@ export default function MembersPageClient({
   const active = sections.find((section) => section.key === activeTab);
 
   return (
-    <main className="relative min-h-[100dvh] overflow-x-clip bg-[#F3EDE2] text-[#1C1C1C]">
+    <main
+      className="relative min-h-[100dvh] overflow-x-clip text-[#1C1C1C]"
+      style={{ background: PAPER }}
+    >
       {/* Warm paper, not the gallery's dark wall: the portraits are the dark
           objects on this page, so the page itself stays light. */}
       <div
         className="pointer-events-none absolute inset-0"
         style={{
           backgroundImage:
-            "radial-gradient(60% 40% at 82% 4%, rgba(201,168,76,0.22) 0%, transparent 62%), radial-gradient(45% 32% at 8% 24%, rgba(27,94,59,0.10) 0%, transparent 65%)",
+            "radial-gradient(58% 38% at 82% 2%, rgba(201,168,76,0.3) 0%, transparent 60%), radial-gradient(46% 34% at 6% 22%, rgba(27,94,59,0.14) 0%, transparent 62%), radial-gradient(70% 50% at 50% 108%, rgba(60,44,22,0.2) 0%, transparent 62%)",
         }}
         aria-hidden
       />
-      <Kolam className="pointer-events-none absolute -right-[14%] -top-[10%] w-[58vw] max-w-[620px] text-[#92791B] opacity-[0.10]" />
+      <Kolam className="pointer-events-none absolute -right-[14%] -top-[10%] w-[58vw] max-w-[620px] text-[#4A3A09] opacity-[0.10]" />
 
       <div className="relative mx-auto w-full max-w-[1500px] px-5 pb-24 pt-28 lg:px-10 lg:pt-32">
         <header className="border-b border-[#92791B]/25 pb-8">
-          <p className="font-body text-[11px] uppercase tracking-[0.3em] text-[#92791B]">
+          <p className="font-body text-[11px] uppercase tracking-[0.3em] text-[#4A3A09]">
             The Collective
           </p>
           <h1 className="mt-4 max-w-4xl font-heading text-[clamp(2.5rem,6.5vw,5.75rem)] font-semibold leading-[0.95]">
@@ -248,7 +254,7 @@ export default function MembersPageClient({
             text row. */}
         <nav
           aria-label="Choose a group"
-          className="mt-8 flex max-w-full gap-0 overflow-x-auto rounded-full border border-[#92791B]/30 bg-[#FBF7EF] p-1 sm:inline-flex sm:max-w-fit [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+          className="mt-8 flex max-w-full gap-0 overflow-x-auto rounded-full border border-[#92791B]/30 bg-[#DED3BB] p-1 sm:inline-flex sm:max-w-fit [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
         >
           {sections.map((section) => {
             const isActive = section.key === activeTab;
@@ -273,11 +279,11 @@ export default function MembersPageClient({
                   />
                 )}
                 <span
-                  className={`relative ${isActive ? "text-[#F5F0E8]" : "text-[#5E5742] hover:text-[#1C1C1C]"}`}
+                  className={`relative ${isActive ? "text-[#F5F0E8]" : "text-[#413C2D] hover:text-[#1C1C1C]"}`}
                 >
                   {section.title}
                   <span
-                    className={`ml-2 tabular-nums ${isActive ? "text-[#C9A84C]" : "text-[#92791B]/60"}`}
+                    className={`ml-2 tabular-nums ${isActive ? "text-[#C9A84C]" : "text-[#4A3A09]/60"}`}
                   >
                     {section.members.length}
                   </span>
@@ -297,7 +303,7 @@ export default function MembersPageClient({
             className="mt-12"
           >
             {!active || active.members.length === 0 ? (
-              <p className="rounded-[18px] border border-dashed border-[#92791B]/40 px-6 py-24 text-center font-body text-sm text-[#5E5742]">
+              <p className="rounded-[18px] border border-dashed border-[#92791B]/40 px-6 py-24 text-center font-body text-sm text-[#413C2D]">
                 {activeTab === "current-team"
                   ? "The current team will be introduced here soon."
                   : "We are still adding names to this part of the archive."}
@@ -312,7 +318,7 @@ export default function MembersPageClient({
                     {active.key === "past-teams" &&
                       (index === 0 ||
                         active.members[index - 1].year !== member.year) && (
-                        <h2 className="col-span-full mt-4 flex items-center gap-4 font-heading text-2xl font-semibold text-[#8B1A1A]">
+                        <h2 className="col-span-full mt-4 flex items-center gap-4 font-heading text-2xl font-semibold text-[#7A1616]">
                           {member.year ?? "Earlier years"}
                           <span
                             className="h-px flex-1 bg-[#92791B]/25"
@@ -455,7 +461,7 @@ function MemberTile({
               className={`${ARCH_RING} absolute -inset-[7px] border border-[#92791B]/30 transition-all duration-700 group-hover:-inset-[12px] group-hover:border-[#92791B]/65`}
             />
             <div
-              className={`${ARCH} absolute inset-0 overflow-hidden bg-[#EFE7D9] ring-1 ring-[#1C1C1C]/10`}
+              className={`${ARCH} absolute inset-0 overflow-hidden bg-[#CABD9F] ring-1 ring-[#1C1C1C]/10`}
             >
               {member.hasPhoto ? (
                 <img
@@ -472,8 +478,8 @@ function MemberTile({
                 // Kept light. A near-black niche is right behind a
                 // photograph, but a gridful of them with no photographs in
                 // reads as a wall of slabs.
-                <div className="relative h-full w-full bg-[#EBE2D1]">
-                  <Kolam className="absolute left-1/2 top-[16%] w-[112%] -translate-x-1/2 text-[#92791B] opacity-[0.3]" />
+                <div className="relative h-full w-full bg-[#C0B391]">
+                  <Kolam className="absolute left-1/2 top-[16%] w-[112%] -translate-x-1/2 text-[#4A3A09] opacity-[0.3]" />
                   <Monogram name={member.name} />
                 </div>
               )}
@@ -484,10 +490,10 @@ function MemberTile({
 
       {/* Caption sits on the paper, not on a plate over the portrait. */}
       <div className="mt-6 lg:mt-7">
-        <p className="truncate font-heading text-xl font-semibold leading-tight transition-colors duration-500 group-hover:text-[#8B1A1A]">
+        <p className="truncate font-heading text-xl font-semibold leading-tight transition-colors duration-500 group-hover:text-[#7A1616]">
           {member.name}
         </p>
-        <p className="mt-1 truncate font-body text-[10px] font-semibold uppercase tracking-[0.18em] text-[#737955]">
+        <p className="mt-1 truncate font-body text-[10px] font-semibold uppercase tracking-[0.18em] text-[#3F4429]">
           {member.designation}
           {member.year ? ` · ${member.year}` : ""}
         </p>
@@ -524,13 +530,13 @@ function MemberDialog({
         animate={{ opacity: 1, y: 0, scale: 1 }}
         transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
         onClick={(event) => event.stopPropagation()}
-        className="relative grid w-full max-w-3xl overflow-hidden rounded-[20px] bg-[#FBF7EF] md:grid-cols-[260px_minmax(0,1fr)]"
+        className="relative grid w-full max-w-3xl overflow-hidden rounded-[20px] bg-[#DED3BB] md:grid-cols-[260px_minmax(0,1fr)]"
       >
         <button
           type="button"
           onClick={onClose}
           aria-label="Close"
-          className="absolute right-3 top-3 z-10 h-9 w-9 rounded-full border border-[#92791B]/40 bg-[#FBF7EF]/90 text-[#1C1C1C] transition hover:bg-[#1C1C1C] hover:text-[#F5F0E8]"
+          className="absolute right-3 top-3 z-10 h-9 w-9 rounded-full border border-[#92791B]/40 bg-[#DED3BB]/90 text-[#1C1C1C] transition hover:bg-[#1C1C1C] hover:text-[#F5F0E8]"
         >
           ✕
         </button>
@@ -556,7 +562,7 @@ function MemberDialog({
               </>
             ) : (
               <div
-                className={`${ARCH} absolute inset-0 overflow-hidden bg-[#EBE2D1]`}
+                className={`${ARCH} absolute inset-0 overflow-hidden bg-[#C0B391]`}
               >
                 {member.hasPhoto ? (
                   <img
@@ -566,7 +572,7 @@ function MemberDialog({
                   />
                 ) : (
                   <>
-                    <Kolam className="absolute left-1/2 top-[16%] w-[112%] -translate-x-1/2 text-[#92791B] opacity-[0.3]" />
+                    <Kolam className="absolute left-1/2 top-[16%] w-[112%] -translate-x-1/2 text-[#4A3A09] opacity-[0.3]" />
                     <Monogram name={member.name} />
                   </>
                 )}
@@ -576,18 +582,18 @@ function MemberDialog({
         </div>
 
         <div className="flex flex-col justify-center p-6 md:p-8">
-          <p className="font-body text-[10px] uppercase tracking-[0.22em] text-[#92791B]">
+          <p className="font-body text-[10px] uppercase tracking-[0.22em] text-[#4A3A09]">
             {member.tags.map(titleCase).join(" · ")}
           </p>
           <h2 className="mt-3 font-heading text-3xl font-semibold md:text-4xl">
             {member.name}
           </h2>
-          <p className="mt-1 font-body text-sm text-[#737955]">
+          <p className="mt-1 font-body text-sm text-[#3F4429]">
             {member.designation}
             {member.year ? ` · ${member.year}` : ""}
           </p>
           <span className="my-5 block h-px w-12 bg-[#92791B]/40" aria-hidden />
-          <p className="font-body text-sm leading-7 text-[#3A352B]">
+          <p className="font-body text-sm leading-7 text-[#3A3628]">
             {member.bio}
           </p>
         </div>
