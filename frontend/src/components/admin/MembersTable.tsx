@@ -40,11 +40,19 @@ export default function MembersTable({
       ) : (
         <div className="table-wrapper">
           <table className="members-table">
+            {/* Fixed widths so every domain's table lines up identically;
+                the Name column takes whatever is left. */}
+            <colgroup>
+              <col className="col-photo" />
+              <col />
+              <col className="col-role" />
+              <col className="col-actions" />
+            </colgroup>
             <thead>
               <tr>
                 <th>Photo</th>
                 <th>Name</th>
-                <th>Role</th>
+                <th className="role-head">Role</th>
                 <th className="align-right">Actions</th>
               </tr>
             </thead>
@@ -134,6 +142,8 @@ export default function MembersTable({
 
         .members-table {
           width: 100%;
+          min-width: 640px;
+          table-layout: fixed;
           border-collapse: collapse;
           font-family: var(--font-body), sans-serif;
           font-size: 14px;
@@ -153,8 +163,25 @@ export default function MembersTable({
           color: var(--av-olive);
         }
 
-        .align-right {
+        .members-table th.align-right {
           text-align: right;
+        }
+
+        /* The badge has its own inner padding; nudge the heading to its text. */
+        .members-table th.role-head {
+          padding-left: 30px;
+        }
+
+        .col-photo {
+          width: 80px;
+        }
+
+        .col-role {
+          width: 240px;
+        }
+
+        .col-actions {
+          width: 190px;
         }
 
         .members-table td {
@@ -178,10 +205,7 @@ export default function MembersTable({
 
         .name-cell {
           font-weight: 500;
-        }
-
-        .photo-cell {
-          width: 72px;
+          overflow-wrap: anywhere;
         }
 
         .member-photo {

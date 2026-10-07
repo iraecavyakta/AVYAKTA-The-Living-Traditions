@@ -132,6 +132,7 @@ export async function getMembersFromDb(): Promise<MemberCard[]> {
           name,
           domain,
           designation,
+          role,
           section,
           photoUrl,
           bio,

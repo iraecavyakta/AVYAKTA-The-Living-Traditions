@@ -2,7 +2,12 @@
 
 import { Fragment, useMemo, useState, useEffect } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { type MemberCard, memberSectionOrder } from "@/lib/data/memberSections";
+import {
+  type MemberCard,
+  currentTeamRank,
+  memberSectionOrder,
+  sectionsFor,
+} from "@/lib/data/memberSections";
 
 type MembersPageClientProps = {
   initialMembers: MemberCard[];
@@ -67,16 +72,13 @@ export default function MembersPageClient({
 
   const sections = useMemo(() => {
     return memberSectionOrder.map((section) => {
-      const members = initialMembers.filter(
-        (member) => member.section === section.key,
+      const members = initialMembers.filter((member) =>
+        sectionsFor(member.tags).includes(section.key),
       );
       members.sort((a, b) => {
         if (section.key === "current-team") {
-          const aHead =
-            a.tags.includes("head") || /head|president/i.test(a.designation);
-          const bHead =
-            b.tags.includes("head") || /head|president/i.test(b.designation);
-          if (aHead !== bHead) return aHead ? -1 : 1;
+          const rankDiff = currentTeamRank(a) - currentTeamRank(b);
+          if (rankDiff) return rankDiff;
         }
         if (section.key === "past-teams" && a.year !== b.year)
           return (b.year ?? 0) - (a.year ?? 0);

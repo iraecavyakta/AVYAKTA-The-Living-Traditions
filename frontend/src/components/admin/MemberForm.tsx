@@ -20,6 +20,9 @@ interface MemberFormProps {
   isLoading?: boolean;
 }
 
+// Faculty sit outside the student teams, so these tags don't apply to them.
+const FACULTY_HIDDEN_TAGS = ["current", "previous", "poc"];
+
 const TEAM_TAGS = [
   { key: "current", label: "Current" },
   { key: "previous", label: "Previous" },
@@ -63,6 +66,7 @@ export default function MemberForm({
   // Club Head is club-level (no domain/role); a POC's role defaults to Member.
   const isClubHead = formData.tags.includes("club_head");
   const isPoc = formData.tags.includes("poc");
+  const isFaculty = formData.tags.includes("faculty");
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -238,7 +242,9 @@ export default function MemberForm({
           <fieldset className="form-group">
             <legend>Team tags</legend>
             <div className="flex flex-wrap gap-3">
-              {TEAM_TAGS.map(({ key, label }) => (
+              {TEAM_TAGS.filter(
+                ({ key }) => !(isFaculty && FACULTY_HIDDEN_TAGS.includes(key)),
+              ).map(({ key, label }) => (
                 <label key={key} className="flex items-center gap-2 text-sm">
                   <input
                     type="checkbox"
@@ -246,9 +252,17 @@ export default function MemberForm({
                     onChange={(event) =>
                       setFormData((prev) => ({
                         ...prev,
-                        tags: event.target.checked
+                        tags: (event.target.checked
                           ? [...prev.tags, key]
-                          : prev.tags.filter((item) => item !== key),
+                          : prev.tags.filter((item) => item !== key)
+                        ).filter(
+                          (item) =>
+                            !(
+                              key === "faculty" &&
+                              event.target.checked &&
+                              FACULTY_HIDDEN_TAGS.includes(item)
+                            ),
+                        ),
                         // leaving Club Head: drop its placeholder role
                         role:
                           key === "club_head" &&
