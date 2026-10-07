@@ -16,6 +16,11 @@ export type EventItem = {
   domain: string;
   /** Real uploaded image URL, or null if none was ever set. */
   posterUrl: string | null;
+  /**
+   * Every web-hosted image of this event (all posters, detail photos, cover) -
+   * the pool the events page's scroll animation draws random pictures from.
+   */
+  images: string[];
   /** CSS gradient (not wrapped in url(...)) shown when posterUrl is null. */
   posterFallback: string;
   venue?: string;

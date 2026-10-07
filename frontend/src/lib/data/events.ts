@@ -105,6 +105,7 @@ function mapRowToEvent(row: {
   more_description: string | null;
   slug_image_url: string | null;
   poster_image_url: string | null;
+  poster_image_urls?: string[];
 }): EventItem {
   const baseDescription =
     row.description?.trim() || "Details will be announced soon.";
@@ -126,6 +127,17 @@ function mapRowToEvent(row: {
         (value) => /^https?:\/\//i.test(value) || /^data:image\//i.test(value),
       ) || null;
 
+  // Web links only: older images saved as inline data would bloat the page
+  // (the event's own posterUrl already carries one of those).
+  const images = Array.from(
+    new Set(
+      [...(row.poster_image_urls ?? []), row.slug_image_url, row.image_url]
+        .flatMap((value) => (value || "").split(/[\n|]/))
+        .map((value) => value.trim())
+        .filter((value) => /^https?:\/\//i.test(value)),
+    ),
+  );
+
   return {
     id: row.id,
     slug: computedSlug,
@@ -136,6 +148,7 @@ function mapRowToEvent(row: {
     status: inferEventStatus(row.date),
     domain: parsed.domain,
     posterUrl,
+    images,
     posterFallback: posterFallbacks[titleHashIndex(row.title)],
     venue: row.venue || undefined,
     highlights: parsed.highlights,
@@ -165,7 +178,12 @@ async function fetchRawEventRows() {
       const es = Array.isArray(row.event_slug)
         ? row.event_slug[0]
         : row.event_slug;
-      const p = Array.isArray(row.posters) ? row.posters[0] : row.posters;
+      const posterRows = Array.isArray(row.posters)
+        ? row.posters
+        : row.posters
+          ? [row.posters]
+          : [];
+      const p = posterRows[0];
 
       return {
         id: row.id,
@@ -180,6 +198,11 @@ async function fetchRawEventRows() {
         more_description: es?.more_description,
         slug_image_url: es?.image_url,
         poster_image_url: p?.poster_image_url,
+        poster_image_urls: posterRows
+          .map(
+            (poster: { poster_image_url?: string }) => poster.poster_image_url,
+          )
+          .filter(Boolean) as string[],
       };
     });
   } catch (error) {

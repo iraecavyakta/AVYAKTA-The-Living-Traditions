@@ -60,6 +60,9 @@ export async function compressImage(
         canvas.height = height;
 
         // Draw image on canvas
+        // JPEG has no transparency; without this, transparent PNGs go black.
+        ctx.fillStyle = "#fff";
+        ctx.fillRect(0, 0, width, height);
         ctx.drawImage(img, 0, 0, width, height);
 
         // Compress to base64
@@ -82,7 +85,11 @@ export async function compressImage(
       };
 
       img.onerror = () => {
-        reject(new Error("Failed to load image"));
+        reject(
+          new Error(
+            "This browser can't open this image format (e.g. HEIC). Please convert it to JPG or PNG.",
+          ),
+        );
       };
 
       img.src = event.target?.result as string;
@@ -109,7 +116,11 @@ export function validateImage(
     return { valid: false, error: "No file provided" };
   }
 
-  if (!file.type.startsWith("image/")) {
+  // Some systems leave the type empty (HEIC, AVIF), so fall back to the name.
+  const looksLikeImage =
+    file.type.startsWith("image/") ||
+    /\.(jpe?g|png|gif|webp|avif|bmp|tiff?|svg|heic|heif|ico)$/i.test(file.name);
+  if (!looksLikeImage) {
     return { valid: false, error: "File must be an image" };
   }
 

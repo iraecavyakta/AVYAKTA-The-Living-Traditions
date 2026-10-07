@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
+import BackToHomeButton from "../layout/BackToHomeButton";
 
 const links = [
   { href: "/dashboard/members", label: "Members" },
@@ -44,9 +45,12 @@ export default function AdminDashboardNav() {
           </nav>
         </div>
 
-        <button type="button" onClick={handleLogout} className="btn-logout">
-          Sign Out
-        </button>
+        <div className="topbar-actions">
+          <BackToHomeButton />
+          <button type="button" onClick={handleLogout} className="btn-logout">
+            Sign Out
+          </button>
+        </div>
       </div>
 
       <div className="topbar-rule" aria-hidden />
@@ -148,6 +152,12 @@ export default function AdminDashboardNav() {
           box-shadow: 0 4px 16px rgba(201, 168, 76, 0.28);
         }
 
+        .topbar-actions {
+          display: flex;
+          align-items: center;
+          gap: 12px;
+        }
+
         .btn-logout {
           padding: 9px 20px;
           border-radius: 999px;
@@ -208,6 +218,11 @@ export default function AdminDashboardNav() {
             flex: 1;
             min-width: 120px;
             text-align: center;
+          }
+
+          .topbar-actions {
+            flex-direction: column;
+            align-items: stretch;
           }
 
           .btn-logout {

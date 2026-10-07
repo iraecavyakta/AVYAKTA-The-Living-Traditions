@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { createPortal } from "react-dom";
 import { motion } from "framer-motion";
 import type { GalleryEvent, GalleryImage } from "@/lib/data/gallery";
 
@@ -9,7 +10,9 @@ type GalleryPageClientProps = {
 };
 
 const PAGE_SIZE = 8;
-const SHOWCASE_DURATION_SECONDS = 30;
+// Seconds each photo takes to pass, so the scroll speed stays the same
+// however many photos there are.
+const SHOWCASE_SECONDS_PER_IMAGE = 4;
 
 type LightboxState = {
   images: GalleryImage[];
@@ -163,7 +166,10 @@ export default function GalleryPageClient({
                 className="flex h-full w-max"
                 animate={{ x: ["0%", "-50%"] }}
                 transition={{
-                  duration: SHOWCASE_DURATION_SECONDS,
+                  duration: Math.max(
+                    10,
+                    allImages.length * SHOWCASE_SECONDS_PER_IMAGE,
+                  ),
                   repeat: Infinity,
                   ease: "linear",
                 }}
@@ -308,66 +314,69 @@ export default function GalleryPageClient({
         </div>
       </motion.section>
 
-      {selectedImage && (
-        <div className="fixed inset-0 z-[120] flex items-center justify-center bg-black/88 p-3 md:p-8">
-          <button
-            type="button"
-            onClick={() => setLightbox(null)}
-            className="absolute right-4 top-4 h-10 w-10 rounded-full border border-[#C9A84C] bg-[#1C1C1C] text-[#F5F0E8] transition hover:bg-[#2D2119]"
-            aria-label="Close"
-          >
-            X
-          </button>
+      {/* Portal: the page sits in a z-10 wrapper that would keep this below the navbar. */}
+      {selectedImage &&
+        createPortal(
+          <div className="fixed inset-0 z-[120] flex items-center justify-center bg-black/88 p-3 md:p-8">
+            <button
+              type="button"
+              onClick={() => setLightbox(null)}
+              className="absolute right-4 top-4 h-10 w-10 rounded-full border border-[#C9A84C] bg-[#1C1C1C] text-[#F5F0E8] transition hover:bg-[#2D2119]"
+              aria-label="Close"
+            >
+              X
+            </button>
 
-          <button
-            type="button"
-            onClick={() =>
-              setLightbox((current) => {
-                if (!current) return current;
-                return {
-                  ...current,
-                  index:
-                    current.index === 0
-                      ? current.images.length - 1
-                      : current.index - 1,
-                };
-              })
-            }
-            className="absolute left-4 top-1/2 -translate-y-1/2 rounded-full border border-[#C9A84C]/70 bg-[#1C1C1C]/90 px-4 py-2 text-[#F5F0E8]"
-            aria-label="Previous"
-          >
-            ←
-          </button>
+            <button
+              type="button"
+              onClick={() =>
+                setLightbox((current) => {
+                  if (!current) return current;
+                  return {
+                    ...current,
+                    index:
+                      current.index === 0
+                        ? current.images.length - 1
+                        : current.index - 1,
+                  };
+                })
+              }
+              className="absolute left-4 top-1/2 -translate-y-1/2 rounded-full border border-[#C9A84C]/70 bg-[#1C1C1C]/90 px-4 py-2 text-[#F5F0E8]"
+              aria-label="Previous"
+            >
+              ←
+            </button>
 
-          <figure className="relative max-h-[90vh] max-w-[95vw] overflow-hidden rounded-xl border border-[#C9A84C]/60 bg-[#121212]">
-            <img
-              src={selectedImage.url}
-              alt={selectedImage.name}
-              className="max-h-[82vh] w-auto max-w-[95vw] object-contain"
-            />
-            <figcaption className="border-t border-[#C9A84C]/40 bg-[#1A1A1A] px-4 py-3 text-sm text-[#F5F0E8]/88">
-              {selectedImage.name}
-            </figcaption>
-          </figure>
+            <figure className="relative max-h-[90vh] max-w-[95vw] overflow-hidden rounded-xl border border-[#C9A84C]/60 bg-[#121212]">
+              <img
+                src={selectedImage.url}
+                alt={selectedImage.name}
+                className="max-h-[82vh] w-auto max-w-[95vw] object-contain"
+              />
+              <figcaption className="border-t border-[#C9A84C]/40 bg-[#1A1A1A] px-4 py-3 text-sm text-[#F5F0E8]/88">
+                {selectedImage.name}
+              </figcaption>
+            </figure>
 
-          <button
-            type="button"
-            onClick={() =>
-              setLightbox((current) => {
-                if (!current) return current;
-                return {
-                  ...current,
-                  index: (current.index + 1) % current.images.length,
-                };
-              })
-            }
-            className="absolute right-4 top-1/2 -translate-y-1/2 rounded-full border border-[#C9A84C]/70 bg-[#1C1C1C]/90 px-4 py-2 text-[#F5F0E8]"
-            aria-label="Next"
-          >
-            →
-          </button>
-        </div>
-      )}
+            <button
+              type="button"
+              onClick={() =>
+                setLightbox((current) => {
+                  if (!current) return current;
+                  return {
+                    ...current,
+                    index: (current.index + 1) % current.images.length,
+                  };
+                })
+              }
+              className="absolute right-4 top-1/2 -translate-y-1/2 rounded-full border border-[#C9A84C]/70 bg-[#1C1C1C]/90 px-4 py-2 text-[#F5F0E8]"
+              aria-label="Next"
+            >
+              →
+            </button>
+          </div>,
+          document.body,
+        )}
     </main>
   );
 }

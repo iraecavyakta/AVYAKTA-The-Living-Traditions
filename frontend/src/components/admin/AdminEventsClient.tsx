@@ -134,8 +134,10 @@ export default function AdminEventsClient() {
       }
 
       setTimeout(() => setSuccessMessage(""), 3000);
+      return true;
     } catch (err) {
       setError(err instanceof Error ? err.message : "An error occurred");
+      return false;
     } finally {
       setIsSubmitting(false);
     }
@@ -769,10 +771,7 @@ export default function AdminEventsClient() {
 
           /* ---------- Detail panel ---------- */
           .events-details-section {
-            grid-column: 2 / 3;
-            grid-row: 2 / 3;
-            overflow-y: auto;
-            max-height: calc(100vh - 140px);
+            grid-column: 1 / -1;
             min-width: 0;
           }
 
@@ -954,9 +953,6 @@ export default function AdminEventsClient() {
             }
 
             .events-details-section {
-              grid-column: 1 / 2;
-              grid-row: 3 / 4;
-              max-height: 480px;
             }
           }
 

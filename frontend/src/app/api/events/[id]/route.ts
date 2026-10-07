@@ -206,20 +206,19 @@ export async function PUT(
         );
 
         if (slugUpdateResult.error) {
-          console.warn(
-            "Warning: Failed to update event slug:",
-            slugUpdateResult.error,
+          throw new Error(
+            `Couldn't save the detail images/description: ${slugUpdateResult.error.message}`,
           );
         }
       } else if (more_description || slug_image_url) {
         // Create new slug if it doesn't exist
+        // more_description is NOT NULL in the database, so it can't be left out
+        // when only images are being added.
         const slugPayload: Record<string, unknown> = {
           event_id: eventId,
+          more_description: more_description || "",
         };
 
-        if (more_description) {
-          slugPayload.more_description = more_description;
-        }
         if (slug_image_url) {
           slugPayload.image_url = slug_image_url;
         }
@@ -229,9 +228,8 @@ export async function PUT(
         );
 
         if (slugCreateResult.error) {
-          console.warn(
-            "Warning: Failed to create event slug:",
-            slugCreateResult.error,
+          throw new Error(
+            `Couldn't save the detail images/description: ${slugCreateResult.error.message}`,
           );
         }
       }
@@ -269,9 +267,8 @@ export async function PUT(
       );
 
       if (deleteResult.error) {
-        console.warn(
-          "Warning: Failed to delete old posters:",
-          deleteResult.error,
+        throw new Error(
+          `Couldn't replace the posters: ${deleteResult.error.message}`,
         );
       }
 
@@ -287,9 +284,8 @@ export async function PUT(
         );
 
         if (createResult.error) {
-          console.warn(
-            "Warning: Failed to create event posters:",
-            createResult.error,
+          throw new Error(
+            `Couldn't save the posters: ${createResult.error.message}`,
           );
         }
       }
@@ -322,7 +318,11 @@ export async function PUT(
   } catch (error) {
     console.error("Error updating event:", error);
     return NextResponse.json(
-      { success: false, error: "Failed to update event" },
+      {
+        success: false,
+        error:
+          error instanceof Error ? error.message : "Failed to update event",
+      },
       { status: 500 },
     );
   }
