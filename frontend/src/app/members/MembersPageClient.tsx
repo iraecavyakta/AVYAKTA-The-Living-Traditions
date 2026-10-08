@@ -1,6 +1,6 @@
 "use client";
 
-import { Fragment, useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { createPortal } from "react-dom";
 import {
   AnimatePresence,
@@ -17,6 +17,7 @@ import {
   memberSectionOrder,
   sectionsFor,
 } from "@/lib/data/memberSections";
+import { type CutoutFit, fitCutout } from "@/lib/utils/cutoutFit";
 
 type MembersPageClientProps = {
   initialMembers: MemberCard[];
@@ -60,6 +61,103 @@ function Kolam({ className }: { className?: string }) {
       <circle cx="100" cy="100" r="52" strokeWidth="0.9" />
       <circle cx="100" cy="100" r="13" strokeWidth="0.7" />
     </svg>
+  );
+}
+
+/**
+ * The mandalas in the background are the real thing rather than drawn
+ * line-work: gold ornament lifted off a photograph by its green channel (the
+ * red ground has almost none, the gold has plenty) into an alpha mask - see
+ * scripts/extract-ornament.mjs. Painted as a mask over a flat colour, not as
+ * an <img>, so they take the page's own gold instead of arriving with the
+ * photograph's red ground attached.
+ *
+ * Every motif sits flush against the edge it was drawn running off, so the
+ * ornament reads as carrying on past the page rather than as a shape that has
+ * been clipped: the four corners hold the frame, and the side pieces are
+ * spaced down it in percentages so they spread with the page as members are
+ * added rather than bunching at the top.
+ */
+const MOTIFS: Array<{ src: string; ratio: string; className: string }> = [
+  // Four corners, each in the orientation it was drawn in.
+  {
+    // The title sits over this one, so it is the quietest of the four.
+    src: "corner-tl",
+    ratio: "439/388",
+    className: "left-0 top-0 w-[44vw] max-w-[470px] opacity-[0.18]",
+  },
+  {
+    src: "corner-tr",
+    ratio: "338/287",
+    className: "right-0 top-0 w-[40vw] max-w-[430px] opacity-[0.28]",
+  },
+  {
+    src: "corner-bl",
+    ratio: "310/348",
+    className: "bottom-0 left-0 w-[34vw] max-w-[360px] opacity-[0.26]",
+  },
+  {
+    src: "lotus-br",
+    ratio: "553/522",
+    className: "bottom-0 right-0 w-[46vw] max-w-[520px] opacity-[0.24]",
+  },
+  // Side accents, holding the long middle of the page. Alternating sides so
+  // the eye is carried down rather than along one rail.
+  {
+    src: "edge-right",
+    ratio: "134/226",
+    className: "right-0 top-[24%] w-[16vw] max-w-[170px] opacity-[0.22]",
+  },
+  {
+    src: "edge-right",
+    ratio: "134/226",
+    className:
+      "left-0 top-[40%] w-[16vw] max-w-[170px] -scale-x-100 opacity-[0.2]",
+  },
+  {
+    src: "edge-right",
+    ratio: "134/226",
+    className: "right-0 top-[56%] w-[16vw] max-w-[170px] opacity-[0.22]",
+  },
+  {
+    src: "edge-right",
+    ratio: "134/226",
+    className:
+      "left-0 top-[72%] w-[16vw] max-w-[170px] -scale-x-100 opacity-[0.2]",
+  },
+];
+
+function Mandalas() {
+  return (
+    <div
+      className="pointer-events-none absolute inset-0 overflow-hidden"
+      aria-hidden
+    >
+      {/* A pair of hairlines just inside the page edge. Corner ornament on
+          its own reads as four separate pieces of art; a rule running between
+          them is what makes it one frame, and the corners then sit over the
+          ends of it the way they would on a printed border. */}
+      <span className="absolute inset-3 border border-[#92791B]/30 sm:inset-5" />
+      <span className="absolute inset-4.5 border border-[#92791B]/15 sm:inset-6.5" />
+      {MOTIFS.map((motif, index) => (
+        <span
+          key={index}
+          className={`absolute block bg-[#4A3A09] ${motif.className}`}
+          style={{
+            aspectRatio: motif.ratio,
+            maskImage: `url(/ornament/${motif.src}.webp)`,
+            WebkitMaskImage: `url(/ornament/${motif.src}.webp)`,
+            // The box already carries the motif's own aspect ratio, so
+            // stretching it to the box is exact - and unlike "contain" it
+            // cannot leave a sub-pixel gap at the anchored edge.
+            maskSize: "100% 100%",
+            WebkitMaskSize: "100% 100%",
+            maskRepeat: "no-repeat",
+            WebkitMaskRepeat: "no-repeat",
+          }}
+        />
+      ))}
+    </div>
   );
 }
 
@@ -147,18 +245,32 @@ export default function MembersPageClient({
   }, [selected]);
 
   /**
-   * Which photographs are background-removed PNGs. A URL cannot say whether
-   * an image has an alpha channel, so each one is decoded once into a tiny
-   * canvas and its top corners sampled: a cut-out person has nothing there,
-   * a photograph has backdrop. This is what lets an ordinary photo_url
-   * upload get the free-standing treatment with no schema change. If the
-   * host serves no CORS header the read throws, and it stays framed.
+   * One decode per portrait, answering two questions off the alpha channel.
+   *
+   * First, whether the file is a background-removed PNG at all: a URL cannot
+   * say so, but a cut-out person has nothing in the top corners where a
+   * photograph has backdrop. This is what lets an ordinary photo_url upload
+   * get the free-standing treatment with no schema change.
+   *
+   * Second, where in the file the person actually is. Uploads are cropped
+   * tightly but at very different framings, and fitting the file to the card
+   * renders a chest-up square at half the height of a full-length portrait.
+   * The opaque bounding box is what gets fitted instead, so everyone lands
+   * at the same size whatever shape their file is - see fitCutout.
+   *
+   * If the host serves no CORS header the read throws and the portrait stays
+   * framed in its arch, which is the behaviour from before any of this.
    */
   const [cutouts, setCutouts] = useState<Record<string, boolean>>({});
+  const [fits, setFits] = useState<Record<string, CutoutFit>>({});
   useEffect(() => {
+    // Big enough to locate an edge within a percent or so, small enough that
+    // twelve of these cost nothing.
+    const W = 64;
+    const H = 88;
     const canvas = document.createElement("canvas");
-    canvas.width = 24;
-    canvas.height = 32;
+    canvas.width = W;
+    canvas.height = H;
     const context = canvas.getContext("2d", { willReadFrequently: true });
     if (!context) return;
 
@@ -166,26 +278,58 @@ export default function MembersPageClient({
     const pending: HTMLImageElement[] = [];
 
     for (const member of initialMembers) {
-      if (member.cutoutUrl || !member.hasPhoto) continue;
+      const source =
+        member.cutoutUrl ?? (member.hasPhoto ? member.photoUrl : null);
+      if (!source) continue;
       const image = new Image();
       image.crossOrigin = "anonymous";
       image.onload = () => {
         if (cancelled) return;
         try {
-          context.clearRect(0, 0, 24, 32);
-          context.drawImage(image, 0, 0, 24, 32);
-          const { data } = context.getImageData(0, 0, 24, 32);
-          const alphaAt = (x: number, y: number) => data[(y * 24 + x) * 4 + 3];
-          if (alphaAt(0, 0) < 24 && alphaAt(23, 0) < 24) {
-            setCutouts((current) =>
-              current[member.id] ? current : { ...current, [member.id]: true },
+          context.clearRect(0, 0, W, H);
+          context.drawImage(image, 0, 0, W, H);
+          const { data } = context.getImageData(0, 0, W, H);
+          const opaque = (x: number, y: number) =>
+            data[(y * W + x) * 4 + 3] > 24;
+
+          // Already known to be a cut-out if the record names one; otherwise
+          // the top corners decide.
+          if (!member.cutoutUrl && (opaque(0, 0) || opaque(W - 1, 0))) return;
+
+          let x0 = W;
+          let x1 = -1;
+          let y0 = H;
+          let y1 = -1;
+          for (let y = 0; y < H; y++) {
+            for (let x = 0; x < W; x++) {
+              if (!opaque(x, y)) continue;
+              if (x < x0) x0 = x;
+              if (x > x1) x1 = x;
+              if (y < y0) y0 = y;
+              if (y > y1) y1 = y;
+            }
+          }
+          if (x1 < 0) return; // fully transparent
+
+          setCutouts((current) =>
+            current[member.id] ? current : { ...current, [member.id]: true },
+          );
+          const fit = fitCutout(image.naturalWidth / image.naturalHeight, {
+            x0: x0 / W,
+            x1: (x1 + 1) / W,
+            y0: y0 / H,
+            y1: (y1 + 1) / H,
+          });
+          if (fit) {
+            setFits((current) =>
+              current[member.id] ? current : { ...current, [member.id]: fit },
             );
           }
         } catch {
           // Tainted canvas. Leave the photo framed in its arch.
         }
       };
-      image.src = member.photoUrl;
+      image.src = source;
       pending.push(image);
     }
 
@@ -223,6 +367,51 @@ export default function MembersPageClient({
 
   const active = sections.find((section) => section.key === activeTab);
 
+  /**
+   * Past Teams is split by year and Current Team by rank; the rest is one
+   * run. Each group gets its own grid rather than sharing one: a grid only
+   * breaks a row for a full-width child, and such a child is counted by
+   * nth-child too, so it would shift the odd/even of every card after it and
+   * break the staggered layout. Separate grids give the row break for free
+   * and start the count again.
+   */
+  const groups = useMemo(() => {
+    if (!active) return [];
+
+    if (active.key === "current-team") {
+      // The club head, the domain heads and the POCs hold the top of the
+      // page; everyone else begins on a row of their own rather than filling
+      // in beside the last POC.
+      const leads = active.members.filter((m) => currentTeamRank(m) < 3);
+      const rest = active.members.filter((m) => currentTeamRank(m) === 3);
+      return [
+        { key: "leads", year: null, members: leads },
+        { key: "members", year: null, members: rest },
+      ].filter((group) => group.members.length > 0);
+    }
+
+    if (active.key !== "past-teams") {
+      return [{ key: "all", year: null, members: active.members }];
+    }
+
+    const out: Array<{
+      key: string;
+      year: number | null;
+      members: MemberCard[];
+    }> = [];
+    for (const member of active.members) {
+      const last = out[out.length - 1];
+      if (last && last.year === member.year) last.members.push(member);
+      else
+        out.push({
+          key: String(member.year ?? "earlier"),
+          year: member.year,
+          members: [member],
+        });
+    }
+    return out;
+  }, [active]);
+
   return (
     <main
       className="relative min-h-[100dvh] overflow-x-clip text-[#1C1C1C]"
@@ -238,7 +427,7 @@ export default function MembersPageClient({
         }}
         aria-hidden
       />
-      <Kolam className="pointer-events-none absolute -right-[14%] -top-[10%] w-[58vw] max-w-[620px] text-[#4A3A09] opacity-[0.10]" />
+      <Mandalas />
 
       <div className="relative mx-auto w-full max-w-[1500px] px-5 pb-24 pt-28 lg:px-10 lg:pt-32">
         <header className="border-b border-[#92791B]/25 pb-8">
@@ -309,31 +498,38 @@ export default function MembersPageClient({
                   : "We are still adding names to this part of the archive."}
               </p>
             ) : (
-              /* Staggered grid: alternate columns drop, so the row reads as a
-                 troupe standing at different depths rather than a filing
-                 cabinet. */
-              <div className="grid grid-cols-2 gap-x-5 gap-y-12 sm:gap-x-7 lg:grid-cols-3 xl:grid-cols-4">
-                {active.members.map((member, index) => (
-                  <Fragment key={member.id}>
-                    {active.key === "past-teams" &&
-                      (index === 0 ||
-                        active.members[index - 1].year !== member.year) && (
-                        <h2 className="col-span-full mt-4 flex items-center gap-4 font-heading text-2xl font-semibold text-[#7A1616]">
-                          {member.year ?? "Earlier years"}
-                          <span
-                            className="h-px flex-1 bg-[#92791B]/25"
-                            aria-hidden
-                          />
-                        </h2>
-                      )}
-                    <MemberTile
-                      member={member}
-                      index={index}
-                      reduce={Boolean(reduce)}
-                      isCutout={Boolean(member.cutoutUrl || cutouts[member.id])}
-                      onOpen={() => setSelected(member)}
-                    />
-                  </Fragment>
+              <div className="space-y-20">
+                {groups.map((group) => (
+                  <section key={group.key}>
+                    {active.key === "past-teams" && (
+                      <h2 className="mb-10 flex items-center gap-4 font-heading text-2xl font-semibold text-[#7A1616]">
+                        {group.year ?? "Earlier years"}
+                        <span
+                          className="h-px flex-1 bg-[#92791B]/25"
+                          aria-hidden
+                        />
+                      </h2>
+                    )}
+                    {/* gap-y is generous because a cut-out stands above its
+                        own cell and the staggered column drops another 2.5rem
+                        on top of that: both have to clear the caption of the
+                        row above, at any number of members. */}
+                    <div className="grid grid-cols-2 gap-x-5 gap-y-14 sm:gap-x-7 sm:gap-y-16 lg:grid-cols-3 xl:grid-cols-4">
+                      {group.members.map((member, index) => (
+                        <MemberTile
+                          key={member.id}
+                          member={member}
+                          index={index}
+                          reduce={Boolean(reduce)}
+                          isCutout={Boolean(
+                            member.cutoutUrl || cutouts[member.id],
+                          )}
+                          fit={fits[member.id]}
+                          onOpen={() => setSelected(member)}
+                        />
+                      ))}
+                    </div>
+                  </section>
                 ))}
               </div>
             )}
@@ -359,12 +555,14 @@ function MemberTile({
   index,
   reduce,
   isCutout,
+  fit,
   onOpen,
 }: {
   member: MemberCard;
   index: number;
   reduce: boolean;
   isCutout: boolean;
+  fit?: CutoutFit;
   onOpen: () => void;
 }) {
   // Pointer position as motion values, never state: these change on every
@@ -409,7 +607,10 @@ function MemberTile({
       }}
       // relative + hover z so a cut-out breaking past its arch passes over
       // its neighbours rather than under the ones earlier in the grid.
-      className="group relative block w-full text-left outline-none hover:z-20 lg:[&:nth-child(even)]:translate-y-10"
+      // The dropped column reads as a troupe standing at different depths.
+      // Safe to key off even/odd now that each year is its own grid, so no
+      // heading sits in the run to shift the count.
+      className="group relative block w-full text-left outline-none hover:z-20 lg:even:translate-y-10"
     >
       {/* No panel. The person stands in a torana arch drawn straight on the
           page, so the warm paper is the background and nothing can show
@@ -450,8 +651,22 @@ function MemberTile({
               // in a way it was not over the niche: nothing sits behind a
               // cut-out but the page and the arch's side strokes, so there
               // is nothing to show through.
-              style={{ filter: CUTOUT_EDGE, ...CUTOUT_FADE }}
-              className="absolute inset-x-0 bottom-0 mx-auto h-[108%] w-auto max-w-none translate-z-0 object-contain transition-transform duration-700 ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:-translate-y-3 group-hover:scale-[1.05]"
+              style={{
+                filter: CUTOUT_EDGE,
+                ...CUTOUT_FADE,
+                // Placed by the measured person, not by the file. Until the
+                // measurement lands (or if it never does, on a tainted
+                // canvas) the classes below fit the whole file instead.
+                ...(fit && {
+                  width: `${fit.width}%`,
+                  left: `${fit.left}%`,
+                  bottom: `${fit.bottom}%`,
+                  right: "auto",
+                  height: "auto",
+                  maxWidth: "none",
+                }),
+              }}
+              className="absolute inset-x-0 bottom-0 mx-auto h-[108%] w-auto max-w-full translate-z-0 object-contain object-bottom transition-transform duration-700 ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:-translate-y-3 group-hover:scale-[1.05]"
             />
           </>
         ) : (
@@ -493,7 +708,10 @@ function MemberTile({
         <p className="truncate font-heading text-xl font-semibold leading-tight transition-colors duration-500 group-hover:text-[#7A1616]">
           {member.name}
         </p>
-        <p className="mt-1 truncate font-body text-[10px] font-semibold uppercase tracking-[0.18em] text-[#3F4429]">
+        {/* Wraps rather than truncates: a narrow column turned "Event
+            Management Head" into "Event Management H…", and the grid row is
+            tall enough for the two lines anyway. */}
+        <p className="mt-1 font-body text-[10px] font-semibold uppercase leading-[1.5] tracking-[0.18em] text-[#3F4429]">
           {member.designation}
           {member.year ? ` · ${member.year}` : ""}
         </p>
@@ -557,7 +775,7 @@ function MemberDialog({
                   src={member.cutoutUrl}
                   alt={member.name}
                   style={{ filter: CUTOUT_EDGE, ...CUTOUT_FADE }}
-                  className="absolute inset-x-0 bottom-0 mx-auto h-[106%] w-auto max-w-none object-contain"
+                  className="absolute inset-x-0 bottom-0 mx-auto h-[106%] w-auto max-w-full object-contain object-bottom"
                 />
               </>
             ) : (

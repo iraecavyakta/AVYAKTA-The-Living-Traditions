@@ -110,22 +110,34 @@ export async function getMembersFromDb(): Promise<MemberCard[]> {
         const domain = String(raw.domain ?? "").trim();
         const storedDesignation = String(raw.designation ?? "").trim();
 
+        // A POC heads a department, not a club domain: their domain column
+        // holds a branch such as MBBS or Nursing, so they are "Dept Head -
+        // MBBS" rather than the club role they happen to be stored with.
+        const isPoc =
+          Array.isArray(raw.tags) &&
+          raw.tags.some(
+            (tag: unknown) => String(tag).trim().toLowerCase() === "poc",
+          );
+
         // A domain head is named by their domain: "Tech Head", not the
         // generic "Domain Head". A stored designation wins, except when it
         // is itself the generic label we are trying to replace.
         const designation =
-          role === "domain_head" &&
-          domain &&
-          (!storedDesignation || /^domain[\s_-]*head$/i.test(storedDesignation))
-            ? domainHeadTitle(domain)
-            : storedDesignation ||
-              (role === "club_head"
-                ? "Club Head"
-                : role === "domain_head"
-                  ? "Domain Head"
-                  : role === "members"
-                    ? "Member"
-                    : role || "Member");
+          isPoc && domain
+            ? `Dept Head - ${domain}`
+            : role === "domain_head" &&
+                domain &&
+                (!storedDesignation ||
+                  /^domain[\s_-]*head$/i.test(storedDesignation))
+              ? domainHeadTitle(domain)
+              : storedDesignation ||
+                (role === "club_head"
+                  ? "Club Head"
+                  : role === "domain_head"
+                    ? "Domain Head"
+                    : role === "members"
+                      ? "Member"
+                      : role || "Member");
 
         const tags = tagsFromRow(
           raw as Record<string, unknown>,
@@ -159,7 +171,10 @@ export async function getMembersFromDb(): Promise<MemberCard[]> {
 
         const bio =
           explicitBio ||
-          `${name} contributes to ${domain || "Avyakta"} as ${designation}.`;
+          (isPoc && domain
+            ? // Otherwise this reads "contributes to MBBS as Dept Head - MBBS".
+              `${name} is Avyakta's point of contact for the ${domain} department.`
+            : `${name} contributes to ${domain || "Avyakta"} as ${designation}.`);
 
         return {
           id,

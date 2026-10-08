@@ -1,7 +1,10 @@
 "use client";
 
 import { useState } from "react";
-import { RECRUITMENT_DOMAINS } from "../../lib/validators/recruitment";
+import {
+  RECRUITMENT_BRANCHES,
+  RECRUITMENT_DOMAINS,
+} from "../../lib/validators/recruitment";
 
 interface FormData {
   name: string;
@@ -210,7 +213,8 @@ export default function MemberForm({
           {!isClubHead && (
             <div className="form-group">
               <label htmlFor="domain">
-                Domain <span className="required">*</span>
+                {isPoc ? "Department" : "Domain"}{" "}
+                <span className="required">*</span>
               </label>
               <select
                 id="domain"
@@ -219,12 +223,16 @@ export default function MemberForm({
                 onChange={handleSelectChange}
                 required
               >
-                <option value="">Select a domain</option>
-                {RECRUITMENT_DOMAINS.map((domain) => (
-                  <option key={domain} value={domain}>
-                    {domain}
-                  </option>
-                ))}
+                <option value="">
+                  {isPoc ? "Select a department" : "Select a domain"}
+                </option>
+                {(isPoc ? RECRUITMENT_BRANCHES : RECRUITMENT_DOMAINS).map(
+                  (option) => (
+                    <option key={option} value={option}>
+                      {option}
+                    </option>
+                  ),
+                )}
               </select>
             </div>
           )}
@@ -279,6 +287,11 @@ export default function MemberForm({
                               FACULTY_HIDDEN_TAGS.includes(item)
                             ),
                         ),
+                        // Ticking POC swaps the dropdown from club domains to
+                        // departments (and unticking swaps it back), so a
+                        // value picked from the other list has to go: the
+                        // select would show blank while still submitting it.
+                        domain: key === "poc" ? "" : prev.domain,
                         // leaving Club Head: drop its placeholder role
                         role:
                           key === "club_head" &&
