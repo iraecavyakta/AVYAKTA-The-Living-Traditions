@@ -39,7 +39,23 @@ export default function RecruitmentForm({
   const [showThankYou, setShowThankYou] = useState(false);
   // Held in memory only (never URL/localStorage) so links show once, right after submit.
   const [groupLinks, setGroupLinks] = useState<GroupLink[]>([]);
+  const [joined, setJoined] = useState<string[]>([]);
   const [devEditUrl, setDevEditUrl] = useState(""); // local testing only
+
+  // A click is the only signal we get - we cannot verify they actually joined.
+  const pendingJoin = groupLinks.length > joined.length;
+
+  // Browser's own "Leave site?" dialog: the only popup allowed on close. Its
+  // wording is fixed by the browser, so the on-page notice carries the reason.
+  useEffect(() => {
+    if (!pendingJoin) return;
+    const warn = (e: BeforeUnloadEvent) => {
+      e.preventDefault();
+      e.returnValue = "";
+    };
+    window.addEventListener("beforeunload", warn);
+    return () => window.removeEventListener("beforeunload", warn);
+  }, [pendingJoin]);
 
   // Cleanup timeout on unmount to prevent memory leaks
   useEffect(() => {
@@ -211,13 +227,29 @@ export default function RecruitmentForm({
                     Dev only - edit link: <a href={devEditUrl}>{devEditUrl}</a>
                   </p>
                 )}
+                {pendingJoin && (
+                  <p className="thank-you-subtext" style={{ color: "#ffd166" }}>
+                    <strong>Mandatory:</strong> you must join the WhatsApp group
+                    {groupLinks.length > 1 ? "s" : ""} below to take part in the
+                    recruitment process. Every round, interview slot and
+                    announcement is shared only there - if you do not join, you
+                    cannot be considered. Do not close this page until you have
+                    joined
+                    {editing
+                      ? ". Already a member? Open the link anyway to confirm - WhatsApp will simply reopen the group."
+                      : "."}
+                  </p>
+                )}
                 {groupLinks.map(({ label, url }) => (
                   <button
                     key={url}
                     type="button"
-                    onClick={() =>
-                      window.open(url, "_blank", "noopener,noreferrer")
-                    }
+                    onClick={() => {
+                      window.open(url, "_blank", "noopener,noreferrer");
+                      setJoined((prev) =>
+                        prev.includes(url) ? prev : [...prev, url],
+                      );
+                    }}
                     style={{
                       border: "none",
                       cursor: "pointer",
@@ -245,7 +277,7 @@ export default function RecruitmentForm({
                       <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z" />
                       <path d="M12 0C5.373 0 0 5.373 0 12c0 2.117.549 4.107 1.513 5.84L0 24l6.335-1.487A11.946 11.946 0 0012 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 21.818a9.818 9.818 0 01-5.007-1.37l-.36-.214-3.727.875.942-3.632-.234-.373A9.818 9.818 0 012.182 12C2.182 6.58 6.58 2.182 12 2.182S21.818 6.58 21.818 12 17.42 21.818 12 21.818z" />
                     </svg>
-                    {label}
+                    {joined.includes(url) ? `✓ ${label}` : label}
                   </button>
                 ))}
               </div>
