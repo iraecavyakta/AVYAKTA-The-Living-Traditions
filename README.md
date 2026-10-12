@@ -354,7 +354,7 @@ Embedded in the same Next.js app — not a separate deployment. Hidden from publ
 
 ### Auth & Security
 
-- Passwords are **hashed** — never hardcoded. Each domain head sets their own.
+- Passwords are **hashed**. Each domain head sets their own.
 - All dashboard routes are protected (auth + role check).
 - Domain heads cannot access other domains' data.
 
