@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { revalidatePath } from "next/cache";
 import { verifyAdminAuth } from "../../../lib/auth/session";
 import {
   getRecruitmentStatus,
@@ -26,6 +27,9 @@ export async function PATCH(request: NextRequest) {
     }
 
     await setRecruitmentStatus(body.isOpen);
+    // The home page renders the recruitment banner from this flag and is
+    // cached until invalidated, so the toggle has to push it.
+    revalidatePath("/");
     return NextResponse.json({ isOpen: body.isOpen });
   } catch (error) {
     console.error("Error updating recruitment status:", error);

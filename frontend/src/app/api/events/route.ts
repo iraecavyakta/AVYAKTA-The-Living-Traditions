@@ -261,6 +261,7 @@ export async function POST(request: NextRequest) {
     // Bust the ISR cache for all event-related public pages so the new event
     // appears immediately rather than after the next 60-second revalidation.
     revalidatePath("/events");
+    revalidatePath("/events/[slug]", "page");
     revalidatePath("/gallery");
     revalidatePath("/");
 

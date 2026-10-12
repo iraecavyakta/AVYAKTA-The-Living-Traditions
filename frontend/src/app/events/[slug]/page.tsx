@@ -1,5 +1,5 @@
 import { notFound } from "next/navigation";
-import { getEventBySlugFromDb } from "@/lib/data/events";
+import { getEventBySlugFromDb, getEventsFromDb } from "@/lib/data/events";
 import { getGalleryEventsFromDb } from "@/lib/data/gallery";
 import { getMembersFromDb } from "@/lib/data/members";
 import EventDetailClient from "./EventDetailClient";
@@ -8,7 +8,16 @@ type Props = {
   params: Promise<{ slug: string }>;
 };
 
-export const revalidate = 60;
+export const revalidate = false;
+
+// Prebuild the real slugs so normal traffic never triggers a render. Without
+// this every unique URL under /events/ - including ones crawlers invent -
+// generates and caches its own entry on demand. New events still work:
+// dynamicParams stays on, and the API routes revalidate this segment.
+export async function generateStaticParams() {
+  const events = await getEventsFromDb();
+  return events.map((event) => ({ slug: event.slug }));
+}
 
 export default async function EventDetailPage({ params }: Props) {
   const { slug } = await params;

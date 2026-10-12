@@ -1,7 +1,7 @@
 import MembersPageClient from "./MembersPageClient";
 import { getMembersFromDb } from "@/lib/data/members";
 
-export const revalidate = 60;
+export const revalidate = false;
 
 export default async function MembersPage() {
   const members = await getMembersFromDb();
