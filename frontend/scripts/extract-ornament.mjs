@@ -42,8 +42,7 @@ const CROPS = {
 };
 
 mkdirSync(outDir, { recursive: true });
-const src =
-  "data:image/png;base64," + readFileSync(input).toString("base64");
+const src = "data:image/png;base64," + readFileSync(input).toString("base64");
 
 const browser = await chromium.launch();
 const page = await browser.newPage();
@@ -83,7 +82,10 @@ const files = await page.evaluate(
       // by its own outline there, while the anchored edges stay exactly where
       // the crop put them and so stay registered to the page edge.
       const region = fctx.getImageData(sx, sy, sw, sh).data;
-      let tx0 = sw, tx1 = -1, ty0 = sh, ty1 = -1;
+      let tx0 = sw,
+        tx1 = -1,
+        ty0 = sh,
+        ty1 = -1;
       for (let y = 0; y < sh; y++) {
         for (let x = 0; x < sw; x++) {
           if (region[(y * sw + x) * 4 + 3] < 8) continue;
