@@ -2,57 +2,30 @@ import Link from "next/link";
 
 const milestones = [
   {
-    year: "2026",
+    date: "January 26, 2026",
     season: "Founding",
-    title: "The First Flame",
+    title: "An Idea Takes Root",
     description:
-      "Avyakta was born from a shared longing — a group of students at PESU EC who believed the campus needed a space where culture could breathe freely. The inaugural orientation showcase lit the first diya, gathering performers, designers, and storytellers under one roof.",
+      "The idea for Avyakta emerged as a student-led cultural club where tradition and creativity could meet. A club formation request followed and was approved, establishing IRA - The Avyakta Chapter at PES University, Electronic City Campus.",
     symbol: "✦",
     accent: "#C9A84C",
   },
   {
-    year: "2026",
-    season: "First Event",
-    title: "Rangotsav Night",
+    date: "March 16-17, 2026",
+    season: "Inaugural Event",
+    title: "Kalavaibhava",
     description:
-      "Our first large-scale cultural evening. Folk music, classical dance, and live percussion filled the open air theatre as students experienced Avyakta's vision for the very first time. The event sold out before the night ended.",
+      "Avyakta's inaugural flagship festival at PES University, Electronic City Campus, brought departments together to celebrate art, creativity, and student talent across two days.",
     symbol: "◈",
     accent: "#8B1A1A",
   },
   {
-    year: "2027",
-    season: "Expansion",
-    title: "The Domains Take Shape",
+    date: "August 15, 2026",
+    season: "Second Event",
+    title: "Independence Day Celebration",
     description:
-      "Eight distinct domains crystallised — Design, Event Management, Finance and Ethics, Logistics, Marketing, Media and Visibility, Operations, and Technical. Each found its rhythm and its people. Cross-domain collaborations produced work that none could have done alone.",
-    symbol: "❋",
-    accent: "#1B5E3B",
-  },
-  {
-    year: "2027",
-    season: "Milestone",
-    title: "Swar & Stage",
-    description:
-      "Carnatic vocals met contemporary theatre in a 90-minute shared set built entirely by Avyakta members. Rehearsed for six weeks, it became the most ambitious production in the club's short life and set a new benchmark for what student culture could look like.",
+      "Avyakta's second event marked India's Independence Day, following its inaugural two-day festival, Kalavaibhava.",
     symbol: "✦",
-    accent: "#C9A84C",
-  },
-  {
-    year: "2028",
-    season: "Outreach",
-    title: "Beyond the Campus",
-    description:
-      "Avyakta opened its doors wider — curated festivals, mentorship circles, and inter-college collaborations brought new voices into the fold. Alumni began returning as advisors, bridging batches across the years.",
-    symbol: "◈",
-    accent: "#8B1A1A",
-  },
-  {
-    year: "2028",
-    season: "Present",
-    title: "The Living Traditions",
-    description:
-      "Today, Avyakta is more than a club. It is a living memory — a collective that honours India's artistic heritage while writing new chapters with every event, every poster, every performance, every line of code.",
-    symbol: "❋",
     accent: "#1B5E3B",
   },
 ];
@@ -217,7 +190,7 @@ export default function HistoryPage() {
           <div className="space-y-12">
             {milestones.map((m, i) => (
               <div
-                key={`${m.year}-${m.title}`}
+                key={`${m.date}-${m.title}`}
                 className={`relative flex gap-6 ${i % 2 === 0 ? "md:flex-row" : "md:flex-row-reverse"} flex-row`}
               >
                 {/* Timeline node */}
@@ -250,7 +223,7 @@ export default function HistoryPage() {
                     >
                       {m.season}
                     </span>
-                    <span className="text-xs text-[#F5F0E8]/40">{m.year}</span>
+                    <span className="text-xs text-[#F5F0E8]/40">{m.date}</span>
                   </div>
                   <h3 className="mb-3 font-serif text-xl font-bold text-[#F5F0E8]">
                     {m.title}
