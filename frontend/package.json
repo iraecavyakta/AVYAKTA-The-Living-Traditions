@@ -7,7 +7,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "test": "echo \"No tests yet\"",
+    "test": "node --experimental-strip-types --test \"src/**/*.test.ts\"",
     "test-mail": "node --env-file=.env.local scripts/test-mail.mjs",
     "manage-logins": "node scripts/manage-logins.mjs"
   },

@@ -100,7 +100,7 @@ export default function ContactPageClient() {
 
           {/* Email Card */}
           <motion.a
-            href="mailto:avyakta@ecc.pes.edu"
+            href="mailto:iraec.avyakta@pes.edu"
             variants={fadeUp}
             whileHover={{ y: -8, scale: 1.02 }}
             className="group relative overflow-hidden bg-white rounded-[24px] p-8 border-2 border-[#C9A84C]/30 shadow-[0_15px_40px_rgba(146,121,27,0.08)] hover:border-[#92791B] hover:shadow-[0_20px_50px_rgba(146,121,27,0.15)] transition-all duration-300"
@@ -127,7 +127,9 @@ export default function ContactPageClient() {
             <h3 className="font-serif text-3xl font-bold text-[#1C1C1C] mb-2 group-hover:text-[#8B1A1A] transition-colors">
               Email
             </h3>
-            <p className="text-[#1C1C1C]/70 font-medium">avyakta@ecc.pes.edu</p>
+            <p className="text-[#1C1C1C]/70 font-medium">
+              iraec.avyakta@pes.edu
+            </p>
             <div className="mt-8 flex items-center text-sm font-bold text-[#8B1A1A] uppercase tracking-wider group-hover:translate-x-2 transition-transform">
               Drop a mail <span>→</span>
             </div>
@@ -166,22 +168,32 @@ export default function ContactPageClient() {
 
             <div className="space-y-3">
               {[
-                { role: "Club Head", label: "Club Head" },
-                { role: "Head of Ops", label: "Head of Ops" },
-                { role: "Head of Tech", label: "Head of Tech" },
-              ].map(({ role, label }) => (
+                {
+                  role: "Club Head",
+                  label: "Club Head",
+                  email: "nslc15112005@gmail.com",
+                },
+                {
+                  role: "Head of Ops",
+                  label: "Head of Ops",
+                  email: "nandanamathew@gmail.com",
+                },
+                {
+                  role: "Head of Tech",
+                  label: "Head of Tech",
+                  email: "gpraneeth555@gmail.com",
+                },
+              ].map(({ role, label, email }) => (
                 <div
                   key={role}
                   className="flex justify-between items-center bg-black/30 p-3 rounded-xl border border-white/5"
                 >
                   <div>
                     <p className="text-[#F5F0E8] font-medium">{label}</p>
-                    <p className="text-xs text-[#C9A84C]/60 italic">
-                      Contact via email
-                    </p>
+                    <p className="text-xs text-[#C9A84C]/60 italic">{email}</p>
                   </div>
                   <a
-                    href="mailto:avyakta@ecc.pes.edu"
+                    href={`mailto:${email}`}
                     className="w-8 h-8 rounded-full bg-[#C9A84C]/20 flex items-center justify-center text-[#C9A84C] hover:bg-[#C9A84C] hover:text-[#1C1C1C] transition-colors"
                     aria-label={`Email ${label}`}
                   >

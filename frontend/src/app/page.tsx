@@ -3,7 +3,7 @@ import { getEventsFromDb } from "@/lib/data/events";
 import { getGalleryEventsFromDb } from "@/lib/data/gallery";
 import { getRecruitmentStatus } from "@/lib/config/recruitmentStatus";
 
-export const revalidate = 60;
+export const revalidate = false;
 
 function toCardSummary(summary: string) {
   const normalized = summary.replace(/\s+/g, " ").trim();

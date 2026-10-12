@@ -311,6 +311,7 @@ export async function PUT(
     }
 
     revalidatePath("/events");
+    revalidatePath("/events/[slug]", "page");
     revalidatePath("/gallery");
     revalidatePath("/");
 
@@ -356,6 +357,7 @@ export async function DELETE(
     if (error) throw new Error(error.message);
 
     revalidatePath("/events");
+    revalidatePath("/events/[slug]", "page");
     revalidatePath("/gallery");
     revalidatePath("/");
 

@@ -104,7 +104,7 @@ export default function Footer({
           <ul className="flex flex-col gap-2 list-none p-0 m-0 sm:gap-3">
             {[
               { label: "Instagram", href: "https://instagram.com/avyakta_ira" },
-              { label: "Email Us", href: "mailto:avyakta@ecc.pes.edu" },
+              { label: "Email Us", href: "mailto:iraec.avyakta@pes.edu" },
             ].map(({ label, href }) => (
               <li key={label}>
                 <a

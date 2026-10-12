@@ -6,7 +6,9 @@ import { getEventsFromDb } from "@/lib/data/events";
 import { isRegistrationOpen } from "@/lib/utils/events";
 import { createClient } from "@/utils/supabase/server";
 
-export const revalidate = 60;
+// Reads registration_status/deadline live - same on/off gate as /recruitment,
+// and no revalidatePath() covers this route, so it must never be frozen.
+export const dynamic = "force-dynamic";
 
 export default async function RegistrationsPage() {
   const allEvents = await getEventsFromDb();

@@ -1,7 +1,10 @@
 "use client";
 
 import { useState } from "react";
-import { RECRUITMENT_DOMAINS } from "../../lib/validators/recruitment";
+import {
+  RECRUITMENT_BRANCHES,
+  RECRUITMENT_DOMAINS,
+} from "../../lib/validators/recruitment";
 
 interface FormData {
   name: string;
@@ -19,6 +22,9 @@ interface MemberFormProps {
   onCancel: () => void;
   isLoading?: boolean;
 }
+
+// Faculty sit outside the student teams, so these tags don't apply to them.
+const FACULTY_HIDDEN_TAGS = ["current", "previous", "poc"];
 
 const TEAM_TAGS = [
   { key: "current", label: "Current" },
@@ -63,6 +69,7 @@ export default function MemberForm({
   // Club Head is club-level (no domain/role); a POC's role defaults to Member.
   const isClubHead = formData.tags.includes("club_head");
   const isPoc = formData.tags.includes("poc");
+  const isFaculty = formData.tags.includes("faculty");
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -125,6 +132,22 @@ export default function MemberForm({
     } finally {
       setIsUploading(false);
     }
+  };
+
+  /**
+   * Clears the photo. The API already maps an empty photo_url to null, so
+   * saving after this detaches the image from the member. The stored file is
+   * left in the bucket rather than deleted, since other records may point at
+   * it and an orphaned object is cheaper than a broken reference.
+   */
+  const handleRemovePhoto = () => {
+    setPhotoPreview(null);
+    setFormData((prev) => ({ ...prev, photo_url: "" }));
+    setError("");
+    const input = document.getElementById("photo") as HTMLInputElement | null;
+    // Without this the same file cannot be re-picked: the input still holds
+    // it, so choosing it again fires no change event.
+    if (input) input.value = "";
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -190,7 +213,8 @@ export default function MemberForm({
           {!isClubHead && (
             <div className="form-group">
               <label htmlFor="domain">
-                Domain <span className="required">*</span>
+                {isPoc ? "Department" : "Domain"}{" "}
+                <span className="required">*</span>
               </label>
               <select
                 id="domain"
@@ -199,12 +223,16 @@ export default function MemberForm({
                 onChange={handleSelectChange}
                 required
               >
-                <option value="">Select a domain</option>
-                {RECRUITMENT_DOMAINS.map((domain) => (
-                  <option key={domain} value={domain}>
-                    {domain}
-                  </option>
-                ))}
+                <option value="">
+                  {isPoc ? "Select a department" : "Select a domain"}
+                </option>
+                {(isPoc ? RECRUITMENT_BRANCHES : RECRUITMENT_DOMAINS).map(
+                  (option) => (
+                    <option key={option} value={option}>
+                      {option}
+                    </option>
+                  ),
+                )}
               </select>
             </div>
           )}
@@ -238,7 +266,9 @@ export default function MemberForm({
           <fieldset className="form-group">
             <legend>Team tags</legend>
             <div className="flex flex-wrap gap-3">
-              {TEAM_TAGS.map(({ key, label }) => (
+              {TEAM_TAGS.filter(
+                ({ key }) => !(isFaculty && FACULTY_HIDDEN_TAGS.includes(key)),
+              ).map(({ key, label }) => (
                 <label key={key} className="flex items-center gap-2 text-sm">
                   <input
                     type="checkbox"
@@ -246,9 +276,22 @@ export default function MemberForm({
                     onChange={(event) =>
                       setFormData((prev) => ({
                         ...prev,
-                        tags: event.target.checked
+                        tags: (event.target.checked
                           ? [...prev.tags, key]
-                          : prev.tags.filter((item) => item !== key),
+                          : prev.tags.filter((item) => item !== key)
+                        ).filter(
+                          (item) =>
+                            !(
+                              key === "faculty" &&
+                              event.target.checked &&
+                              FACULTY_HIDDEN_TAGS.includes(item)
+                            ),
+                        ),
+                        // Ticking POC swaps the dropdown from club domains to
+                        // departments (and unticking swaps it back), so a
+                        // value picked from the other list has to go: the
+                        // select would show blank while still submitting it.
+                        domain: key === "poc" ? "" : prev.domain,
                         // leaving Club Head: drop its placeholder role
                         role:
                           key === "club_head" &&
@@ -308,6 +351,18 @@ export default function MemberForm({
           <div className="photo-preview">
             <small>Preview</small>
             <img src={photoPreview} alt="Member preview" />
+            <button
+              type="button"
+              onClick={handleRemovePhoto}
+              disabled={isUploading}
+              className="btn-remove-photo"
+            >
+              Remove photo
+            </button>
+            <small className="file-hint">
+              The member falls back to their initials until a new photo is
+              uploaded. Save the form to apply.
+            </small>
           </div>
         )}
 
@@ -457,6 +512,30 @@ export default function MemberForm({
           border: 1px dashed rgba(146, 121, 27, 0.4);
           border-radius: 12px;
           background: rgba(146, 121, 27, 0.05);
+        }
+
+        .btn-remove-photo {
+          margin-top: 12px;
+          padding: 8px 16px;
+          border: 1px solid rgba(139, 26, 26, 0.5);
+          border-radius: 999px;
+          background: transparent;
+          color: var(--av-crimson);
+          font-family: var(--font-body), sans-serif;
+          font-size: 12px;
+          font-weight: 600;
+          cursor: pointer;
+          transition: all 0.2s ease;
+        }
+
+        .btn-remove-photo:hover:not(:disabled) {
+          background: var(--av-crimson);
+          color: var(--av-warm);
+        }
+
+        .btn-remove-photo:disabled {
+          opacity: 0.5;
+          cursor: not-allowed;
         }
 
         .photo-preview small {
