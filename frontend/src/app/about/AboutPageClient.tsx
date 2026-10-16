@@ -114,7 +114,7 @@ export default function AboutPageClient() {
           <div className="aspect-video bg-[#24150E]">
             <iframe
               className="h-full w-full"
-              src="https://www.youtube-nocookie.com/embed/hX3r9dFTNVA?autoplay=1&mute=1&loop=1&playlist=hX3r9dFTNVA&controls=1&playsinline=1&rel=0"
+              src="https://www.instagram.com/reel/Def7rJFh2pD/embed/"
               title="Indian village monsoon ambience"
               allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share; fullscreen"
               referrerPolicy="strict-origin-when-cross-origin"
