@@ -99,7 +99,7 @@ export default function AboutPageClient() {
           </div>
         </div>
 
-        <div className="mx-auto max-w-[400px] overflow-hidden rounded-[2rem] border-4 border-white bg-[#1A0A06] shadow-[0_20px_60px_rgba(36,21,14,0.22)]">
+        <div className="mx-[-1.5rem] w-[calc(100%+3rem)] max-w-[400px] overflow-hidden rounded-[2rem] border-4 border-white bg-[#1A0A06] shadow-[0_20px_60px_rgba(36,21,14,0.22)] md:mx-auto md:w-full">
           <div className="aspect-[2/3] bg-[#24150E]">
             <iframe
               className="h-full w-full"
@@ -111,6 +111,14 @@ export default function AboutPageClient() {
               loading="lazy"
             />
           </div>
+          <a
+            className="block px-4 py-3 text-center text-sm font-semibold text-[#F4C766] underline underline-offset-4"
+            href="https://www.instagram.com/reel/Def7rJFh2pD/"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            View Reel on Instagram
+          </a>
         </div>
       </section>
 
