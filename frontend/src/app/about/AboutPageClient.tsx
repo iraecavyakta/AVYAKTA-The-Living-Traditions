@@ -99,24 +99,13 @@ export default function AboutPageClient() {
           </div>
         </div>
 
-        <div className="overflow-hidden rounded-[2rem] border-4 border-white bg-[#1A0A06] shadow-[0_20px_60px_rgba(36,21,14,0.22)]">
-          <div className="flex items-center justify-between px-5 py-4 text-[#FFF7E8]">
-            <div>
-              <p className="text-xs font-bold uppercase tracking-[0.18em] text-[#F4C766]">
-                A little calm from Kerala
-              </p>
-              <p className="mt-1 text-sm text-white/70">
-                Monsoon ambience • plays muted · use the player controls for
-                sound or fullscreen
-              </p>
-            </div>
-          </div>
-          <div className="aspect-video bg-[#24150E]">
+        <div className="mx-auto max-w-[400px] overflow-hidden rounded-[2rem] border-4 border-white bg-[#1A0A06] shadow-[0_20px_60px_rgba(36,21,14,0.22)]">
+          <div className="aspect-[2/3] bg-[#24150E]">
             <iframe
               className="h-full w-full"
-              src="https://www.instagram.com/reel/Def7rJFh2pD/embed/"
-              title="Indian village monsoon ambience"
-              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share; fullscreen"
+              src="https://www.instagram.com/reel/Def7rJFh2pD/embed/?autoplay=1"
+              title="Instagram Reel by avyakta_ira"
+              allow="autoplay; encrypted-media; picture-in-picture; web-share; fullscreen"
               referrerPolicy="strict-origin-when-cross-origin"
               allowFullScreen
               loading="lazy"
