@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
-import { getSupabaseAdmin } from "../../../../lib/supabase/server";
+import { getSupabaseAdmin } from "@/lib/supabase/admin";
 import {
   verifySessionId,
   getSessionCookieName,

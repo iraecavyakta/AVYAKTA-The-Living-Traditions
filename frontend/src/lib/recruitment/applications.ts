@@ -1,7 +1,7 @@
 import "server-only";
 import { createHash, randomBytes } from "node:crypto";
 import type { NextRequest } from "next/server";
-import { getSupabaseAdmin } from "@/lib/supabase/server";
+import { getSupabaseAdmin } from "@/lib/supabase/admin";
 
 // A candidate edits / tracks their application through a private link emailed
 // to them: /recruitment/edit?token=<secret>. Only a SHA-256 hash of the secret

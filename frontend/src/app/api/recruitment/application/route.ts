@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getSupabaseAdmin } from "@/lib/supabase/server";
+import { getSupabaseAdmin } from "@/lib/supabase/admin";
 import { getRecruitmentStatus } from "@/lib/config/recruitmentStatus";
 import { getApplicantLinks } from "@/lib/config/domainLinks";
 import { recruitmentSchema } from "@/lib/validators/recruitment";

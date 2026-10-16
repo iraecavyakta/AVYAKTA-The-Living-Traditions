@@ -1,5 +1,5 @@
 import "server-only";
-import { getSupabaseAdmin } from "@/lib/supabase/server";
+import { getSupabaseAdmin } from "@/lib/supabase/admin";
 
 // Backed by `recruitment_domain_links` (one row per domain). RLS is on with no
 // policies, so only the service-role client used here can read or write it.

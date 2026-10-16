@@ -1,6 +1,6 @@
 import "server-only";
 
-import { createPublicClient } from "@/utils/supabase/server";
+import { createPublicClient } from "@/lib/supabase/public";
 
 export type GalleryImage = {
   id: string;
