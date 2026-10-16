@@ -99,7 +99,7 @@ export default function AboutPageClient() {
           </div>
         </div>
 
-        <div className="mx-[-1.5rem] w-[calc(100%+3rem)] max-w-[560px] overflow-hidden rounded-[2rem] border-4 border-white bg-[#1A0A06] shadow-[0_20px_60px_rgba(36,21,14,0.22)] md:mx-auto md:w-full">
+        <div className="mx-[-1.5rem] w-[calc(100%+3rem)] max-w-[560px] self-start overflow-hidden rounded-[2rem] border-4 border-white bg-[#1A0A06] shadow-[0_20px_60px_rgba(36,21,14,0.22)] md:mx-auto md:w-full">
           <div className="aspect-video bg-[#24150E]">
             <video
               className="h-full w-full"
