@@ -1,5 +1,5 @@
 import "server-only";
-import { getSupabaseAdmin } from "@/lib/supabase/server";
+import { getSupabaseAdmin } from "@/lib/supabase/admin";
 import type { MailMessage } from "@/lib/mail/send";
 import {
   decisionEmail,

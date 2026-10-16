@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import bcryptjs from "bcryptjs";
-import { getSupabaseAdmin } from "../../../../lib/supabase/server";
+import { getSupabaseAdmin } from "@/lib/supabase/admin";
 import {
   createSessionToken,
   getSessionCookieName,

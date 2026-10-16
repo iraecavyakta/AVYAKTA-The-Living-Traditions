@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getSupabaseAdmin } from "../../../lib/supabase/server";
+import { getSupabaseAdmin } from "@/lib/supabase/admin";
 import { recruitmentSchema } from "../../../lib/validators/recruitment";
 import { retryWithBackoff } from "../../../lib/api/retry";
 import { getApplicantLinks } from "../../../lib/config/domainLinks";

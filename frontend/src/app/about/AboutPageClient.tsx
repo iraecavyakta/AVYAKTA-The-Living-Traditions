@@ -65,7 +65,7 @@ export default function AboutPageClient() {
         </motion.div>
       </section>
 
-      <section className="mx-auto grid max-w-6xl gap-8 px-6 py-16 md:grid-cols-[1fr_1fr] md:py-24">
+      <section className="mx-auto grid max-w-7xl gap-8 px-6 py-16 md:py-24 lg:grid-cols-[1fr_1fr]">
         <div className="self-center">
           <p className="text-xs font-bold uppercase tracking-[0.25em] text-[#8B1A1A]">
             What is Avyakta?
@@ -99,17 +99,22 @@ export default function AboutPageClient() {
           </div>
         </div>
 
-        <div className="mx-[-1.5rem] w-[calc(100%+3rem)] max-w-[400px] overflow-hidden rounded-[2rem] border-4 border-white bg-[#1A0A06] shadow-[0_20px_60px_rgba(36,21,14,0.22)] md:mx-auto md:w-full">
-          <div className="aspect-[2/3] bg-[#24150E]">
-            <iframe
+        <div className="mx-[-1.5rem] w-[calc(100%+3rem)] self-center overflow-hidden rounded-[2rem] border-4 border-white bg-[#1A0A06] shadow-[0_20px_60px_rgba(36,21,14,0.22)] md:mx-auto md:w-full">
+          <div className="aspect-video bg-[#24150E]">
+            <video
               className="h-full w-full"
-              src="https://www.instagram.com/reel/Def7rJFh2pD/embed/?autoplay=1"
-              title="Instagram Reel by avyakta_ira"
-              allow="autoplay; encrypted-media; picture-in-picture; web-share; fullscreen"
-              referrerPolicy="strict-origin-when-cross-origin"
-              allowFullScreen
-              loading="lazy"
-            />
+              src="/videos/about.mp4"
+              poster="/videos/about-poster.jpg"
+              autoPlay
+              controls
+              loop
+              muted
+              playsInline
+              preload="metadata"
+              aria-label="Avyakta traditions video"
+            >
+              Your browser does not support the video tag.
+            </video>
           </div>
           <a
             className="block px-4 py-3 text-center text-sm font-semibold text-[#F4C766] underline underline-offset-4"

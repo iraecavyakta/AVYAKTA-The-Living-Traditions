@@ -4,7 +4,7 @@ import bgFormsImage from "@/components/forms/bg-forms.jpeg";
 import "../recruitment/recruitment.css"; // Reuse recruitment styles
 import { getEventsFromDb } from "@/lib/data/events";
 import { isRegistrationOpen } from "@/lib/utils/events";
-import { createClient } from "@/utils/supabase/server";
+import { createClient } from "@/lib/supabase/server";
 
 // Reads registration_status/deadline live - same on/off gate as /recruitment,
 // and no revalidatePath() covers this route, so it must never be frozen.

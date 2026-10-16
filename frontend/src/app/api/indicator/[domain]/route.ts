@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireDomainAccess } from "@/lib/auth/domainAccess";
 import { getSession } from "@/lib/auth/session";
-import { getSupabaseAdmin } from "@/lib/supabase/server";
+import { getSupabaseAdmin } from "@/lib/supabase/admin";
 import { sendMailsAfterResponse } from "@/lib/mail/send";
 import { rejectOpenCandidates } from "@/lib/recruitment/closeDomain";
 import { formatDomainFromUrl } from "@/lib/utils/domainFormatter";

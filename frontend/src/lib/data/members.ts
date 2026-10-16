@@ -1,6 +1,6 @@
 import "server-only";
 
-import { createPublicClient } from "@/utils/supabase/server";
+import { createPublicClient } from "@/lib/supabase/public";
 import { type MemberCard } from "@/lib/data/memberSections";
 
 function avatarFromName(name: string) {

@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { getSupabaseAdmin } from "@/lib/supabase/server";
+import { getSupabaseAdmin } from "@/lib/supabase/admin";
 import { verifyAdminAuth } from "@/lib/auth/session";
 import { RECRUITMENT_DOMAINS } from "@/lib/validators/recruitment";
 

@@ -1,5 +1,5 @@
 import "server-only";
-import { getSupabaseAdmin } from "@/lib/supabase/server";
+import { getSupabaseAdmin } from "@/lib/supabase/admin";
 
 // Backed by the `recruitment_config` table (a single row, id=true) instead
 // of a local JSON file — a file on disk doesn't survive on serverless

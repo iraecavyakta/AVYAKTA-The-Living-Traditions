@@ -1,23 +1,27 @@
 import "server-only";
-import { createClient } from "@supabase/supabase-js";
+import { createServerClient } from "@supabase/ssr";
+import { cookies } from "next/headers";
 
-// Server-only admin client (has full permissions)
-// Only use this in server actions and API routes
-export function getSupabaseAdmin() {
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
-  if (!supabaseUrl) {
-    throw new Error(
-      "Missing required environment variable: NEXT_PUBLIC_SUPABASE_URL",
-    );
-  }
+export const createClient = async () => {
+  const cookieStore = await cookies();
 
-  if (!serviceRoleKey) {
-    throw new Error(
-      "Missing required environment variable: SUPABASE_SERVICE_ROLE_KEY",
-    );
-  }
-
-  return createClient(supabaseUrl, serviceRoleKey);
-}
+  return createServerClient(supabaseUrl!, supabaseKey!, {
+    cookies: {
+      getAll() {
+        return cookieStore.getAll();
+      },
+      setAll(cookiesToSet) {
+        try {
+          cookiesToSet.forEach(({ name, value, options }) =>
+            cookieStore.set(name, value, options),
+          );
+        } catch {
+          // Server Components cannot write cookies; middleware refreshes sessions.
+        }
+      },
+    },
+  });
+};

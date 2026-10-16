@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { randomUUID } from "node:crypto";
-import { getSupabaseAdmin } from "@/lib/supabase/server";
+import { getSupabaseAdmin } from "@/lib/supabase/admin";
 import { verifyAdminAuth } from "@/lib/auth/session";
 
 // Admin-only: stores one event image in Supabase Storage and returns its

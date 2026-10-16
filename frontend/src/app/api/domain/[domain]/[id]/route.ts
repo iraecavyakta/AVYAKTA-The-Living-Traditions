@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { requireDomainAccess } from "@/lib/auth/domainAccess";
 import { sendMailAfterResponse } from "@/lib/mail/send";
 import { decisionEmail } from "@/lib/mail/templates";
-import { getSupabaseAdmin } from "@/lib/supabase/server";
+import { getSupabaseAdmin } from "@/lib/supabase/admin";
 import { formatDomainFromUrl } from "@/lib/utils/domainFormatter";
 import { isValidDomain } from "@/lib/utils/domainValidator";
 

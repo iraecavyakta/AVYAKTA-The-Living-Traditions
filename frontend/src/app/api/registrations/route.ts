@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import { registrationSchema } from "@/lib/validators/registration";
-import { getSupabaseAdmin } from "@/lib/supabase/server";
+import { getSupabaseAdmin } from "@/lib/supabase/admin";
 import { retryWithBackoff } from "@/lib/api/retry";
 import { verifySessionId, getSessionCookieName } from "@/lib/auth/session";
 import { getClientIp, rateLimit } from "@/lib/security/rateLimit";
